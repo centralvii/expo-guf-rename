@@ -1,0 +1,103 @@
+/**
+ * Модуль импорта / экспорта ZIP-архивов.
+ * Использует jszip для работы с архивами и file-saver для скачивания.
+ */
+
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import type { FileRow } from '../types';
+import { parseFileName, getExtension, getNameWithoutExtension, getBaseName } from './nameCleaner';
+import { applyTemplate } from './templateEngine';
+
+/**
+ * Генерирует уникальный ID строки
+ */
+function generateId(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * Распаковывает ZIP-файл и возвращает массив FileRow.
+ * Поддерживает вложенные папки.
+ * По умолчанию показывает только .guf файлы, но можно отключить фильтрацию.
+ */
+export async function extractZip(
+  file: File,
+  filterGuf: boolean = true
+): Promise<FileRow[]> {
+  const zip = await JSZip.loadAsync(file);
+  const rows: FileRow[] = [];
+  let order = 1;
+
+  const entries: { path: string; zipObj: JSZip.JSZipObject }[] = [];
+
+  zip.forEach((relativePath, zipObj) => {
+    // Пропускаем директории
+    if (zipObj.dir) return;
+    entries.push({ path: relativePath, zipObj });
+  });
+
+  // Сортируем по имени для предсказуемого порядка
+  entries.sort((a, b) => a.path.localeCompare(b.path));
+
+  for (const { path, zipObj } of entries) {
+    const baseName = getBaseName(path);
+    const ext = getExtension(baseName);
+
+    // Фильтрация по расширению
+    if (filterGuf && ext !== 'guf') continue;
+
+    const nameWithoutExt = getNameWithoutExtension(baseName);
+    const parsed = parseFileName(nameWithoutExt);
+    const blob = await zipObj.async('blob');
+
+    const row: FileRow = {
+      id: generateId(),
+      order,
+      originalPath: path,
+      originalName: baseName,
+      extension: ext,
+      file: blob,
+      detectedDate: parsed.detectedDate,
+      detectedTime: parsed.detectedTime,
+      cleanName: parsed.cleanName,
+      prefix: '',
+      module: '',
+      code: '',
+      docNumber: '',
+      custom1: '',
+      custom2: '',
+      newName: '', // Будет рассчитано после
+    };
+
+    rows.push(row);
+    order++;
+  }
+
+  return rows;
+}
+
+/**
+ * Создаёт ZIP-архив с переименованными файлами и инициирует скачивание.
+ */
+export async function generateZip(
+  files: FileRow[],
+  template: string,
+  archiveName: string = 'renamed_files.zip'
+): Promise<void> {
+  const zip = new JSZip();
+
+  for (const file of files) {
+    // Пересчитываем имя на случай если оно не актуально
+    const finalName = applyTemplate(template, file);
+    zip.file(finalName, file.file);
+  }
+
+  const blob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 },
+  });
+
+  saveAs(blob, archiveName);
+}
