@@ -1,40 +1,17 @@
 /**
  * Хук глобального состояния приложения.
  * Управляет массивом файлов, шаблоном, ошибками валидации.
- * Шаблон и стартовый номер сохраняются в localStorage.
+ * Полное состояние (включая файлы) сохраняется в IndexedDB
+ * и восстанавливается при перезагрузке страницы.
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { FileRow, EditableField, ValidationError } from '../types';
 import { DEFAULT_TEMPLATE } from '../types';
 import { applyTemplate, recalculateAllNames } from '../utils/templateEngine';
 import { validateFiles } from '../utils/validation';
 import { extractZip, generateZip } from '../utils/zipHandler';
-
-// ---- localStorage keys ----
-const LS_KEY_TEMPLATE = 'guf-renamer:template';
-const LS_KEY_START_NUMBER = 'guf-renamer:startNumber';
-
-function loadSavedTemplate(): string {
-  try {
-    return localStorage.getItem(LS_KEY_TEMPLATE) || DEFAULT_TEMPLATE;
-  } catch {
-    return DEFAULT_TEMPLATE;
-  }
-}
-
-function loadSavedStartNumber(): number {
-  try {
-    const val = localStorage.getItem(LS_KEY_START_NUMBER);
-    if (val !== null) {
-      const num = parseInt(val, 10);
-      return Number.isFinite(num) && num >= 0 ? num : 1;
-    }
-    return 1;
-  } catch {
-    return 1;
-  }
-}
+import { saveState, loadState, clearState } from '../utils/persistence';
 
 export interface AppState {
   files: FileRow[];
@@ -44,6 +21,7 @@ export interface AppState {
   isLoading: boolean;
   isExporting: boolean;
   archiveName: string;
+  isRestoring: boolean;
 
   loadZip: (file: File) => Promise<void>;
   setTemplate: (tpl: string) => void;
@@ -61,27 +39,50 @@ export interface AppState {
 
 export function useAppState(): AppState {
   const [files, setFiles] = useState<FileRow[]>([]);
-  const [template, setTemplateRaw] = useState<string>(loadSavedTemplate);
-  const [startNumber, setStartNumberRaw] = useState<number>(loadSavedStartNumber);
+  const [template, setTemplateRaw] = useState<string>(DEFAULT_TEMPLATE);
+  const [startNumber, setStartNumberRaw] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [archiveName, setArchiveName] = useState('renamed_files.zip');
+  const [isRestoring, setIsRestoring] = useState(true);
 
-  // Сохранение шаблона в localStorage при изменении
+  // Флаг, что первичное восстановление завершено — чтобы не сохранять пустое состояние
+  const restoredRef = useRef(false);
+
+  // ---- Восстановление из IndexedDB при первой загрузке ----
   useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY_TEMPLATE, template);
-    } catch { /* ignore quota errors */ }
-  }, [template]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const saved = await loadState();
+        if (saved && !cancelled) {
+          setFiles(saved.files);
+          setTemplateRaw(saved.template);
+          setStartNumberRaw(saved.startNumber);
+          setArchiveName(saved.archiveName);
+        }
+      } catch (err) {
+        console.warn('[restore] Ошибка восстановления:', err);
+      } finally {
+        if (!cancelled) {
+          restoredRef.current = true;
+          setIsRestoring(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-  // Сохранение стартового номера в localStorage при изменении
+  // ---- Автосохранение при изменении состояния ----
   useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY_START_NUMBER, String(startNumber));
-    } catch { /* ignore */ }
-  }, [startNumber]);
+    if (!restoredRef.current) return; // не сохраняем до завершения восстановления
+    const timer = setTimeout(() => {
+      saveState({ files, template, startNumber, archiveName });
+    }, 300); // debounce 300 мс
+    return () => clearTimeout(timer);
+  }, [files, template, startNumber, archiveName]);
 
-  // Пересчёт имён при изменении шаблона, файлов или стартового номера
+  // Пересчёт имён
   const recalc = useCallback(
     (currentFiles: FileRow[], tpl: string, start: number): FileRow[] => {
       return recalculateAllNames(currentFiles, tpl, start);
@@ -200,6 +201,7 @@ export function useAppState(): AppState {
   // Очистка
   const clearFiles = useCallback(() => {
     setFiles([]);
+    clearState(); // Удалить из IndexedDB тоже
   }, []);
 
   // Валидация
@@ -218,6 +220,7 @@ export function useAppState(): AppState {
     isLoading,
     isExporting,
     archiveName,
+    isRestoring,
     loadZip,
     setTemplate,
     resetTemplate,

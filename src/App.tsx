@@ -10,6 +10,18 @@ import './App.css';
 function App() {
   const state = useAppState();
 
+  // Пока состояние восстанавливается из IndexedDB — показываем спиннер
+  if (state.isRestoring) {
+    return (
+      <div className="app">
+        <div className="app-restore">
+          <div className="spinner" />
+          <span>Восстановление сессии…</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       {/* Header */}
