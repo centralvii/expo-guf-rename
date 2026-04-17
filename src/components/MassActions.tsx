@@ -6,9 +6,17 @@ interface MassActionsProps {
   onMassUpdate: (field: EditableField, value: string) => void;
   onAutoNumber: () => void;
   fileCount: number;
+  startNumber: number;
+  onStartNumberChange: (num: number) => void;
 }
 
-export function MassActions({ onMassUpdate, onAutoNumber, fileCount }: MassActionsProps) {
+export function MassActions({
+  onMassUpdate,
+  onAutoNumber,
+  fileCount,
+  startNumber,
+  onStartNumberChange,
+}: MassActionsProps) {
   const [selectedField, setSelectedField] = useState<EditableField>('prefix');
   const [massValue, setMassValue] = useState('');
 
@@ -53,10 +61,26 @@ export function MassActions({ onMassUpdate, onAutoNumber, fileCount }: MassActio
           </button>
         </div>
 
-        <button className="btn btn--secondary" onClick={onAutoNumber}>
-          <Hash size={14} />
-          Порядковые номера
-        </button>
+        <div className="mass-actions__group mass-actions__group--compact">
+          <label className="start-number-label">
+            Нумерация с:
+            <input
+              type="number"
+              className="start-number-input"
+              min={0}
+              value={startNumber}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                onStartNumberChange(Number.isFinite(val) ? val : 1);
+              }}
+            />
+          </label>
+
+          <button className="btn btn--secondary" onClick={onAutoNumber}>
+            <Hash size={14} />
+            Порядковые номера
+          </button>
+        </div>
       </div>
     </div>
   );

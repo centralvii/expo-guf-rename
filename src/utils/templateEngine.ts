@@ -49,14 +49,16 @@ export function applyTemplate(template: string, row: FileRow): string {
 /**
  * Пересчитывает newName для всех строк массива.
  * Полезно при изменении шаблона или порядка файлов.
+ * @param startNumber — номер, с которого начинается нумерация (по умолчанию 1)
  */
 export function recalculateAllNames(
   files: FileRow[],
-  template: string
+  template: string,
+  startNumber: number = 1
 ): FileRow[] {
   return files.map((row, idx) => ({
     ...row,
-    order: idx + 1,
-    newName: applyTemplate(template, { ...row, order: idx + 1 }),
+    order: startNumber + idx,
+    newName: applyTemplate(template, { ...row, order: startNumber + idx }),
   }));
 }

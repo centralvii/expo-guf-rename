@@ -50,6 +50,8 @@ function App() {
               onMassUpdate={state.massUpdateField}
               onAutoNumber={state.autoNumberDocNumbers}
               fileCount={state.files.length}
+              startNumber={state.startNumber}
+              onStartNumberChange={state.setStartNumber}
             />
 
             {/* File table */}

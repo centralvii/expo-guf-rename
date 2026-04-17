@@ -1,5 +1,5 @@
 import { AVAILABLE_TAGS } from '../types';
-import { RotateCcw, Tag } from 'lucide-react';
+import { RotateCcw, Tag, Save } from 'lucide-react';
 
 interface TemplateEditorProps {
   template: string;
@@ -18,6 +18,10 @@ export function TemplateEditor({ template, onChange, onReset }: TemplateEditorPr
         <h2>
           <Tag size={18} />
           Шаблон переименования
+          <span className="template-saved-badge" title="Шаблон автоматически сохраняется в браузере">
+            <Save size={12} />
+            сохранён
+          </span>
         </h2>
         <button
           className="btn btn--ghost"
