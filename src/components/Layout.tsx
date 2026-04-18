@@ -3,12 +3,11 @@
  * Header + content + footer.
  */
 
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { Boxes, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 export function Layout() {
-  const location = useLocation();
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
