@@ -1,11 +1,8 @@
-/**
- * Общий Layout для всех страниц GD Helper.
- * Header + content + footer.
- */
-
 import { Outlet, Link } from 'react-router-dom';
 import { Boxes, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+
+declare const __APP_GIT_COMMIT__: string;
 
 export function Layout() {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -17,13 +14,13 @@ export function Layout() {
         setIsToolsOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
     <div className="app">
-      {/* Header */}
       <header className="app-header">
         <div className="app-header__inner">
           <div className="app-header__left">
@@ -62,14 +59,19 @@ export function Layout() {
         </div>
       </header>
 
-      {/* Page content */}
       <main className="app-main">
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="app-footer">
-        <span>GD Helper &mdash; клиентское приложение, файлы не покидают ваш браузер</span>
+        <div className="app-footer__inner">
+          <span className="app-footer__meta">
+            GD Helper - клиентское приложение, файлы не покидают ваш браузер
+          </span>
+          <span className="app-footer__branch">
+            Актуальный коммит: {__APP_GIT_COMMIT__}
+          </span>
+        </div>
       </footer>
     </div>
   );
