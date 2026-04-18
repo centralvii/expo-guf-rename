@@ -136,6 +136,12 @@ a {
   justify-content: space-between;
 }
 
+.app-header__left {
+  display: flex;
+  align-items: center;
+  gap: 32px; /* Space between logo and nav */
+}
+
 .app-header__logo {
   display: flex;
   align-items: center;
@@ -169,20 +175,93 @@ a {
 .app-header__nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .app-header__nav-link {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  transition: color var(--transition), background var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
 }
 
-.app-header__nav-link:hover {
+.app-header__nav-link:hover, .app-header__nav-link--active {
   color: var(--text-primary);
+}
+
+.app-header__nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dropdown-arrow {
+  transition: transform var(--transition);
+  opacity: 0.5;
+}
+.app-header__nav-link:hover .dropdown-arrow, .app-header__nav-link--active .dropdown-arrow {
+  opacity: 1;
+}
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.app-header__dropdown-container {
+  position: relative;
+}
+
+.app-header__dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 240px;
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all var(--transition-slow);
+  z-index: 1000;
+}
+
+.app-header__dropdown-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background var(--transition);
+}
+
+.dropdown-item:hover {
   background: var(--bg-hover);
+}
+
+.dropdown-item-title {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.dropdown-item-desc {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 /* ---- Footer ---- */
