@@ -4,7 +4,7 @@ import { Plus, Search, Calendar, ChevronRight, FileText, ArrowLeft } from 'lucid
 import { useTasks } from '../hooks/useTasks';
 
 export function TaskHelperPage() {
-  const { tasks, isLoaded, addTask } = useTasks();
+  const { tasks, isLoaded, error, addTask } = useTasks();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -49,6 +49,12 @@ export function TaskHelperPage() {
       </div>
 
       <div className="tool-page__content">
+        {error && (
+          <div className="app-restore" style={{ marginBottom: '24px' }}>
+            <span>{error}</span>
+          </div>
+        )}
+
         <div className="task-registry__header" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
           <div className="search-box" style={{ flex: 1, margin: 0 }}>
             <Search size={16} className="search-icon" />
