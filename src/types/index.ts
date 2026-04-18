@@ -82,7 +82,7 @@ export const AVAILABLE_TAGS = [
  * Шаблон переименования по умолчанию
  */
 export const DEFAULT_TEMPLATE =
-  '{indexPad6}_{prefix}_{module}_{code}_{date}_{time}_{cleanName}';
+  '{indexPad6}_{prefix}_{module}-{docNumber}_{cleanName}{code}';
 
 /**
  * Список редактируемых полей для UI
