@@ -26,7 +26,7 @@ export function GufPackerPage() {
 
   const handleClearFiles = () => {
     state.clearFiles();
-    notify('Список файлов очищен');
+    notify('Список файлов очищен', 'error');
   };
 
   const handleExportZip = async () => {

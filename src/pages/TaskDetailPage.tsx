@@ -113,7 +113,7 @@ export function TaskDetailPage() {
     if (window.confirm('Вы уверены, что хотите удалить этот экземпляр?')) {
       try {
         await deleteTask(taskId);
-        notify('Экземпляр удалён');
+        notify('Экземпляр удалён', 'error');
         navigate('/task-helper');
       } catch (deleteError) {
         console.error('[task-helper] Failed to delete task', deleteError);
@@ -132,7 +132,7 @@ export function TaskDetailPage() {
 
   const handleRemoveSection = (id: string) => {
     setEditSections(editSections.filter((section) => section.id !== id));
-    notify('Раздел удалён', 'info');
+    notify('Раздел удалён', 'error');
   };
 
   const updateSection = (id: string, updates: Partial<TaskSection>) => {
