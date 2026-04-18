@@ -115,6 +115,77 @@ a {
   font-size: 14px;
 }
 
+.app-toast-stack {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.app-toast {
+  min-width: 280px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(17, 17, 17, 0.92);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: app-toast-enter 180ms ease-out;
+}
+
+.app-toast--success {
+  border-color: rgba(12, 206, 107, 0.22);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(12, 206, 107, 0.08);
+}
+
+.app-toast--error {
+  border-color: rgba(238, 85, 85, 0.24);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(238, 85, 85, 0.08);
+}
+
+.app-toast--info {
+  border-color: var(--accent-border);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 112, 243, 0.10);
+}
+
+.app-toast__message {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+@keyframes app-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-toast-stack {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+  }
+
+  .app-toast {
+    min-width: 0;
+    max-width: none;
+  }
+}
+
 /* =========== HEADER — Vercel style =========== */
 .app-header {
   background: rgba(10, 10, 10, 0.8);

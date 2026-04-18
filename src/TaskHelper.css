@@ -228,6 +228,14 @@
   gap: 12px;
 }
 
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 8px 10px;
+}
+
 .btn-ghost {
   display: flex;
   align-items: center;

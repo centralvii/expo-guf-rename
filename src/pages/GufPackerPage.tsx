@@ -1,28 +1,50 @@
-/**
- * GUF Packer — страница инструмента переименования .guf файлов.
- * Весь функционал перенесён из старого App.tsx.
- */
-
-import { useAppState } from '../hooks/useAppState';
-import { FileUploader } from '../components/FileUploader';
-import { TemplateEditor } from '../components/TemplateEditor';
-import { MassActions } from '../components/MassActions';
-import { FileTable } from '../components/FileTable';
-import { ReadmeEditor } from '../components/ReadmeEditor';
-import { ValidationPanel } from '../components/ValidationPanel';
 import { Download, Trash2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { FileTable } from '../components/FileTable';
+import { FileUploader } from '../components/FileUploader';
+import { MassActions } from '../components/MassActions';
+import { ReadmeEditor } from '../components/ReadmeEditor';
+import { TemplateEditor } from '../components/TemplateEditor';
+import { ValidationPanel } from '../components/ValidationPanel';
+import { useAppState } from '../hooks/useAppState';
+import { useToast } from '../hooks/useToast';
 
 export function GufPackerPage() {
   const state = useAppState();
+  const { notify } = useToast();
 
-  // Пока состояние восстанавливается из IndexedDB — показываем спиннер
+  const handleLoadZip = async (file: File) => {
+    try {
+      await state.loadZip(file);
+      notify('Архив загружен');
+    } catch (loadError) {
+      console.error('[guf-packer] Failed to load zip', loadError);
+      notify('Не удалось загрузить архив', 'error');
+      throw loadError;
+    }
+  };
+
+  const handleClearFiles = () => {
+    state.clearFiles();
+    notify('Список файлов очищен');
+  };
+
+  const handleExportZip = async () => {
+    try {
+      await state.exportZip();
+      notify('ZIP архив скачан');
+    } catch (exportError) {
+      console.error('[guf-packer] Failed to export zip', exportError);
+      notify('Не удалось сформировать ZIP архив', 'error');
+    }
+  };
+
   if (state.isRestoring) {
     return (
       <div className="tool-page">
         <div className="app-restore">
           <div className="spinner" />
-          <span>Восстановление сессии…</span>
+          <span>Восстановление сессии...</span>
         </div>
       </div>
     );
@@ -30,7 +52,6 @@ export function GufPackerPage() {
 
   return (
     <div className="tool-page">
-      {/* Breadcrumb / Back */}
       <div className="tool-page__nav">
         <Link to="/" className="back-link">
           <ArrowLeft size={16} />
@@ -41,24 +62,20 @@ export function GufPackerPage() {
       </div>
 
       <div className="tool-page__content">
-        {/* Upload zone */}
         <FileUploader
-          onFileLoaded={state.loadZip}
+          onFileLoaded={handleLoadZip}
           isLoading={state.isLoading}
           hasFiles={state.files.length > 0}
         />
 
-        {/* Show everything else only when files are loaded */}
         {state.files.length > 0 && (
           <>
-            {/* Template editor */}
             <TemplateEditor
               template={state.template}
               onChange={state.setTemplate}
               onReset={state.resetTemplate}
             />
 
-            {/* Mass actions */}
             <MassActions
               template={state.template}
               fieldValues={state.fieldValues}
@@ -68,7 +85,6 @@ export function GufPackerPage() {
               onStartNumberChange={state.setStartNumber}
             />
 
-            {/* File table */}
             <FileTable
               files={state.files}
               errorFileIds={state.errorFileIds}
@@ -76,20 +92,17 @@ export function GufPackerPage() {
               onCleanNameChange={state.updateFileCleanName}
             />
 
-            {/* README editor */}
             <ReadmeEditor
               value={state.readmeContent}
               onChange={state.setReadmeContent}
             />
 
-            {/* Validation errors */}
             <ValidationPanel errors={state.errors} />
 
-            {/* Export bar */}
             <div className="export-bar">
               <button
                 className="btn btn--ghost btn--danger"
-                onClick={state.clearFiles}
+                onClick={handleClearFiles}
               >
                 <Trash2 size={16} />
                 Очистить
@@ -97,13 +110,13 @@ export function GufPackerPage() {
 
               <button
                 className="btn btn--export"
-                onClick={state.exportZip}
+                onClick={handleExportZip}
                 disabled={state.hasErrors || state.isExporting}
               >
                 {state.isExporting ? (
                   <>
                     <div className="spinner spinner--sm" />
-                    Упаковка…
+                    Упаковка...
                   </>
                 ) : (
                   <>

@@ -1,14 +1,46 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTasks } from '../hooks/useTasks';
-import type { TaskSection } from '../types';
+import { useToast } from '../hooks/useToast';
+import type { TaskItem, TaskSection } from '../types';
+
+function taskToMarkdown(task: TaskItem): string {
+  const lines = [`# ${task.title}`];
+
+  if (task.description.trim()) {
+    lines.push('', task.description.trim());
+  }
+
+  task.sections.forEach((section) => {
+    lines.push('', `## ${section.title}`);
+    lines.push('', section.content.trim() || '*Пусто*');
+  });
+
+  return `${lines.join('\n').trim()}\n`;
+}
+
+function createMarkdownFilename(title: string): string {
+  const withoutForbiddenChars = title
+    .trim()
+    .replace(/[<>:"/\\|?*]/g, '-')
+    .split('')
+    .filter((char) => char.charCodeAt(0) >= 32)
+    .join('');
+
+  const normalizedTitle = withoutForbiddenChars
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+  return `${normalizedTitle || 'task-helper-item'}.md`;
+}
 
 export function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const { notify } = useToast();
   const { isLoaded, error, getTask, updateTask, deleteTask } = useTasks();
 
   const task = taskId ? getTask(taskId) : undefined;
@@ -21,6 +53,8 @@ export function TaskDetailPage() {
   if (error) return <div className="page-loading">{error}</div>;
   if (!task) return <div className="page-loading">Задача не найдена или удалена</div>;
 
+  const markdown = taskToMarkdown(task);
+
   const handleStartEditing = () => {
     setEditTitle(task.title);
     setEditDesc(task.description);
@@ -28,22 +62,62 @@ export function TaskDetailPage() {
     setIsEditing(true);
   };
 
+  const handleCopyMarkdown = async () => {
+    try {
+      await navigator.clipboard.writeText(markdown);
+      notify('Markdown скопирован');
+    } catch (copyError) {
+      console.error('[task-helper] Failed to copy markdown', copyError);
+      notify('Не удалось скопировать Markdown', 'error');
+    }
+  };
+
+  const handleDownloadMarkdown = () => {
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = objectUrl;
+    link.download = createMarkdownFilename(task.title);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+    notify('Markdown файл скачан');
+  };
+
   const handleSave = async () => {
-    if (taskId) {
+    if (!taskId) {
+      return;
+    }
+
+    try {
       await updateTask(taskId, {
         title: editTitle,
         description: editDesc,
         sections: editSections,
       });
       setIsEditing(false);
+      notify('Изменения сохранены');
+    } catch (saveError) {
+      console.error('[task-helper] Failed to save task', saveError);
+      notify('Не удалось сохранить изменения', 'error');
     }
   };
 
   const handleDelete = async () => {
+    if (!taskId) {
+      return;
+    }
+
     if (window.confirm('Вы уверены, что хотите удалить этот экземпляр?')) {
-      if (taskId) {
+      try {
         await deleteTask(taskId);
+        notify('Экземпляр удалён');
         navigate('/task-helper');
+      } catch (deleteError) {
+        console.error('[task-helper] Failed to delete task', deleteError);
+        notify('Не удалось удалить экземпляр', 'error');
       }
     }
   };
@@ -53,10 +127,12 @@ export function TaskDetailPage() {
       ...editSections,
       { id: crypto.randomUUID(), title: 'Новый раздел', content: '' },
     ]);
+    notify('Раздел добавлен', 'info');
   };
 
   const handleRemoveSection = (id: string) => {
     setEditSections(editSections.filter((section) => section.id !== id));
+    notify('Раздел удалён', 'info');
   };
 
   const updateSection = (id: string, updates: Partial<TaskSection>) => {
@@ -86,6 +162,26 @@ export function TaskDetailPage() {
             <ArrowLeft size={16} /> Назад
           </button>
           <div className="task-detail__actions">
+            {!isEditing && (
+              <>
+                <button
+                  className="btn btn-secondary btn-icon"
+                  onClick={handleCopyMarkdown}
+                  title="Копировать Markdown"
+                  aria-label="Копировать Markdown"
+                >
+                  <Copy size={16} />
+                </button>
+                <button
+                  className="btn btn-secondary btn-icon"
+                  onClick={handleDownloadMarkdown}
+                  title="Скачать Markdown"
+                  aria-label="Скачать Markdown"
+                >
+                  <Download size={16} />
+                </button>
+              </>
+            )}
             {isEditing ? (
               <button className="btn btn-primary" onClick={handleSave}>
                 <Save size={16} /> Сохранить
