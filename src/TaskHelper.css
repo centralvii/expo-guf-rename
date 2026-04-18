@@ -441,14 +441,14 @@
 .task-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  animation: task-modal-backdrop-in 180ms ease-out;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: task-modal-backdrop-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .task-modal--closing .task-modal__backdrop {
-  animation: task-modal-backdrop-out 220ms ease-out forwards;
+  animation: task-modal-backdrop-out 250ms ease-out forwards;
 }
 
 .task-modal__card {
@@ -458,34 +458,53 @@
   flex-direction: column;
   gap: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, #111111, #0a0a0a);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), var(--shadow-drag);
-  animation: task-modal-card-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
+  background: rgba(10, 10, 10, 0.85);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  animation: task-modal-card-in 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.task-modal__card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(238, 85, 85, 0.5), transparent);
+  opacity: 0.8;
 }
 
 .task-modal--closing .task-modal__card {
-  animation: task-modal-card-out 220ms ease-in forwards;
+  animation: task-modal-card-out 250ms ease-in forwards;
 }
 
 .task-modal__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   color: var(--danger);
-  background: var(--danger-soft);
-  border: 1px solid var(--danger-border);
+  background: rgba(238, 85, 85, 0.08);
+  border: 1px solid rgba(238, 85, 85, 0.2);
+  box-shadow: inset 0 1px 0 rgba(238, 85, 85, 0.2);
+}
+
+.task-modal__icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .task-modal__title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.4px;
   color: var(--text-primary);
+  margin-top: 4px;
 }
 
 .task-modal__description {
@@ -509,27 +528,36 @@
 .task-modal__confirm {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
   border: 1px solid var(--danger-border);
   border-radius: var(--radius-sm);
-  background: rgba(238, 85, 85, 0.14);
+  background: rgba(238, 85, 85, 0.1);
   color: #ffb4b4;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition);
+  box-shadow: inset 0 1px 0 rgba(238, 85, 85, 0.1);
 }
 
 .task-modal__confirm:hover:not(:disabled) {
   background: rgba(238, 85, 85, 0.2);
-  border-color: rgba(238, 85, 85, 0.4);
+  border-color: rgba(238, 85, 85, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(238, 85, 85, 0.15), inset 0 1px 0 rgba(238, 85, 85, 0.2);
+}
+
+.task-modal__confirm:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .task-modal__confirm:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 @keyframes task-modal-fade-in {
