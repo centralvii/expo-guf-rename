@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# 🛠️ GD Helper
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Premium productivity suite for GD specialists.**  
+> Built with performance, privacy, and aesthetics in mind.
 
-Currently, two official plugins are available:
+[![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
+[![React](https://img.shields.io/badge/Powered_by-React-blue?style=for-the-badge&logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/Strict-TypeScript-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Built_with-Vite-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Обзор (Overview)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**GD Helper** — это набор инструментов для автоматизации рутинных процессов при работе с игровыми ресурсами и документацией. Приложение полностью клиентское: ваши файлы обрабатываются локально и никогда не передаются на сервер.
 
-## Expanding the ESLint configuration
+### 🍱 Основные инструменты:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+#### 1. 📦 GUF Packer
+Умный инструмент для пакетного переименования ресурсов внутри ZIP-архивов.
+- **Гибкие шаблоны:** Используйте теги `{cleanName}`, `{order}` и другие для формирования имен.
+- **Массовое заполнение:** Редактируйте параметры сразу для всех файлов.
+- **Drag & Drop:** Изменяйте порядок файлов простым перетаскиванием (DnD).
+- **README генератор:** Автоматическое создание сопроводительной документации к архиву.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+#### 📝 2. Task Helper
+Продвинутый реестр задач с фокусом на структуру и удобство.
+- **Markdown Support:** Пишите отчеты и инструкции с использованием полноценного Markdown.
+- **Структурированные разделы:** Разделение на "Предысторию", "Решение" и "Результат".
+- **Локальное хранилище:** Все данные сохраняются в IndexedDB и не пропадают после перезагрузки.
+- **Премиальный UX:** Всплывающие уведомления (Toasts) и плавные переходы.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🖼️ Скриншоты (Gallery)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Главная страница / Home Page
+![Home Page](./docs/screenshots/screenshot-home.png)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### GUF Packer в работе
+![GUF Packer](./docs/screenshots/screenshot-guf.png)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Task Helper / Редактор задач
+![Task Helper](./docs/screenshots/screenshot-tasks.png)
+
+---
+
+## 🛠️ Технологический стек (Stack)
+
+- **Frontend:** React 19 + Vite
+- **Language:** TypeScript (Strict mode)
+- **Styling:** CSS3 (Custom Design System + Glassmorphism)
+- **Libraries:**
+  - `lucide-react` — Иконки
+  - `@dnd-kit` — Drag & Drop функционал
+  - `jszip` — Работа с архивами
+  - `react-markdown` — Рендеринг разметки
+  - `idb-keyval` — Хранение данных
+
+## 🚀 Быстрый старт (Development)
+
+1. Установите зависимости:
+   ```bash
+   npm install
+   ```
+
+2. Запустите сервер разработки:
+   ```bash
+   npm run dev
+   ```
+
+3. Соберите проект для продакшена:
+   ```bash
+   npm run build
+   ```
+
+---
+
+<p align="center">
+  Сделано с ❤️ для ускорения разработки.
+</p>
