@@ -30,6 +30,7 @@ export interface AppState {
   template: string;
   startNumber: number;
   fieldValues: FieldValues;
+  readmeContent: string;
   errors: ValidationError[];
   isLoading: boolean;
   isExporting: boolean;
@@ -41,6 +42,8 @@ export interface AppState {
   resetTemplate: () => void;
   setStartNumber: (num: number) => void;
   setFieldValue: (field: EditableField, value: string) => void;
+  updateFileCleanName: (fileId: string, cleanName: string) => void;
+  setReadmeContent: (content: string) => void;
   reorderFiles: (fromIndex: number, toIndex: number) => void;
   exportZip: () => Promise<void>;
   clearFiles: () => void;
@@ -53,6 +56,7 @@ export function useAppState(): AppState {
   const [template, setTemplateRaw] = useState<string>(DEFAULT_TEMPLATE);
   const [startNumber, setStartNumberRaw] = useState<number>(1);
   const [fieldValues, setFieldValues] = useState<FieldValues>({ ...EMPTY_FIELDS });
+  const [readmeContent, setReadmeContentRaw] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [archiveName, setArchiveName] = useState('renamed_files.zip');
@@ -74,6 +78,9 @@ export function useAppState(): AppState {
           if (saved.fieldValues) {
             setFieldValues(saved.fieldValues);
           }
+          if (saved.readmeContent) {
+            setReadmeContentRaw(saved.readmeContent);
+          }
         }
       } catch (err) {
         console.warn('[restore] Ошибка восстановления:', err);
@@ -91,10 +98,10 @@ export function useAppState(): AppState {
   useEffect(() => {
     if (!restoredRef.current) return;
     const timer = setTimeout(() => {
-      saveState({ files, template, startNumber, archiveName, fieldValues });
+      saveState({ files, template, startNumber, archiveName, fieldValues, readmeContent });
     }, 300);
     return () => clearTimeout(timer);
-  }, [files, template, startNumber, archiveName, fieldValues]);
+  }, [files, template, startNumber, archiveName, fieldValues, readmeContent]);
 
   // Пересчёт имён — применяет шаблон с текущими fieldValues
   const recalc = useCallback(
@@ -169,6 +176,34 @@ export function useAppState(): AppState {
     [recalc, template, startNumber]
   );
 
+  // Переименование cleanName для конкретного файла
+  const updateFileCleanName = useCallback(
+    (fileId: string, cleanName: string) => {
+      setFiles((prev) => {
+        const updated = prev.map((f) => (f.id === fileId ? { ...f, cleanName } : f));
+        return recalculateAllNames(
+          updated.map((f) => ({
+            ...f,
+            prefix: fieldValues.prefix,
+            module: fieldValues.module,
+            code: fieldValues.code,
+            docNumber: fieldValues.docNumber,
+            custom1: fieldValues.custom1,
+            custom2: fieldValues.custom2,
+          })),
+          template,
+          startNumber
+        );
+      });
+    },
+    [template, startNumber, fieldValues]
+  );
+
+  // Установка readme
+  const setReadmeContent = useCallback((content: string) => {
+    setReadmeContentRaw(content);
+  }, []);
+
   // Drag-and-drop reorder
   const reorderFiles = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -186,16 +221,17 @@ export function useAppState(): AppState {
   const exportZip = useCallback(async () => {
     setIsExporting(true);
     try {
-      await generateZip(files, template, archiveName);
+      await generateZip(files, template, archiveName, readmeContent);
     } finally {
       setIsExporting(false);
     }
-  }, [files, template, archiveName]);
+  }, [files, template, archiveName, readmeContent]);
 
   // Очистка
   const clearFiles = useCallback(() => {
     setFiles([]);
     setFieldValues({ ...EMPTY_FIELDS });
+    setReadmeContentRaw('');
     clearState();
   }, []);
 
@@ -212,6 +248,7 @@ export function useAppState(): AppState {
     template,
     startNumber,
     fieldValues,
+    readmeContent,
     errors,
     isLoading,
     isExporting,
@@ -222,6 +259,8 @@ export function useAppState(): AppState {
     resetTemplate,
     setStartNumber,
     setFieldValue,
+    updateFileCleanName,
+    setReadmeContent,
     reorderFiles,
     exportZip,
     clearFiles,

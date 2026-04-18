@@ -860,6 +860,7 @@ a {
 .th-handle { width: 32px; }
 .th-order { width: 40px; text-align: center; }
 .th-original { min-width: 180px; }
+.th-clean { min-width: 160px; }
 .th-ext { width: 55px; }
 .th-preview { min-width: 250px; }
 
@@ -939,6 +940,145 @@ a {
   font-size: 12px;
   color: var(--accent);
   font-weight: 500;
+}
+
+/* ---- Inline Edit (cleanName per-file) ---- */
+.inline-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inline-edit__input {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-focus);
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+}
+
+.inline-edit__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: transparent;
+}
+
+.inline-edit__btn--confirm {
+  color: var(--success);
+}
+
+.inline-edit__btn--confirm:hover {
+  background: var(--success-soft);
+}
+
+.inline-edit__btn--cancel {
+  color: var(--text-muted);
+}
+
+.inline-edit__btn--cancel:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.inline-edit-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: background var(--transition);
+}
+
+.inline-edit-display:hover {
+  background: var(--bg-hover);
+}
+
+.inline-edit-display__text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.inline-edit-display__icon {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition);
+  flex-shrink: 0;
+}
+
+.inline-edit-display:hover .inline-edit-display__icon {
+  opacity: 1;
+}
+
+/* =========== README EDITOR =========== */
+.readme-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.readme-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.readme-card__header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.readme-card__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.readme-card__textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color var(--transition);
+}
+
+.readme-card__textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+}
+
+.readme-card__textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 /* =========== VALIDATION PANEL =========== */

@@ -20,12 +20,14 @@ interface FileTableProps {
   files: FileRow[];
   errorFileIds: Set<string>;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onCleanNameChange?: (fileId: string, cleanName: string) => void;
 }
 
 export function FileTable({
   files,
   errorFileIds,
   onReorder,
+  onCleanNameChange,
 }: FileTableProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -71,6 +73,7 @@ export function FileTable({
                   <th className="th-handle"></th>
                   <th className="th-order">#</th>
                   <th className="th-original">Исходное имя</th>
+                  <th className="th-clean">Описание файла</th>
                   <th className="th-ext">Расш.</th>
                   <th className="th-preview">Новое имя</th>
                 </tr>
@@ -81,6 +84,7 @@ export function FileTable({
                     key={row.id}
                     row={row}
                     hasError={errorFileIds.has(row.id)}
+                    onCleanNameChange={onCleanNameChange}
                   />
                 ))}
               </tbody>

@@ -8,6 +8,7 @@ import { FileUploader } from '../components/FileUploader';
 import { TemplateEditor } from '../components/TemplateEditor';
 import { MassActions } from '../components/MassActions';
 import { FileTable } from '../components/FileTable';
+import { ReadmeEditor } from '../components/ReadmeEditor';
 import { ValidationPanel } from '../components/ValidationPanel';
 import { Download, Trash2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -72,6 +73,13 @@ export function GufPackerPage() {
               files={state.files}
               errorFileIds={state.errorFileIds}
               onReorder={state.reorderFiles}
+              onCleanNameChange={state.updateFileCleanName}
+            />
+
+            {/* README editor */}
+            <ReadmeEditor
+              value={state.readmeContent}
+              onChange={state.setReadmeContent}
             />
 
             {/* Validation errors */}

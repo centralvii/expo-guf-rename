@@ -17,6 +17,7 @@ export interface PersistedState {
   startNumber: number;
   archiveName: string;
   fieldValues?: Record<EditableField, string>;
+  readmeContent?: string;
 }
 
 // ----- Открытие БД -----
@@ -87,6 +88,7 @@ export async function saveState(state: PersistedState): Promise<void> {
       startNumber: state.startNumber,
       archiveName: state.archiveName,
       fieldValues: state.fieldValues,
+      readmeContent: state.readmeContent,
     });
 
     // Очистить старые блобы и записать новые
@@ -117,6 +119,7 @@ export async function loadState(): Promise<PersistedState | null> {
       startNumber: number;
       archiveName: string;
       fieldValues?: Record<EditableField, string>;
+      readmeContent?: string;
     }>(db, STORE_META, 'state');
 
     if (!saved || !saved.files || saved.files.length === 0) {
@@ -142,6 +145,7 @@ export async function loadState(): Promise<PersistedState | null> {
       startNumber: saved.startNumber,
       archiveName: saved.archiveName,
       fieldValues: saved.fieldValues,
+      readmeContent: saved.readmeContent,
     };
   } catch (err) {
     console.warn('[persistence] Не удалось загрузить состояние:', err);

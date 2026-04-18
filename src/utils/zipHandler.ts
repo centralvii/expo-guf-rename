@@ -79,11 +79,13 @@ export async function extractZip(
 
 /**
  * Создаёт ZIP-архив с переименованными файлами и инициирует скачивание.
+ * Если передан readmeContent — включает README.txt в архив.
  */
 export async function generateZip(
   files: FileRow[],
   template: string,
-  archiveName: string = 'renamed_files.zip'
+  archiveName: string = 'renamed_files.zip',
+  readmeContent?: string
 ): Promise<void> {
   const zip = new JSZip();
 
@@ -91,6 +93,11 @@ export async function generateZip(
     // Пересчитываем имя на случай если оно не актуально
     const finalName = applyTemplate(template, file);
     zip.file(finalName, file.file);
+  }
+
+  // Добавить README.txt если есть содержимое
+  if (readmeContent && readmeContent.trim().length > 0) {
+    zip.file('README.txt', readmeContent);
   }
 
   const blob = await zip.generateAsync({
