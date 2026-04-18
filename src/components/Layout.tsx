@@ -49,6 +49,10 @@ export function Layout() {
                     <div className="dropdown-item-title">Все инструменты</div>
                     <div className="dropdown-item-desc">Главная страница со списком</div>
                   </Link>
+                  <Link to="/task-helper" className="dropdown-item" onClick={() => setIsToolsOpen(false)}>
+                    <div className="dropdown-item-title">Task Helper</div>
+                    <div className="dropdown-item-desc">Реестр задач и отчётов</div>
+                  </Link>
                   <Link to="/guf-packer" className="dropdown-item" onClick={() => setIsToolsOpen(false)}>
                     <div className="dropdown-item-title">GUF Packer</div>
                     <div className="dropdown-item-desc">Групповое переименование</div>

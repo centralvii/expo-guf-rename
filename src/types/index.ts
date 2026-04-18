@@ -95,3 +95,21 @@ export const EDITABLE_FIELDS: { key: EditableField; label: string }[] = [
   { key: 'custom1', label: 'Custom 1' },
   { key: 'custom2', label: 'Custom 2' },
 ];
+
+/**
+ * Task Helper — Инструмент для ведения экземпляров задач
+ */
+export interface TaskSection {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: number;
+  updatedAt: number;
+  sections: TaskSection[];
+}
