@@ -80,6 +80,7 @@ export function FileUploader({ onFileLoaded, isLoading, hasFiles }: FileUploader
           type="file"
           accept=".zip"
           onChange={handleInputChange}
+          onClick={(e) => e.stopPropagation()}
           className="dropzone__input"
           aria-label="Загрузить ZIP-архив"
         />
