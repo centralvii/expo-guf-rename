@@ -8,7 +8,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { FileRow, EditableField, ValidationError } from '../types';
 import { DEFAULT_TEMPLATE } from '../types';
-import { applyTemplate, recalculateAllNames } from '../utils/templateEngine';
+import { recalculateAllNames } from '../utils/templateEngine';
 import { validateFiles } from '../utils/validation';
 import { extractZip, generateZip } from '../utils/zipHandler';
 import { saveState, loadState, clearState } from '../utils/persistence';
@@ -42,7 +42,6 @@ export interface AppState {
   setStartNumber: (num: number) => void;
   setFieldValue: (field: EditableField, value: string) => void;
   reorderFiles: (fromIndex: number, toIndex: number) => void;
-  autoNumberDocNumbers: () => void;
   exportZip: () => Promise<void>;
   clearFiles: () => void;
   hasErrors: boolean;
@@ -183,20 +182,6 @@ export function useAppState(): AppState {
     [template, startNumber, fieldValues, recalc]
   );
 
-  // Автоматическое проставление порядковых номеров в docNumber
-  const autoNumberDocNumbers = useCallback(() => {
-    setFiles((prev) => {
-      const updated = prev.map((f, idx) => {
-        const newRow = { ...f, docNumber: String(startNumber + idx) };
-        newRow.newName = applyTemplate(template, newRow);
-        return newRow;
-      });
-      return updated;
-    });
-    // Также обновим fieldValues docNumber чтобы показать что оно изменено
-    setFieldValues((prev) => ({ ...prev, docNumber: `авто (${startNumber}+)` }));
-  }, [template, startNumber]);
-
   // Экспорт ZIP
   const exportZip = useCallback(async () => {
     setIsExporting(true);
@@ -238,7 +223,6 @@ export function useAppState(): AppState {
     setStartNumber,
     setFieldValue,
     reorderFiles,
-    autoNumberDocNumbers,
     exportZip,
     clearFiles,
     hasErrors,

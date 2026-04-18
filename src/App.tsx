@@ -62,7 +62,6 @@ function App() {
               template={state.template}
               fieldValues={state.fieldValues}
               onFieldChange={state.setFieldValue}
-              onAutoNumber={state.autoNumberDocNumbers}
               fileCount={state.files.length}
               startNumber={state.startNumber}
               onStartNumberChange={state.setStartNumber}

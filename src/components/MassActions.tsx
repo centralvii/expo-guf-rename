@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { type EditableField, EDITABLE_FIELDS } from '../types';
-import { Layers, Hash } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 /** Теги, для которых можно создать форму ввода */
 const TAG_TO_FIELD: Record<string, EditableField> = {
@@ -22,7 +22,6 @@ interface MassActionsProps {
   fieldValues: Record<EditableField, string>;
   /** Callback при изменении любого поля — сразу применяется ко всем файлам */
   onFieldChange: (field: EditableField, value: string) => void;
-  onAutoNumber: () => void;
   fileCount: number;
   startNumber: number;
   onStartNumberChange: (num: number) => void;
@@ -32,7 +31,6 @@ export function MassActions({
   template,
   fieldValues,
   onFieldChange,
-  onAutoNumber,
   fileCount,
   startNumber,
   onStartNumberChange,
@@ -97,11 +95,6 @@ export function MassActions({
             }}
           />
         </label>
-
-        <button className="btn btn--secondary" onClick={onAutoNumber}>
-          <Hash size={14} />
-          Порядковые номера
-        </button>
       </div>
     </div>
   );
