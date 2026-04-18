@@ -31,8 +31,8 @@ const TOOLS: ToolCard[] = [
       'Реестр экземпляров задач со структурированными разделами и поддержкой Markdown. Создавайте заметки и инструкции.',
     icon: <FileText size={24} />,
     path: '/task-helper',
-    tag: 'NEW',
-    tagColor: 'accent',
+    tag: 'ГОТОВО',
+    tagColor: 'green',
   },
   {
     id: 'another-tool',
@@ -66,9 +66,9 @@ export function HomePage() {
 
       <section className="home-grid">
         {TOOLS.map((tool) => (
-          <Link 
-            to={tool.disabled ? "#" : tool.path} 
-            key={tool.id} 
+          <Link
+            to={tool.disabled ? "#" : tool.path}
+            key={tool.id}
             className={`tool-card ${tool.disabled ? 'tool-card--disabled' : ''}`}
             onClick={(e) => tool.disabled && e.preventDefault()}
           >
