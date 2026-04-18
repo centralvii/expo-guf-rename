@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { FileArchive, FileText, Wrench, ArrowRight } from 'lucide-react';
 
@@ -5,7 +6,7 @@ interface ToolCard {
   id: string;
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   path: string;
   tag: string;
   tagColor: string;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Calendar, ChevronRight, FileText, ArrowLeft } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
@@ -19,7 +19,7 @@ export function TaskHelperPage() {
       .sort((a, b) => b.updatedAt - a.updatedAt);
   }, [tasks, searchQuery]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
     await addTask(newTitle.trim(), newDescription.trim());

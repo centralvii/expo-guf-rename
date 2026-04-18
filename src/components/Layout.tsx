@@ -36,19 +36,15 @@ export function Layout() {
 
             <nav className="app-header__nav">
               <div className="app-header__dropdown-container" ref={dropdownRef}>
-                <button 
+                <button
                   className={`app-header__nav-link app-header__nav-btn ${isToolsOpen ? 'app-header__nav-link--active' : ''}`}
                   onClick={() => setIsToolsOpen(!isToolsOpen)}
                 >
                   Инструменты
                   <ChevronDown size={14} className={`dropdown-arrow ${isToolsOpen ? 'open' : ''}`} />
                 </button>
-                
+
                 <div className={`app-header__dropdown-menu ${isToolsOpen ? 'open' : ''}`}>
-                  <Link to="/" className="dropdown-item" onClick={() => setIsToolsOpen(false)}>
-                    <div className="dropdown-item-title">Все инструменты</div>
-                    <div className="dropdown-item-desc">Главная страница со списком</div>
-                  </Link>
                   <Link to="/task-helper" className="dropdown-item" onClick={() => setIsToolsOpen(false)}>
                     <div className="dropdown-item-title">Task Helper</div>
                     <div className="dropdown-item-desc">Реестр задач и отчётов</div>
