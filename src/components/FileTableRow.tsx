@@ -1,24 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
-import type { FileRow, EditableField } from '../types';
+import type { FileRow } from '../types';
 
 interface FileTableRowProps {
   row: FileRow;
   hasError: boolean;
-  onFieldChange: (fileId: string, field: EditableField, value: string) => void;
 }
 
-const INLINE_FIELDS: { key: EditableField; placeholder: string; width: string }[] = [
-  { key: 'prefix', placeholder: 'Префикс', width: '80px' },
-  { key: 'module', placeholder: 'Модуль', width: '80px' },
-  { key: 'code', placeholder: 'Код', width: '110px' },
-  { key: 'docNumber', placeholder: '№ док', width: '70px' },
-  { key: 'custom1', placeholder: 'C1', width: '70px' },
-  { key: 'custom2', placeholder: 'C2', width: '70px' },
-];
-
-export function FileTableRow({ row, hasError, onFieldChange }: FileTableRowProps) {
+export function FileTableRow({ row, hasError }: FileTableRowProps) {
   const {
     attributes,
     listeners,
@@ -56,25 +46,6 @@ export function FileTableRow({ row, hasError, onFieldChange }: FileTableRowProps
 
       {/* Extension */}
       <td className="file-row__ext">.{row.extension}</td>
-
-      {/* Clean name */}
-      <td className="file-row__clean" title={row.cleanName}>
-        <span className="file-row__clean-text">{row.cleanName}</span>
-      </td>
-
-      {/* Editable fields */}
-      {INLINE_FIELDS.map((field) => (
-        <td key={field.key} className="file-row__field">
-          <input
-            type="text"
-            className="inline-input"
-            style={{ width: field.width }}
-            value={row[field.key]}
-            onChange={(e) => onFieldChange(row.id, field.key, e.target.value)}
-            placeholder={field.placeholder}
-          />
-        </td>
-      ))}
 
       {/* New name preview */}
       <td className="file-row__preview" title={row.newName}>

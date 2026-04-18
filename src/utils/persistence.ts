@@ -3,7 +3,7 @@
  * Сохраняет метаданные файлов и бинарные Blob-ы отдельно.
  */
 
-import type { FileRow } from '../types';
+import type { FileRow, EditableField } from '../types';
 
 const DB_NAME = 'guf-renamer';
 const DB_VERSION = 1;
@@ -12,10 +12,11 @@ const STORE_BLOBS = 'blobs';
 
 // ----- Типы -----
 export interface PersistedState {
-  files: FileRow[]; // blobs will be null here, loaded separately
+  files: FileRow[];
   template: string;
   startNumber: number;
   archiveName: string;
+  fieldValues?: Record<EditableField, string>;
 }
 
 // ----- Открытие БД -----
@@ -85,6 +86,7 @@ export async function saveState(state: PersistedState): Promise<void> {
       template: state.template,
       startNumber: state.startNumber,
       archiveName: state.archiveName,
+      fieldValues: state.fieldValues,
     });
 
     // Очистить старые блобы и записать новые
@@ -114,6 +116,7 @@ export async function loadState(): Promise<PersistedState | null> {
       template: string;
       startNumber: number;
       archiveName: string;
+      fieldValues?: Record<EditableField, string>;
     }>(db, STORE_META, 'state');
 
     if (!saved || !saved.files || saved.files.length === 0) {
@@ -138,6 +141,7 @@ export async function loadState(): Promise<PersistedState | null> {
       template: saved.template,
       startNumber: saved.startNumber,
       archiveName: saved.archiveName,
+      fieldValues: saved.fieldValues,
     };
   } catch (err) {
     console.warn('[persistence] Не удалось загрузить состояние:', err);

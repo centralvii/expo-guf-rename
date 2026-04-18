@@ -13,10 +13,23 @@ import { validateFiles } from '../utils/validation';
 import { extractZip, generateZip } from '../utils/zipHandler';
 import { saveState, loadState, clearState } from '../utils/persistence';
 
+/** Значения «глобальных» полей для массового заполнения */
+export type FieldValues = Record<EditableField, string>;
+
+const EMPTY_FIELDS: FieldValues = {
+  prefix: '',
+  module: '',
+  code: '',
+  docNumber: '',
+  custom1: '',
+  custom2: '',
+};
+
 export interface AppState {
   files: FileRow[];
   template: string;
   startNumber: number;
+  fieldValues: FieldValues;
   errors: ValidationError[];
   isLoading: boolean;
   isExporting: boolean;
@@ -27,8 +40,7 @@ export interface AppState {
   setTemplate: (tpl: string) => void;
   resetTemplate: () => void;
   setStartNumber: (num: number) => void;
-  updateField: (fileId: string, field: EditableField, value: string) => void;
-  massUpdateField: (field: EditableField, value: string) => void;
+  setFieldValue: (field: EditableField, value: string) => void;
   reorderFiles: (fromIndex: number, toIndex: number) => void;
   autoNumberDocNumbers: () => void;
   exportZip: () => Promise<void>;
@@ -41,12 +53,12 @@ export function useAppState(): AppState {
   const [files, setFiles] = useState<FileRow[]>([]);
   const [template, setTemplateRaw] = useState<string>(DEFAULT_TEMPLATE);
   const [startNumber, setStartNumberRaw] = useState<number>(1);
+  const [fieldValues, setFieldValues] = useState<FieldValues>({ ...EMPTY_FIELDS });
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [archiveName, setArchiveName] = useState('renamed_files.zip');
   const [isRestoring, setIsRestoring] = useState(true);
 
-  // Флаг, что первичное восстановление завершено — чтобы не сохранять пустое состояние
   const restoredRef = useRef(false);
 
   // ---- Восстановление из IndexedDB при первой загрузке ----
@@ -60,6 +72,9 @@ export function useAppState(): AppState {
           setTemplateRaw(saved.template);
           setStartNumberRaw(saved.startNumber);
           setArchiveName(saved.archiveName);
+          if (saved.fieldValues) {
+            setFieldValues(saved.fieldValues);
+          }
         }
       } catch (err) {
         console.warn('[restore] Ошибка восстановления:', err);
@@ -75,17 +90,27 @@ export function useAppState(): AppState {
 
   // ---- Автосохранение при изменении состояния ----
   useEffect(() => {
-    if (!restoredRef.current) return; // не сохраняем до завершения восстановления
+    if (!restoredRef.current) return;
     const timer = setTimeout(() => {
-      saveState({ files, template, startNumber, archiveName });
-    }, 300); // debounce 300 мс
+      saveState({ files, template, startNumber, archiveName, fieldValues });
+    }, 300);
     return () => clearTimeout(timer);
-  }, [files, template, startNumber, archiveName]);
+  }, [files, template, startNumber, archiveName, fieldValues]);
 
-  // Пересчёт имён
+  // Пересчёт имён — применяет шаблон с текущими fieldValues
   const recalc = useCallback(
-    (currentFiles: FileRow[], tpl: string, start: number): FileRow[] => {
-      return recalculateAllNames(currentFiles, tpl, start);
+    (currentFiles: FileRow[], tpl: string, start: number, fv: FieldValues): FileRow[] => {
+      // Сначала применить глобальные значения, потом пересчитать имена
+      const withFields = currentFiles.map((f) => ({
+        ...f,
+        prefix: fv.prefix,
+        module: fv.module,
+        code: fv.code,
+        docNumber: fv.docNumber,
+        custom1: fv.custom1,
+        custom2: fv.custom2,
+      }));
+      return recalculateAllNames(withFields, tpl, start);
     },
     []
   );
@@ -96,7 +121,7 @@ export function useAppState(): AppState {
       setIsLoading(true);
       try {
         const rows = await extractZip(file, true);
-        const withNames = recalc(rows, template, startNumber);
+        const withNames = recalc(rows, template, startNumber, fieldValues);
         setFiles(withNames);
         const baseName = file.name.replace(/\.zip$/i, '');
         setArchiveName(`${baseName}_renamed.zip`);
@@ -104,63 +129,45 @@ export function useAppState(): AppState {
         setIsLoading(false);
       }
     },
-    [template, startNumber, recalc]
+    [template, startNumber, fieldValues, recalc]
   );
 
   // Установка шаблона
   const setTemplate = useCallback(
     (tpl: string) => {
       setTemplateRaw(tpl);
-      setFiles((prev) => recalc(prev, tpl, startNumber));
+      setFiles((prev) => recalc(prev, tpl, startNumber, fieldValues));
     },
-    [recalc, startNumber]
+    [recalc, startNumber, fieldValues]
   );
 
   // Сброс шаблона к дефолтному
   const resetTemplate = useCallback(() => {
     setTemplateRaw(DEFAULT_TEMPLATE);
-    setFiles((prev) => recalc(prev, DEFAULT_TEMPLATE, startNumber));
-  }, [recalc, startNumber]);
+    setFiles((prev) => recalc(prev, DEFAULT_TEMPLATE, startNumber, fieldValues));
+  }, [recalc, startNumber, fieldValues]);
 
   // Установка стартового номера
   const setStartNumber = useCallback(
     (num: number) => {
       const safeNum = Math.max(0, Math.floor(num));
       setStartNumberRaw(safeNum);
-      setFiles((prev) => recalc(prev, template, safeNum));
+      setFiles((prev) => recalc(prev, template, safeNum, fieldValues));
     },
-    [recalc, template]
+    [recalc, template, fieldValues]
   );
 
-  // Обновление поля одного файла
-  const updateField = useCallback(
-    (fileId: string, field: EditableField, value: string) => {
-      setFiles((prev) => {
-        const updated = prev.map((f) => {
-          if (f.id !== fileId) return f;
-          const newRow = { ...f, [field]: value };
-          newRow.newName = applyTemplate(template, newRow);
-          return newRow;
-        });
-        return updated;
-      });
-    },
-    [template]
-  );
-
-  // Массовое обновление поля для всех файлов
-  const massUpdateField = useCallback(
+  // Изменение глобального поля — сразу применяется ко всем файлам
+  const setFieldValue = useCallback(
     (field: EditableField, value: string) => {
-      setFiles((prev) => {
-        const updated = prev.map((f) => {
-          const newRow = { ...f, [field]: value };
-          newRow.newName = applyTemplate(template, newRow);
-          return newRow;
-        });
-        return updated;
+      setFieldValues((prev) => {
+        const newFv = { ...prev, [field]: value };
+        // Пересчёт файлов с новыми значениями
+        setFiles((prevFiles) => recalc(prevFiles, template, startNumber, newFv));
+        return newFv;
       });
     },
-    [template]
+    [recalc, template, startNumber]
   );
 
   // Drag-and-drop reorder
@@ -170,10 +177,10 @@ export function useAppState(): AppState {
         const arr = [...prev];
         const [moved] = arr.splice(fromIndex, 1);
         arr.splice(toIndex, 0, moved);
-        return recalc(arr, template, startNumber);
+        return recalc(arr, template, startNumber, fieldValues);
       });
     },
-    [template, startNumber, recalc]
+    [template, startNumber, fieldValues, recalc]
   );
 
   // Автоматическое проставление порядковых номеров в docNumber
@@ -186,6 +193,8 @@ export function useAppState(): AppState {
       });
       return updated;
     });
+    // Также обновим fieldValues docNumber чтобы показать что оно изменено
+    setFieldValues((prev) => ({ ...prev, docNumber: `авто (${startNumber}+)` }));
   }, [template, startNumber]);
 
   // Экспорт ZIP
@@ -201,7 +210,8 @@ export function useAppState(): AppState {
   // Очистка
   const clearFiles = useCallback(() => {
     setFiles([]);
-    clearState(); // Удалить из IndexedDB тоже
+    setFieldValues({ ...EMPTY_FIELDS });
+    clearState();
   }, []);
 
   // Валидация
@@ -216,6 +226,7 @@ export function useAppState(): AppState {
     files,
     template,
     startNumber,
+    fieldValues,
     errors,
     isLoading,
     isExporting,
@@ -225,8 +236,7 @@ export function useAppState(): AppState {
     setTemplate,
     resetTemplate,
     setStartNumber,
-    updateField,
-    massUpdateField,
+    setFieldValue,
     reorderFiles,
     autoNumberDocNumbers,
     exportZip,

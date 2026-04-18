@@ -59,7 +59,9 @@ function App() {
 
             {/* Mass actions */}
             <MassActions
-              onMassUpdate={state.massUpdateField}
+              template={state.template}
+              fieldValues={state.fieldValues}
+              onFieldChange={state.setFieldValue}
               onAutoNumber={state.autoNumberDocNumbers}
               fileCount={state.files.length}
               startNumber={state.startNumber}
@@ -71,7 +73,6 @@ function App() {
               files={state.files}
               errorFileIds={state.errorFileIds}
               onReorder={state.reorderFiles}
-              onFieldChange={state.updateField}
             />
 
             {/* Validation errors */}

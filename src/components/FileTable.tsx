@@ -13,21 +13,19 @@ import {
   verticalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import type { FileRow, EditableField } from '../types';
+import type { FileRow } from '../types';
 import { FileTableRow } from './FileTableRow';
 
 interface FileTableProps {
   files: FileRow[];
   errorFileIds: Set<string>;
   onReorder: (fromIndex: number, toIndex: number) => void;
-  onFieldChange: (fileId: string, field: EditableField, value: string) => void;
 }
 
 export function FileTable({
   files,
   errorFileIds,
   onReorder,
-  onFieldChange,
 }: FileTableProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -74,13 +72,6 @@ export function FileTable({
                   <th className="th-order">#</th>
                   <th className="th-original">Исходное имя</th>
                   <th className="th-ext">Расш.</th>
-                  <th className="th-clean">Очищенное имя</th>
-                  <th className="th-field">Префикс</th>
-                  <th className="th-field">Модуль</th>
-                  <th className="th-field">Код</th>
-                  <th className="th-field">№ док</th>
-                  <th className="th-field">C1</th>
-                  <th className="th-field">C2</th>
                   <th className="th-preview">Новое имя</th>
                 </tr>
               </thead>
@@ -90,7 +81,6 @@ export function FileTable({
                     key={row.id}
                     row={row}
                     hasError={errorFileIds.has(row.id)}
-                    onFieldChange={onFieldChange}
                   />
                 ))}
               </tbody>
