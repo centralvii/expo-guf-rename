@@ -1,5 +1,5 @@
 import { type ReactNode, useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FileArchive, FileText, Wrench, ArrowRight, Activity, Clock, Boxes } from 'lucide-react';
 
 const TYPEWRITER_WORDS = [
@@ -14,7 +14,7 @@ function useTypewriter(words: string[], typingSpeed = 90, deletingSpeed = 50, pa
   const [text, setText] = useState('');
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const tick = useCallback(() => {
     const currentWord = words[wordIndex];
