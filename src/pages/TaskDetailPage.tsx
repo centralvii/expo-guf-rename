@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -201,18 +201,6 @@ export function TaskDetailPage() {
   return (
     <>
       <div className="tool-page anim-fade-in">
-        <div className="tool-page__nav">
-          <Link to="/" className="back-link">
-            <ArrowLeft size={16} />
-            <span>GD Helper</span>
-          </Link>
-          <span className="back-link__sep">/</span>
-          <Link to="/task-helper" className="back-link">
-            <span>Task Helper</span>
-          </Link>
-          <span className="back-link__sep">/</span>
-          <span className="back-link__current">{task.title}</span>
-        </div>
 
         <div className="tool-page__content">
           <div className="task-detail__toolbar">

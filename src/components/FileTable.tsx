@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -13,6 +13,7 @@ import {
   verticalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
+import { FileIcon, Plus } from 'lucide-react';
 import type { FileRow } from '../types';
 import { FileTableRow } from './FileTableRow';
 
@@ -21,6 +22,7 @@ interface FileTableProps {
   errorFileIds: Set<string>;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onCleanNameChange?: (fileId: string, cleanName: string) => void;
+  onAddFiles?: (files: File[]) => void;
 }
 
 export function FileTable({
@@ -28,7 +30,10 @@ export function FileTable({
   errorFileIds,
   onReorder,
   onCleanNameChange,
+  onAddFiles,
 }: FileTableProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -54,44 +59,67 @@ export function FileTable({
     [files, onReorder]
   );
 
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+    if (onAddFiles) {
+      onAddFiles(Array.from(selectedFiles));
+    }
+    // Reset input so same file can be re-added
+    e.target.value = '';
+  };
+
   if (files.length === 0) {
     return null;
   }
 
   return (
     <div className="table-card">
-      <div className="table-wrapper">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-            <table className="file-table">
-              <thead>
-                <tr>
-                  <th className="th-handle"></th>
-                  <th className="th-order">#</th>
-                  <th className="th-original">Исходное имя</th>
-                  <th className="th-clean">Описание файла</th>
-                  <th className="th-ext">Расш.</th>
-                  <th className="th-preview">Новое имя</th>
-                </tr>
-              </thead>
-              <tbody>
-                {files.map((row) => (
-                  <FileTableRow
-                    key={row.id}
-                    row={row}
-                    hasError={errorFileIds.has(row.id)}
-                    onCleanNameChange={onCleanNameChange}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </SortableContext>
-        </DndContext>
+      <div className="table-card__header">
+        <h2>
+          <FileIcon size={18} />
+          Файлы
+          <span className="table-card__count">{files.length}</span>
+        </h2>
+        {onAddFiles && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".guf"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFileInputChange}
+            />
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={() => fileInputRef.current?.click()}
+              title="Добавить отдельные .guf файлы в конец списка"
+            >
+              <Plus size={14} />
+              Добавить файл
+            </button>
+          </>
+        )}
       </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+          <div className="file-list">
+            {files.map((row) => (
+              <FileTableRow
+                key={row.id}
+                row={row}
+                hasError={errorFileIds.has(row.id)}
+                onCleanNameChange={onCleanNameChange}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }

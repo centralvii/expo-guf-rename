@@ -1,6 +1,6 @@
 import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Calendar, ChevronRight, FileText, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Calendar, ChevronRight, FileText } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
 
@@ -50,15 +50,6 @@ export function TaskHelperPage() {
 
   return (
     <div className="tool-page anim-fade-in">
-      <div className="tool-page__nav">
-        <Link to="/" className="back-link">
-          <ArrowLeft size={16} />
-          <span>GD Helper</span>
-        </Link>
-        <span className="back-link__sep">/</span>
-        <span className="back-link__current">Task Helper</span>
-      </div>
-
       <div className="tool-page__content">
         {error && (
           <div className="app-restore" style={{ marginBottom: '24px' }}>

@@ -61,12 +61,7 @@ export async function extractZip(
       detectedDate: parsed.detectedDate,
       detectedTime: parsed.detectedTime,
       cleanName: parsed.cleanName,
-      prefix: '',
-      module: '',
-      code: '',
-      docNumber: '',
-      custom1: '',
-      custom2: '',
+      variables: {},
       newName: '', // Будет рассчитано после
     };
 

@@ -1,6 +1,49 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { FileArchive, FileText, Wrench, ArrowRight } from 'lucide-react';
+import { type ReactNode, useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { FileArchive, FileText, Wrench, ArrowRight, Activity, Clock, Boxes } from 'lucide-react';
+
+const TYPEWRITER_WORDS = [
+  'Переименовывай.',
+  'Упаковывай.',
+  'Документируй.',
+  'Автоматизируй.',
+  'Создавай.',
+];
+
+function useTypewriter(words: string[], typingSpeed = 90, deletingSpeed = 50, pauseMs = 1800) {
+  const [text, setText] = useState('');
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const tick = useCallback(() => {
+    const currentWord = words[wordIndex];
+
+    if (!isDeleting) {
+      const next = currentWord.slice(0, text.length + 1);
+      setText(next);
+      if (next === currentWord) {
+        timerRef.current = setTimeout(() => setIsDeleting(true), pauseMs);
+        return;
+      }
+    } else {
+      const next = currentWord.slice(0, text.length - 1);
+      setText(next);
+      if (next === '') {
+        setIsDeleting(false);
+        setWordIndex((i) => (i + 1) % words.length);
+      }
+    }
+  }, [words, wordIndex, text, isDeleting, pauseMs]);
+
+  useEffect(() => {
+    const speed = isDeleting ? deletingSpeed : typingSpeed;
+    timerRef.current = setTimeout(tick, speed);
+    return () => clearTimeout(timerRef.current);
+  }, [tick, isDeleting, typingSpeed, deletingSpeed]);
+
+  return text;
+}
 
 interface ToolCard {
   id: string;
@@ -19,7 +62,7 @@ const TOOLS: ToolCard[] = [
     title: 'GUF Packer',
     description:
       'Пакетное переименование файлов .guf из ZIP-архива с поддержкой шаблонов, массового заполнения и drag-and-drop сортировки.',
-    icon: <FileArchive size={24} />,
+    icon: <FileArchive size={22} />,
     path: '/guf-packer',
     tag: 'ГОТОВО',
     tagColor: 'green',
@@ -29,7 +72,7 @@ const TOOLS: ToolCard[] = [
     title: 'Task Helper',
     description:
       'Реестр экземпляров задач со структурированными разделами и поддержкой Markdown. Создавайте заметки и инструкции.',
-    icon: <FileText size={24} />,
+    icon: <FileText size={22} />,
     path: '/task-helper',
     tag: 'ГОТОВО',
     tagColor: 'green',
@@ -38,7 +81,7 @@ const TOOLS: ToolCard[] = [
     id: 'another-tool',
     title: 'Новый инструмент',
     description: 'Здесь появится следующий инструмент. Следите за обновлениями.',
-    icon: <Wrench size={24} />,
+    icon: <Wrench size={22} />,
     path: '/',
     tag: 'СКОРО',
     tagColor: 'gray',
@@ -47,52 +90,78 @@ const TOOLS: ToolCard[] = [
 ];
 
 export function HomePage() {
+  const location = useLocation();
+  const typedText = useTypewriter(TYPEWRITER_WORDS);
+
   return (
-    <div className="home">
-      <section className="home-hero">
-        <div className="home-hero__badge">
-          <Wrench size={14} />
-          <span>Набор инструментов</span>
+    <div className="home-dashboard">
+      {/* Welcome Banner */}
+      <section className="welcome-banner">
+        <div className="welcome-banner__content">
+          <div className="welcome-banner__icon">
+            <Boxes size={28} />
+          </div>
+          <div className="welcome-banner__text">
+            <h2 className="welcome-banner__title">
+              Добро пожаловать в <span className="welcome-banner__highlight">GD Helper</span>
+            </h2>
+            <div className="typewriter">
+              <span className="typewriter__text">{typedText}</span>
+              <span className="typewriter__cursor">|</span>
+            </div>
+            <p className="welcome-banner__subtitle">
+              Инструменты для работы с проектами GD. Выберите нужный инструмент, чтобы начать.
+            </p>
+          </div>
         </div>
-        <h1 className="home-hero__title">
-          <span className="home-hero__title-gd">GD</span> Helper
-        </h1>
-        <p className="home-hero__subtitle">
-          Инструменты для работы с проектами GD.
-          <br />
-          Выберите нужный инструмент, чтобы начать.
-        </p>
+        <div className="welcome-banner__meta">
+          <div className="welcome-banner__stat">
+            <Activity size={14} />
+            <span>{TOOLS.filter(t => !t.disabled).length} активных</span>
+          </div>
+          <div className="welcome-banner__stat">
+            <Clock size={14} />
+            <span>{new Date().toLocaleDateString('ru-RU')}</span>
+          </div>
+        </div>
       </section>
 
-      <section className="home-grid">
-        {TOOLS.map((tool) => (
-          <Link
-            to={tool.disabled ? "#" : tool.path}
-            key={tool.id}
-            className={`tool-card ${tool.disabled ? 'tool-card--disabled' : ''}`}
-            onClick={(e) => tool.disabled && e.preventDefault()}
-          >
-            <div className="tool-card__header">
-              <div className={`tool-card__icon ${tool.disabled ? 'tool-card__icon--muted' : ''}`}>
-                {tool.icon}
+      {/* Tools Grid */}
+      <section className="dashboard-section">
+        <div className="dashboard-section__header">
+          <h3 className="dashboard-section__title">Инструменты</h3>
+          <span className="dashboard-section__count">{TOOLS.length} шт.</span>
+        </div>
+        <div className="dashboard-grid">
+          {TOOLS.map((tool) => (
+            <Link
+              to={tool.disabled ? "#" : tool.path}
+              key={tool.id}
+              className={`dash-card ${tool.disabled ? 'dash-card--disabled' : ''}`}
+              onClick={(e) => tool.disabled && e.preventDefault()}
+            >
+              <div className="dash-card__header">
+                <div className={`dash-card__icon ${tool.disabled ? 'dash-card__icon--muted' : ''}`}>
+                  {tool.icon}
+                </div>
+                <span className={`dash-card__tag dash-card__tag--${tool.tagColor}`}>
+                  {tool.tag}
+                </span>
               </div>
-              <span className={`tool-card__tag tool-card__tag--${tool.tagColor}`}>
-                {tool.tag}
-              </span>
-            </div>
-            <h2 className={`tool-card__title ${tool.disabled ? 'tool-card__title--muted' : ''}`}>
-              {tool.title}
-            </h2>
-            <p className="tool-card__desc">{tool.description}</p>
-            <div className="tool-card__footer">
-              <span className="tool-card__link">
-                {tool.disabled ? 'В разработке' : (
-                  <>Открыть <ArrowRight size={14} /></>
-                )}
-              </span>
-            </div>
-          </Link>
-        ))}
+              <h3 className={`dash-card__title ${tool.disabled ? 'dash-card__title--muted' : ''}`}>
+                {tool.title}
+              </h3>
+              <p className="dash-card__desc">{tool.description}</p>
+              <div className="dash-card__footer">
+                <span className="dash-card__link">
+                  {tool.disabled ? 'В разработке' : (
+                    <>Открыть <ArrowRight size={14} /></>
+                  )}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
   );

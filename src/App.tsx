@@ -6,6 +6,7 @@ import { GufPackerPage } from './pages/GufPackerPage';
 import { TaskHelperPage } from './pages/TaskHelperPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
 import './App.css';
+import './Dashboard.css';
 import './TaskHelper.css';
 
 function App() {

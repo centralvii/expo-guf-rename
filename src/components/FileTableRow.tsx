@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Check, X } from 'lucide-react';
+import { GripVertical, Pencil, Check, X, ArrowRight } from 'lucide-react';
 import type { FileRow } from '../types';
 
 interface FileTableRowProps {
@@ -61,66 +61,70 @@ export function FileTableRow({ row, hasError, onCleanNameChange }: FileTableRowP
   };
 
   return (
-    <tr
+    <div
       ref={setNodeRef}
       style={style}
-      className={`file-row ${hasError ? 'file-row--error' : ''} ${isDragging ? 'file-row--dragging' : ''}`}
+      className={`file-item ${hasError ? 'file-item--error' : ''} ${isDragging ? 'file-item--dragging' : ''}`}
     >
-      {/* Drag handle */}
-      <td className="file-row__handle" {...attributes} {...listeners}>
-        <GripVertical size={16} />
-      </td>
+      {/* Left: drag handle + order */}
+      <div className="file-item__handle" {...attributes} {...listeners}>
+        <GripVertical size={14} />
+      </div>
 
-      {/* Order */}
-      <td className="file-row__order">{row.order}</td>
+      <div className="file-item__order">{row.order}</div>
 
-      {/* Original name */}
-      <td className="file-row__original" title={row.originalName}>
-        <span className="file-row__original-text">{row.originalName}</span>
-      </td>
+      {/* Center: file info */}
+      <div className="file-item__body">
+        {/* Top line: original name + extension */}
+        <div className="file-item__original">
+          <span className="file-item__original-name" title={row.originalName}>
+            {row.originalName}
+          </span>
+        </div>
 
-      {/* Clean name — editable */}
-      <td className="file-row__clean">
-        {isEditing ? (
-          <div className="inline-edit">
-            <input
-              ref={inputRef}
-              className="inline-edit__input"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={confirmEdit}
-            />
-            <button
-              className="inline-edit__btn inline-edit__btn--confirm"
-              onMouseDown={(e) => { e.preventDefault(); confirmEdit(); }}
-              title="Подтвердить"
-            >
-              <Check size={13} />
-            </button>
-            <button
-              className="inline-edit__btn inline-edit__btn--cancel"
-              onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }}
-              title="Отмена"
-            >
-              <X size={13} />
-            </button>
-          </div>
-        ) : (
-          <div className="inline-edit-display" onClick={startEditing} title="Нажмите для редактирования">
-            <span className="inline-edit-display__text">{row.cleanName}</span>
-            <Pencil size={12} className="inline-edit-display__icon" />
-          </div>
-        )}
-      </td>
+        {/* Clean name (editable) */}
+        <div className="file-item__clean">
+          {isEditing ? (
+            <div className="inline-edit">
+              <input
+                ref={inputRef}
+                className="inline-edit__input"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={confirmEdit}
+              />
+              <button
+                className="inline-edit__btn inline-edit__btn--confirm"
+                onMouseDown={(e) => { e.preventDefault(); confirmEdit(); }}
+                title="Подтвердить"
+              >
+                <Check size={13} />
+              </button>
+              <button
+                className="inline-edit__btn inline-edit__btn--cancel"
+                onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }}
+                title="Отмена"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ) : (
+            <div className="inline-edit-display" onClick={startEditing} title="Нажмите для редактирования описания">
+              <span className="inline-edit-display__text">{row.cleanName}</span>
+              <Pencil size={11} className="inline-edit-display__icon" />
+            </div>
+          )}
+        </div>
 
-      {/* Extension */}
-      <td className="file-row__ext">.{row.extension}</td>
-
-      {/* New name preview */}
-      <td className="file-row__preview" title={row.newName}>
-        <span className="file-row__preview-text">{row.newName}</span>
-      </td>
-    </tr>
+        {/* Bottom line: result */}
+        <div className="file-item__result">
+          <ArrowRight size={12} className="file-item__arrow" />
+          <span className="file-item__new-name" title={row.newName}>
+            {row.newName}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

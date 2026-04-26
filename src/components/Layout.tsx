@@ -1,75 +1,167 @@
-import { Outlet, Link } from 'react-router-dom';
-import { Boxes, ChevronDown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
+import { Boxes, LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 declare const __APP_GIT_COMMIT__: string;
 
+interface NavItem {
+  id: string;
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  disabled?: boolean;
+  tag?: string;
+}
+
+const MAIN_NAV: NavItem[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    path: '/',
+    icon: <LayoutDashboard size={18} />,
+  },
+];
+
+const TOOLS_NAV: NavItem[] = [
+  {
+    id: 'guf-packer',
+    label: 'GUF Packer',
+    path: '/guf-packer',
+    icon: <FileArchive size={18} />,
+  },
+  {
+    id: 'task-helper',
+    label: 'Task Helper',
+    path: '/task-helper',
+    icon: <FileText size={18} />,
+  },
+  {
+    id: 'new-tool',
+    label: 'Новый инструмент',
+    path: '#',
+    icon: <Wrench size={18} />,
+    disabled: true,
+    tag: 'СКОРО',
+  },
+];
+
 export function Layout() {
-  const [isToolsOpen, setIsToolsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
 
+  // Auto-collapse on small screens
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsToolsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const mq = window.matchMedia('(max-width: 900px)');
+    const handler = (e: MediaQueryListEvent) => setIsCollapsed(e.matches);
+    setIsCollapsed(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
 
-  return (
-    <div className="app">
-      <header className="app-header">
-        <div className="app-header__inner">
-          <div className="app-header__left">
-            <Link to="/" className="app-header__logo">
-              <div className="app-header__logo-icon">
-                <Boxes size={22} />
-              </div>
-              <span className="app-header__wordmark">GD Helper</span>
-            </Link>
+  const sidebarClass = `sidebar ${isCollapsed ? 'sidebar--collapsed' : ''}`;
 
-            <nav className="app-header__nav">
-              <div className="app-header__dropdown-container" ref={dropdownRef}>
-                <button
-                  className={`app-header__nav-link app-header__nav-btn ${isToolsOpen ? 'app-header__nav-link--active' : ''}`}
-                  onClick={() => setIsToolsOpen(!isToolsOpen)}
-                >
-                  Инструменты
-                  <ChevronDown size={14} className={`dropdown-arrow ${isToolsOpen ? 'open' : ''}`} />
-                </button>
-
-                <div className={`app-header__dropdown-menu ${isToolsOpen ? 'open' : ''}`}>
-                  <Link to="/task-helper" className="dropdown-item" onClick={() => setIsToolsOpen(false)}>
-                    <div className="dropdown-item-title">Task Helper</div>
-                    <div className="dropdown-item-desc">Реестр задач и отчётов</div>
-                  </Link>
-                  <Link to="/guf-packer" className="dropdown-item" onClick={() => setIsToolsOpen(false)}>
-                    <div className="dropdown-item-title">GUF Packer</div>
-                    <div className="dropdown-item-desc">Групповое переименование</div>
-                  </Link>
-                </div>
-              </div>
-              <a href="#" className="app-header__nav-link">Ресурсы</a>
-              <a href="#" className="app-header__nav-link">Документация</a>
-            </nav>
-          </div>
+  const renderNavItem = (item: NavItem) => {
+    if (item.disabled) {
+      return (
+        <div key={item.id} className="sidebar__link sidebar__link--disabled" title={item.label}>
+          <span className="sidebar__link-icon">{item.icon}</span>
+          {!isCollapsed && (
+            <span className="sidebar__link-label">{item.label}</span>
+          )}
+          {!isCollapsed && item.tag && (
+            <span className="sidebar__link-tag">{item.tag}</span>
+          )}
         </div>
-      </header>
+      );
+    }
 
-      <main className="app-main">
-        <Outlet />
-      </main>
+    return (
+      <NavLink
+        key={item.id}
+        to={item.path}
+        end={item.path === '/'}
+        className={({ isActive }) =>
+          `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+        }
+        title={item.label}
+      >
+        <span className="sidebar__link-icon">{item.icon}</span>
+        {!isCollapsed && (
+          <span className="sidebar__link-label">{item.label}</span>
+        )}
+      </NavLink>
+    );
+  };
 
-      <footer className="app-footer">
-        <div className="app-footer__inner">
-          <span className="app-footer__meta">
-            GD Helper - клиентское приложение, файлы не покидают ваш браузер
+  // Get current page title for the top bar
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path === '/') return 'Dashboard';
+    if (path.startsWith('/guf-packer')) return 'GUF Packer';
+    if (path.startsWith('/task-helper')) return 'Task Helper';
+    return 'GD Helper';
+  };
+
+  return (
+    <div className="dashboard">
+      {/* Sidebar */}
+      <aside className={sidebarClass}>
+        <div className="sidebar__header">
+          <Link to="/" className="sidebar__logo">
+            <div className="sidebar__logo-icon">
+              <Boxes size={20} />
+            </div>
+            {!isCollapsed && (
+              <span className="sidebar__logo-text">GD Helper</span>
+            )}
+          </Link>
+        </div>
+
+        <nav className="sidebar__nav">
+          <div className="sidebar__section">
+            {!isCollapsed && (
+              <span className="sidebar__section-label">MAIN</span>
+            )}
+            {MAIN_NAV.map(renderNavItem)}
+          </div>
+
+          <div className="sidebar__section">
+            {!isCollapsed && (
+              <span className="sidebar__section-label">ИНСТРУМЕНТЫ</span>
+            )}
+            {TOOLS_NAV.map(renderNavItem)}
+          </div>
+        </nav>
+
+        <div className="sidebar__footer">
+          <button
+            className="sidebar__toggle"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-label={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+          >
+            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content area */}
+      <div className="dashboard__main">
+        <main className="dashboard__content">
+          <Outlet />
+        </main>
+      </div>
+
+      {/* Status bar — full width under sidebar + content */}
+      <footer className="statusbar">
+        <div className="statusbar__left">
+          <span className="statusbar__item">
+            <span className="statusbar__dot" />
+            Ready
           </span>
-          <span className="app-footer__branch">
-            Актуальный коммит: {__APP_GIT_COMMIT__}
+        </div>
+        <div className="statusbar__right">
+          <span className="statusbar__item">
+            commit: {__APP_GIT_COMMIT__}
           </span>
         </div>
       </footer>

@@ -1,5 +1,4 @@
-import { Download, Trash2, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Download, Trash2 } from 'lucide-react';
 import { FileTable } from '../components/FileTable';
 import { FileUploader } from '../components/FileUploader';
 import { MassActions } from '../components/MassActions';
@@ -52,15 +51,6 @@ export function GufPackerPage() {
 
   return (
     <div className="tool-page">
-      <div className="tool-page__nav">
-        <Link to="/" className="back-link">
-          <ArrowLeft size={16} />
-          <span>GD Helper</span>
-        </Link>
-        <span className="back-link__sep">/</span>
-        <span className="back-link__current">GUF Packer</span>
-      </div>
-
       <div className="tool-page__content">
         <FileUploader
           onFileLoaded={handleLoadZip}
@@ -70,26 +60,32 @@ export function GufPackerPage() {
 
         {state.files.length > 0 && (
           <>
-            <TemplateEditor
-              template={state.template}
-              onChange={state.setTemplate}
-              onReset={state.resetTemplate}
-            />
+            <div className="guf-packer__config">
+              <TemplateEditor
+                template={state.template}
+                variables={state.variables}
+                onChange={state.setTemplate}
+                onReset={state.resetTemplate}
+              />
 
-            <MassActions
-              template={state.template}
-              fieldValues={state.fieldValues}
-              onFieldChange={state.setFieldValue}
-              fileCount={state.files.length}
-              startNumber={state.startNumber}
-              onStartNumberChange={state.setStartNumber}
-            />
+              <MassActions
+                template={state.template}
+                variables={state.variables}
+                onVariableChange={state.setVariableValue}
+                onAddVariable={state.addVariable}
+                onRemoveVariable={state.removeVariable}
+                fileCount={state.files.length}
+                startNumber={state.startNumber}
+                onStartNumberChange={state.setStartNumber}
+              />
+            </div>
 
             <FileTable
               files={state.files}
               errorFileIds={state.errorFileIds}
               onReorder={state.reorderFiles}
               onCleanNameChange={state.updateFileCleanName}
+              onAddFiles={state.addFiles}
             />
 
             <ReadmeEditor

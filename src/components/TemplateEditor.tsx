@@ -1,16 +1,43 @@
-import { AVAILABLE_TAGS } from '../types';
+import { useRef } from 'react';
+import { BUILTIN_TAGS, type CustomVariable } from '../types';
 import { RotateCcw, Tag, Save } from 'lucide-react';
 
 interface TemplateEditorProps {
   template: string;
+  variables: CustomVariable[];
   onChange: (tpl: string) => void;
   onReset: () => void;
 }
 
-export function TemplateEditor({ template, onChange, onReset }: TemplateEditorProps) {
+export function TemplateEditor({ template, variables, onChange, onReset }: TemplateEditorProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const insertTag = (tag: string) => {
-    onChange(template + tag);
+    const input = inputRef.current;
+    if (!input) {
+      onChange(template + tag);
+      return;
+    }
+
+    const start = input.selectionStart ?? template.length;
+    const end = input.selectionEnd ?? template.length;
+
+    const before = template.slice(0, start);
+    const after = template.slice(end);
+    const newTemplate = before + tag + after;
+
+    onChange(newTemplate);
+
+    // Restore cursor position after React re-renders
+    requestAnimationFrame(() => {
+      const newPos = start + tag.length;
+      input.setSelectionRange(newPos, newPos);
+      input.focus();
+    });
   };
+
+  // User tags
+  const userTags = variables.map((v) => `{${v.key}}`);
 
   return (
     <div className="template-card">
@@ -34,6 +61,7 @@ export function TemplateEditor({ template, onChange, onReset }: TemplateEditorPr
       </div>
 
       <input
+        ref={inputRef}
         type="text"
         className="template-input"
         value={template}
@@ -43,9 +71,9 @@ export function TemplateEditor({ template, onChange, onReset }: TemplateEditorPr
       />
 
       <div className="template-tags">
-        <span className="template-tags__label">Вставить тег:</span>
+        <span className="template-tags__label">Системные:</span>
         <div className="template-tags__list">
-          {AVAILABLE_TAGS.map((tag) => (
+          {BUILTIN_TAGS.map((tag) => (
             <button
               key={tag}
               className="tag-btn"
@@ -57,6 +85,24 @@ export function TemplateEditor({ template, onChange, onReset }: TemplateEditorPr
           ))}
         </div>
       </div>
+
+      {userTags.length > 0 && (
+        <div className="template-tags template-tags--user">
+          <span className="template-tags__label">Переменные:</span>
+          <div className="template-tags__list">
+            {userTags.map((tag) => (
+              <button
+                key={tag}
+                className={`tag-btn tag-btn--user ${template.includes(tag) ? 'tag-btn--active' : ''}`}
+                onClick={() => insertTag(tag)}
+                title={`Вставить ${tag}`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

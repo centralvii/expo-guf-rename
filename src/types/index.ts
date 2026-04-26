@@ -20,32 +20,23 @@ export type FileRow = {
   detectedTime: string;
   /** Очищенное имя файла (без даты, времени, префиксов) */
   cleanName: string;
-  /** Пользовательское поле: префикс */
-  prefix: string;
-  /** Пользовательское поле: модуль */
-  module: string;
-  /** Пользовательское поле: код */
-  code: string;
-  /** Пользовательское поле: номер документа */
-  docNumber: string;
-  /** Пользовательское поле: custom1 */
-  custom1: string;
-  /** Пользовательское поле: custom2 */
-  custom2: string;
+  /** Динамические переменные, назначенные файлу */
+  variables: Record<string, string>;
   /** Рассчитанное новое имя файла (превью) */
   newName: string;
 };
 
 /**
- * Редактируемые пользователем поля FileRow
+ * Пользовательская переменная для шаблона
  */
-export type EditableField =
-  | 'prefix'
-  | 'module'
-  | 'code'
-  | 'docNumber'
-  | 'custom1'
-  | 'custom2';
+export interface CustomVariable {
+  /** Уникальный ключ (имя переменной в шаблоне без фигурных скобок) */
+  key: string;
+  /** Отображаемое название поля */
+  label: string;
+  /** Текущее значение */
+  value: string;
+}
 
 /**
  * Ошибка валидации для одной строки
@@ -60,9 +51,9 @@ export type ValidationError = {
 };
 
 /**
- * Доступные теги для шаблона переименования
+ * Встроенные теги шаблона (не пользовательские)
  */
-export const AVAILABLE_TAGS = [
+export const BUILTIN_TAGS = [
   '{index}',
   '{indexPad6}',
   '{originalName}',
@@ -70,30 +61,21 @@ export const AVAILABLE_TAGS = [
   '{date}',
   '{time}',
   '{cleanName}',
-  '{prefix}',
-  '{module}',
-  '{code}',
-  '{docNumber}',
-  '{custom1}',
-  '{custom2}',
 ] as const;
 
 /**
  * Шаблон переименования по умолчанию
  */
-export const DEFAULT_TEMPLATE =
-  '{indexPad6}_{prefix}_{module}-{docNumber}_{cleanName}{code}';
+export const DEFAULT_TEMPLATE = '{indexPad6}_{cleanName}';
 
 /**
- * Список редактируемых полей для UI
+ * Переменные-заготовки по умолчанию
  */
-export const EDITABLE_FIELDS: { key: EditableField; label: string }[] = [
-  { key: 'prefix', label: 'Префикс' },
-  { key: 'module', label: 'Модуль' },
-  { key: 'code', label: 'Код' },
-  { key: 'docNumber', label: '№ документа' },
-  { key: 'custom1', label: 'Custom 1' },
-  { key: 'custom2', label: 'Custom 2' },
+export const DEFAULT_VARIABLES: CustomVariable[] = [
+  { key: 'prefix', label: 'Префикс', value: '' },
+  { key: 'module', label: 'Модуль', value: '' },
+  { key: 'code', label: 'Код', value: '' },
+  { key: 'docNumber', label: '№ документа', value: '' },
 ];
 
 /**

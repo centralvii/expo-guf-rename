@@ -3,7 +3,7 @@
  * Сохраняет метаданные файлов и бинарные Blob-ы отдельно.
  */
 
-import type { FileRow, EditableField } from '../types';
+import type { FileRow, CustomVariable } from '../types';
 
 const DB_NAME = 'guf-renamer';
 const DB_VERSION = 1;
@@ -16,7 +16,8 @@ export interface PersistedState {
   template: string;
   startNumber: number;
   archiveName: string;
-  fieldValues?: Record<EditableField, string>;
+  variables?: CustomVariable[];
+  fieldValues?: Record<string, string>; // backwards compat
   readmeContent?: string;
 }
 
@@ -87,7 +88,7 @@ export async function saveState(state: PersistedState): Promise<void> {
       template: state.template,
       startNumber: state.startNumber,
       archiveName: state.archiveName,
-      fieldValues: state.fieldValues,
+      variables: state.variables,
       readmeContent: state.readmeContent,
     });
 
@@ -118,7 +119,8 @@ export async function loadState(): Promise<PersistedState | null> {
       template: string;
       startNumber: number;
       archiveName: string;
-      fieldValues?: Record<EditableField, string>;
+      variables?: CustomVariable[];
+      fieldValues?: Record<string, string>;
       readmeContent?: string;
     }>(db, STORE_META, 'state');
 
@@ -144,6 +146,7 @@ export async function loadState(): Promise<PersistedState | null> {
       template: saved.template,
       startNumber: saved.startNumber,
       archiveName: saved.archiveName,
+      variables: saved.variables,
       fieldValues: saved.fieldValues,
       readmeContent: saved.readmeContent,
     };
