@@ -962,7 +962,36 @@ a {
   white-space: nowrap;
 }
 
-/* ---- Inline Edit (cleanName per-file) ---- */
+/* ---- Inline Edit Buttons ---- */
+.inline-edit__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--text-muted);
+}
+
+.inline-edit__btn--confirm:hover {
+  background: var(--success-soft);
+  border-color: var(--success);
+  color: var(--success);
+  box-shadow: 0 0 10px var(--success-soft);
+}
+
+.inline-edit__btn--cancel:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger);
+  box-shadow: 0 0 10px var(--danger-soft);
+}
+
+/* ---- Inline Edit Display ---- */
 .inline-edit {
   display: flex;
   align-items: center;
@@ -982,11 +1011,12 @@ a {
 }
 
 .inline-edit-display {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 12px;
   border-radius: 6px;
   transition: background var(--transition);
   width: 100%;
