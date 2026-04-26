@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, Link } from 'react-router-dom';
 import { Boxes, LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -47,7 +47,6 @@ const TOOLS_NAV: NavItem[] = [
 
 export function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const location = useLocation();
 
   // Auto-collapse on small screens
   useEffect(() => {
