@@ -70,7 +70,9 @@ export function recalculateAllNames(
   }
 
   return files.map((row, idx) => {
-    const mergedVars = { ...varValues, ...row.variables };
+    // Важно: глобальные переменные (variables) должны иметь приоритет над теми, 
+    // что уже записаны в строке, если мы хотим массового обновления.
+    const mergedVars = { ...row.variables, ...varValues };
     const updatedRow: FileRow = {
       ...row,
       order: startNumber + idx,

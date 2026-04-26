@@ -146,7 +146,7 @@ export function Layout() {
         <div className="statusbar__left">
           <span className="statusbar__item">
             <span className="statusbar__dot" />
-            Ready
+            Online
           </span>
         </div>
         <div className="statusbar__right">

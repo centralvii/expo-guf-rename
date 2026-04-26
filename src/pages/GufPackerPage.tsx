@@ -23,6 +23,11 @@ export function GufPackerPage() {
     }
   };
 
+  const handleAddFiles = (files: File[]) => {
+    state.addFiles(files);
+    notify(`Добавлено файлов: ${files.length}`);
+  };
+
   const handleClearFiles = () => {
     state.clearFiles();
     notify('Список файлов очищен', 'error');
@@ -85,7 +90,7 @@ export function GufPackerPage() {
               errorFileIds={state.errorFileIds}
               onReorder={state.reorderFiles}
               onCleanNameChange={state.updateFileCleanName}
-              onAddFiles={state.addFiles}
+              onAddFiles={handleAddFiles}
             />
 
             <ReadmeEditor

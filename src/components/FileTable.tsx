@@ -107,8 +107,14 @@ export function FileTable({
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-          <div className="file-list">
+        <div className="file-list">
+          <div className="file-list-header">
+            <div /> {/* handle */}
+            <div style={{ textAlign: 'center' }}>№</div>
+            <div>Оригинальное название (описание)</div>
+            <div>Итоговое название файла</div>
+          </div>
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
             {files.map((row) => (
               <FileTableRow
                 key={row.id}
@@ -117,8 +123,8 @@ export function FileTable({
                 onCleanNameChange={onCleanNameChange}
               />
             ))}
-          </div>
-        </SortableContext>
+          </SortableContext>
+        </div>
       </DndContext>
     </div>
   );

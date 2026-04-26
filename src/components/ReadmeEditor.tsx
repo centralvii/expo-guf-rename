@@ -101,7 +101,7 @@ function insertAtCursor(
 const TOOLBAR_ITEMS: ToolbarItem[] = [
   {
     icon: <Bold size={14} />,
-    title: 'Жирный (Ctrl+B)',
+    title: 'Жирный шрифт (Ctrl+B)',
     action: (ta, v, onChange) => wrapSelection(ta, v, onChange, '**', '**'),
   },
   {
@@ -111,23 +111,23 @@ const TOOLBAR_ITEMS: ToolbarItem[] = [
   },
   {
     icon: <Strikethrough size={14} />,
-    title: 'Зачёркнутый',
+    title: 'Зачёркнутый текст',
     action: (ta, v, onChange) => wrapSelection(ta, v, onChange, '~~', '~~'),
   },
   { separator: true },
   {
     icon: <Heading1 size={14} />,
-    title: 'Заголовок 1',
+    title: 'Заголовок 1 (самый крупный)',
     action: (ta, v, onChange) => prefixLine(ta, v, onChange, '# '),
   },
   {
     icon: <Heading2 size={14} />,
-    title: 'Заголовок 2',
+    title: 'Заголовок 2 (средний)',
     action: (ta, v, onChange) => prefixLine(ta, v, onChange, '## '),
   },
   {
     icon: <Heading3 size={14} />,
-    title: 'Заголовок 3',
+    title: 'Заголовок 3 (небольшой)',
     action: (ta, v, onChange) => prefixLine(ta, v, onChange, '### '),
   },
   { separator: true },
@@ -143,27 +143,27 @@ const TOOLBAR_ITEMS: ToolbarItem[] = [
   },
   {
     icon: <CheckSquare size={14} />,
-    title: 'Чекбокс',
+    title: 'Список с чекбоксами',
     action: (ta, v, onChange) => prefixLine(ta, v, onChange, '- [ ] '),
   },
   { separator: true },
   {
     icon: <Code size={14} />,
-    title: 'Код (Ctrl+`)',
+    title: 'Вставка кода (Ctrl+`)',
     action: (ta, v, onChange) => wrapSelection(ta, v, onChange, '`', '`'),
   },
   {
     icon: <Quote size={14} />,
-    title: 'Цитата',
+    title: 'Цитата (блок текста)',
     action: (ta, v, onChange) => prefixLine(ta, v, onChange, '> '),
   },
   {
     icon: <Link size={14} />,
-    title: 'Ссылка',
+    title: 'Добавить гиперссылку',
     action: (ta, v, onChange) => {
       const start = ta.selectionStart;
       const end = ta.selectionEnd;
-      const selected = v.slice(start, end);
+      const selected = value.slice(start, end);
       const text = selected || 'ссылка';
       const replacement = `[${text}](url)`;
       const newValue = v.slice(0, start) + replacement + v.slice(end);
@@ -178,7 +178,7 @@ const TOOLBAR_ITEMS: ToolbarItem[] = [
   },
   {
     icon: <Minus size={14} />,
-    title: 'Горизонтальная линия',
+    title: 'Разделительная линия (HR)',
     action: (ta, v, onChange) => insertAtCursor(ta, v, onChange, '\n---\n'),
   },
 ];
@@ -286,26 +286,26 @@ export function ReadmeEditor({ value, onChange }: ReadmeEditorProps) {
           Заметки к поставке
         </h2>
         <div className="readme-card__actions">
-          <span className="readme-card__hint">
-            Будет включён в архив как README.txt
-          </span>
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={() => onChange('')}
+            data-tooltip="Очистить всё содержимое"
+            disabled={!value}
+            style={{ 
+              opacity: value ? 1 : 0, 
+              pointerEvents: value ? 'auto' : 'none',
+              transition: 'opacity 0.2s ease'
+            }}
+          >
+            <Eraser size={14} />
+          </button>
           <button
             className={`readme-card__preview-btn ${showPreview ? 'readme-card__preview-btn--active' : ''}`}
             onClick={() => setShowPreview(!showPreview)}
-            title={showPreview ? 'Редактировать' : 'Предпросмотр'}
+            data-tooltip={showPreview ? 'Вернуться к редактированию' : 'Показать предпросмотр'}
           >
             {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
-            {showPreview ? 'Редактор' : 'Превью'}
           </button>
-          {value.length > 0 && (
-            <button
-              className="btn btn--ghost btn--sm"
-              onClick={() => onChange('')}
-              title="Очистить"
-            >
-              <Eraser size={14} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -320,7 +320,7 @@ export function ReadmeEditor({ value, onChange }: ReadmeEditorProps) {
               <button
                 key={i}
                 className="readme-card__toolbar-btn"
-                title={action.title}
+                data-tooltip={action.title}
                 onMouseDown={(e) => e.preventDefault()} // keep focus in textarea
                 onClick={() => {
                   const ta = textareaRef.current;
@@ -352,10 +352,15 @@ export function ReadmeEditor({ value, onChange }: ReadmeEditorProps) {
         />
       )}
 
-      {!showPreview && value.length > 0 && (
+      {!showPreview && (
         <div className="readme-card__status">
-          <span>{lineCount} строк</span>
-          <span>{charCount} символов</span>
+          <span className="readme-card__hint" style={{ marginRight: 'auto' }}>
+            Будет включён в архив как README.txt
+          </span>
+          <div style={{ display: 'flex', gap: '12px', visibility: value.length > 0 ? 'visible' : 'hidden' }}>
+            <span>{lineCount} строк</span>
+            <span>{charCount} символов</span>
+          </div>
         </div>
       )}
     </div>

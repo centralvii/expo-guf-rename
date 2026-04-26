@@ -478,8 +478,9 @@
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, #0070f3, #7928ca);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Radial spotlight on hover */
@@ -506,7 +507,7 @@
     0 8px 30px rgba(0, 0, 0, 0.3),
     0 0 1px rgba(0, 112, 243, 0.3);
 }
-.dash-card:hover::before { opacity: 1; }
+.dash-card:hover::before { transform: scaleX(1); }
 .dash-card:hover::after { opacity: 1; }
 
 .dash-card--disabled {
