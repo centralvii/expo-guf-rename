@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CustomVariable } from '../types';
-import { Layers, Plus, X, Variable } from 'lucide-react';
+import { Plus, X, Variable } from 'lucide-react';
 
 interface MassActionsProps {
   template: string;

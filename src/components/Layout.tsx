@@ -93,15 +93,6 @@ export function Layout() {
     );
   };
 
-  // Get current page title for the top bar
-  const getPageTitle = () => {
-    const path = location.pathname;
-    if (path === '/') return 'Dashboard';
-    if (path.startsWith('/guf-packer')) return 'GUF Packer';
-    if (path.startsWith('/task-helper')) return 'Task Helper';
-    return 'GD Helper';
-  };
-
   return (
     <div className="dashboard">
       {/* Sidebar */}

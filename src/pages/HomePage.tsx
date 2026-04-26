@@ -90,7 +90,6 @@ const TOOLS: ToolCard[] = [
 ];
 
 export function HomePage() {
-  const location = useLocation();
   const typedText = useTypewriter(TYPEWRITER_WORDS);
 
   return (
