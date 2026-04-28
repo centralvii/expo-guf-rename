@@ -35,15 +35,15 @@ const TOOLS_NAV: NavItem[] = [
     label: 'Задачник',
     path: '/task-helper',
     icon: <FileText size={18} />,
-  },
-  {
-    id: 'new-tool',
-    label: 'Новый инструмент',
-    path: '#',
-    icon: <Wrench size={18} />,
-    disabled: true,
-    tag: 'СКОРО',
-  },
+  }
+  // {
+  //   id: 'new-tool',
+  //   label: 'Новый инструмент',
+  //   path: '#',
+  //   icon: <Wrench size={18} />,
+  //   disabled: true,
+  //   tag: 'СКОРО',
+  // },
 ];
 
 export function Layout() {

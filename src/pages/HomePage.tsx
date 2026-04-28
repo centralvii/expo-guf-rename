@@ -76,17 +76,17 @@ const TOOLS: ToolCard[] = [
     path: '/task-helper',
     tag: 'ГОТОВО',
     tagColor: 'green',
-  },
-  {
-    id: 'another-tool',
-    title: 'Новый инструмент',
-    description: 'Здесь появится следующий инструмент. Следите за обновлениями.',
-    icon: <Wrench size={22} />,
-    path: '/',
-    tag: 'СКОРО',
-    tagColor: 'gray',
-    disabled: true,
-  },
+  }
+  // {
+  //   id: 'another-tool',
+  //   title: 'Новый инструмент',
+  //   description: 'Здесь появится следующий инструмент. Следите за обновлениями.',
+  //   icon: <Wrench size={22} />,
+  //   path: '/',
+  //   tag: 'СКОРО',
+  //   tagColor: 'gray',
+  //   disabled: true,
+  // },
 ];
 
 export function HomePage() {
