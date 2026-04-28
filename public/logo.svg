@@ -1,0 +1,39 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vertex-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" /> <!-- Electric Cyan -->
+      <stop offset="100%" stop-color="#0066FF" /> <!-- Royal Blue -->
+    </linearGradient>
+    
+    <filter id="vertex-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- The Symmetrical Hexagon Base -->
+  <g filter="url(#vertex-glow)">
+    <!-- Right Section -->
+    <path d="M50 50L85 30V70L50 90V50Z" fill="url(#vertex-grad)" opacity="0.9">
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
+    </path>
+    
+    <!-- Left Section -->
+    <path d="M50 50L15 30V70L50 90V50Z" fill="url(#vertex-grad)" opacity="0.7">
+      <animate attributeName="opacity" values="0.6;0.9;0.6" dur="3s" repeatCount="indefinite" />
+    </path>
+    
+    <!-- Top Section -->
+    <path d="M50 10L85 30L50 50L15 30L50 10Z" fill="url(#vertex-grad)" opacity="1" />
+  </g>
+
+  <!-- Glassmorphic Highlights -->
+  <path d="M50 15L78 33L50 47L22 33L50 15Z" fill="white" opacity="0.2" />
+  <path d="M52 52L80 36V66L52 86V52Z" fill="white" opacity="0.1" />
+
+  <!-- The Center Detail -->
+  <circle cx="50" cy="50" r="2" fill="white">
+    <animate attributeName="r" values="1.5;3;1.5" dur="1.5s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+  </circle>
+</svg>

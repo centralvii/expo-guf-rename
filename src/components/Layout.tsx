@@ -112,8 +112,8 @@ export function Layout() {
       <aside className={sidebarClass}>
         <div className="sidebar__header">
           <Link to="/" className="sidebar__logo">
-            <div className="sidebar__logo-icon">
-              <Boxes size={20} />
+            <div className="sidebar__logo-icon" style={{ background: 'none', padding: 0 }}>
+              <img src="/logo.svg" alt="Logo" style={{ width: '100%', height: '100%' }} />
             </div>
             {!isCollapsed && (
               <span className="sidebar__logo-text">GreenData Helper</span>

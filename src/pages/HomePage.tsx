@@ -97,8 +97,8 @@ export function HomePage() {
       {/* Welcome Banner */}
       <section className="welcome-banner">
         <div className="welcome-banner__content">
-          <div className="welcome-banner__icon">
-            <Boxes size={28} />
+          <div className="welcome-banner__icon" style={{ background: 'none', border: 'none' }}>
+            <img src="/logo.svg" alt="Logo" style={{ width: '64px', height: '64px' }} />
           </div>
           <div className="welcome-banner__text">
             <h2 className="welcome-banner__title">
