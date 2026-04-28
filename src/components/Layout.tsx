@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Wrench, Settings, PanelLeftDashed } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 

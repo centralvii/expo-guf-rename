@@ -1,6 +1,6 @@
 import { type ReactNode, useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FileArchive, FileText, Wrench, ArrowRight, Activity, Clock } from 'lucide-react';
+import { FileArchive, FileText, ArrowRight, Activity, Clock } from 'lucide-react';
 
 const TYPEWRITER_WORDS = [
   'Переименовывай.',
