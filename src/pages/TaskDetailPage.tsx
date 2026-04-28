@@ -1,19 +1,60 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus } from 'lucide-react';
+import {
+  AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus,
+  Flame, ArrowUp, ArrowRight, ArrowDown, Circle, Clock, GitPullRequest,
+  CheckCircle2, XCircle, Tag, X
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTasks } from '../hooks/useTasks';
 import { useToast } from '../hooks/useToast';
-import type { TaskItem, TaskSection } from '../types';
+import type { TaskItem, TaskSection, TaskPriority, TaskStatus, TaskTag } from '../types';
+import {
+  TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TAG_COLOR_PRESETS
+} from '../types';
 
 const DELETE_MODAL_ANIMATION_MS = 220;
+
+const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
+  critical: <Flame size={12} />,
+  high: <ArrowUp size={12} />,
+  medium: <ArrowRight size={12} />,
+  low: <ArrowDown size={12} />,
+};
+
+const PRIORITY_COLORS: Record<TaskPriority, string> = {
+  critical: '#ef4444',
+  high: '#f97316',
+  medium: '#3b82f6',
+  low: '#6b7280',
+};
+
+const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
+  open: <Circle size={12} />,
+  in_progress: <Clock size={12} />,
+  review: <GitPullRequest size={12} />,
+  done: <CheckCircle2 size={12} />,
+  closed: <XCircle size={12} />,
+};
+
+const STATUS_COLORS: Record<TaskStatus, string> = {
+  open: '#6b7280',
+  in_progress: '#3b82f6',
+  review: '#a855f7',
+  done: '#22c55e',
+  closed: '#374151',
+};
 
 function taskToMarkdown(task: TaskItem): string {
   const lines = [`# ${task.title}`];
 
   if (task.description.trim()) {
     lines.push('', task.description.trim());
+  }
+
+  if (task.tags?.length > 0) {
+    lines.push('', `**Теги:** ${task.tags.map((t) => t.name).join(', ')}`);
   }
 
   task.sections.forEach((section) => {
@@ -39,6 +80,83 @@ function createMarkdownFilename(title: string): string {
   return `${normalizedTitle || 'task-helper-item'}.md`;
 }
 
+/* ---- Tag picker (inline) ---- */
+interface TagPickerProps {
+  selectedTags: TaskTag[];
+  onChange: (tags: TaskTag[]) => void;
+}
+
+function TagPicker({ selectedTags, onChange }: TagPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState(TAG_COLOR_PRESETS[0]);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleAdd = () => {
+    if (!newTagName.trim()) return;
+    const newTag: TaskTag = { id: crypto.randomUUID(), name: newTagName.trim(), color: newTagColor };
+    onChange([...selectedTags, newTag]);
+    setNewTagName('');
+    setNewTagColor(TAG_COLOR_PRESETS[0]);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="tag-picker" ref={ref}>
+      <div className="tag-picker__selected">
+        {selectedTags.map((tag) => (
+          <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>
+            {tag.name}
+            <button type="button" onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))} className="task-tag__remove">
+              <X size={10} />
+            </button>
+          </span>
+        ))}
+        <button type="button" className="tag-picker__add-btn" onClick={() => setIsOpen(!isOpen)}>
+          <Tag size={12} /> Тег
+        </button>
+      </div>
+      {isOpen && (
+        <div className="tag-picker__dropdown">
+          <div className="tag-picker__dropdown-inner">
+            <input
+              autoFocus
+              type="text"
+              className="tag-picker__input"
+              placeholder="Название тега..."
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+            />
+            <div className="tag-picker__colors">
+              {TAG_COLOR_PRESETS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`tag-picker__color-dot ${newTagColor === color ? 'tag-picker__color-dot--active' : ''}`}
+                  style={{ background: color }}
+                  onClick={() => setNewTagColor(color)}
+                />
+              ))}
+            </div>
+            <button type="button" className="btn btn-primary btn--sm" onClick={handleAdd} disabled={!newTagName.trim()}>
+              Добавить
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -50,19 +168,19 @@ export function TaskDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleteModalClosing, setIsDeleteModalClosing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editSections, setEditSections] = useState<TaskSection[]>([]);
+  const [editPriority, setEditPriority] = useState<TaskPriority>('medium');
+  const [editStatus, setEditStatus] = useState<TaskStatus>('open');
+  const [editTags, setEditTags] = useState<TaskTag[]>([]);
 
   useEffect(() => {
-    if (!isDeleteModalOpen) {
-      return undefined;
-    }
+    if (!isDeleteModalOpen) return undefined;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isDeleting) {
-        setIsDeleteModalClosing(true);
-      }
+      if (event.key === 'Escape' && !isDeleting) setIsDeleteModalClosing(true);
     };
 
     const previousOverflow = document.body.style.overflow;
@@ -76,9 +194,7 @@ export function TaskDetailPage() {
   }, [isDeleteModalOpen, isDeleting]);
 
   useEffect(() => {
-    if (!isDeleteModalClosing) {
-      return undefined;
-    }
+    if (!isDeleteModalClosing) return undefined;
 
     const timeoutId = window.setTimeout(() => {
       setIsDeleteModalOpen(false);
@@ -86,9 +202,7 @@ export function TaskDetailPage() {
       setIsDeleting(false);
     }, DELETE_MODAL_ANIMATION_MS);
 
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
+    return () => window.clearTimeout(timeoutId);
   }, [isDeleteModalClosing]);
 
   if (!isLoaded) return <div className="page-loading">Загрузка...</div>;
@@ -101,6 +215,9 @@ export function TaskDetailPage() {
     setEditTitle(task.title);
     setEditDesc(task.description);
     setEditSections(task.sections);
+    setEditPriority(task.priority ?? 'medium');
+    setEditStatus(task.status ?? 'open');
+    setEditTags(task.tags ?? []);
     setIsEditing(true);
   };
 
@@ -118,7 +235,6 @@ export function TaskDetailPage() {
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
     const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
-
     link.href = objectUrl;
     link.download = createMarkdownFilename(task.title);
     document.body.appendChild(link);
@@ -129,15 +245,15 @@ export function TaskDetailPage() {
   };
 
   const handleSave = async () => {
-    if (!taskId) {
-      return;
-    }
-
+    if (!taskId) return;
     try {
       await updateTask(taskId, {
         title: editTitle,
         description: editDesc,
         sections: editSections,
+        priority: editPriority,
+        status: editStatus,
+        tags: editTags,
       });
       setIsEditing(false);
       notify('Изменения сохранены');
@@ -153,26 +269,21 @@ export function TaskDetailPage() {
   };
 
   const handleCancelDelete = () => {
-    if (!isDeleting) {
-      setIsDeleteModalClosing(true);
-    }
+    if (!isDeleting) setIsDeleteModalClosing(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!taskId) {
-      return;
-    }
-
+    if (!taskId) return;
     try {
       setIsDeleting(true);
       await deleteTask(taskId);
-      notify('Экземпляр удалён', 'error');
+      notify('Задача удалена', 'error');
       setIsDeleteModalOpen(false);
       setIsDeleteModalClosing(false);
       navigate('/task-helper');
     } catch (deleteError) {
       console.error('[task-helper] Failed to delete task', deleteError);
-      notify('Не удалось удалить экземпляр', 'error');
+      notify('Не удалось удалить задачу', 'error');
       setIsDeleting(false);
     }
   };
@@ -182,27 +293,27 @@ export function TaskDetailPage() {
       ...editSections,
       { id: crypto.randomUUID(), title: 'Новый раздел', content: '' },
     ]);
-    notify('Раздел добавлен', 'info');
   };
 
   const handleRemoveSection = (id: string) => {
-    setEditSections(editSections.filter((section) => section.id !== id));
-    notify('Раздел удалён', 'error');
+    setEditSections(editSections.filter((s) => s.id !== id));
   };
 
   const updateSection = (id: string, updates: Partial<TaskSection>) => {
-    setEditSections(editSections.map((section) => (
-      section.id === id ? { ...section, ...updates } : section
-    )));
+    setEditSections(editSections.map((s) => (s.id === id ? { ...s, ...updates } : s)));
   };
 
   const deleteModalClassName = `task-modal${isDeleteModalClosing ? ' task-modal--closing' : ''}`;
 
+  const taskPriority = task.priority ?? 'medium';
+  const taskStatus = task.status ?? 'open';
+
   return (
     <>
       <div className="tool-page anim-fade-in">
-
         <div className="tool-page__content">
+
+          {/* Toolbar */}
           <div className="task-detail__toolbar">
             <button className="btn btn-ghost" onClick={() => navigate('/task-helper')}>
               <ArrowLeft size={16} /> Назад
@@ -210,20 +321,10 @@ export function TaskDetailPage() {
             <div className="task-detail__actions">
               {!isEditing && (
                 <>
-                  <button
-                    className="btn btn-secondary btn-icon"
-                    onClick={handleCopyMarkdown}
-                    title="Копировать Markdown"
-                    aria-label="Копировать Markdown"
-                  >
+                  <button className="btn btn-secondary btn-icon" onClick={handleCopyMarkdown} title="Копировать Markdown" aria-label="Копировать Markdown">
                     <Copy size={16} />
                   </button>
-                  <button
-                    className="btn btn-secondary btn-icon"
-                    onClick={handleDownloadMarkdown}
-                    title="Скачать Markdown"
-                    aria-label="Скачать Markdown"
-                  >
+                  <button className="btn btn-secondary btn-icon" onClick={handleDownloadMarkdown} title="Скачать Markdown" aria-label="Скачать Markdown">
                     <Download size={16} />
                   </button>
                 </>
@@ -245,30 +346,109 @@ export function TaskDetailPage() {
             </div>
           </div>
 
+          {/* Header */}
           {isEditing ? (
             <div className="task-detail__edit-header">
               <input
                 type="text"
                 className="task-detail__title-input"
                 value={editTitle}
-                onChange={(event) => setEditTitle(event.target.value)}
+                onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Название (FINAPP-1234)"
               />
-              <input
-                type="text"
+              <textarea
                 className="task-detail__desc-input"
                 value={editDesc}
-                onChange={(event) => setEditDesc(event.target.value)}
+                onChange={(e) => setEditDesc(e.target.value)}
                 placeholder="Описание..."
+                rows={2}
               />
+
+              {/* Priority + Status row in edit */}
+              <div className="task-detail__meta-edit">
+                <div className="form-group">
+                  <label className="form-label">Приоритет</label>
+                  <div className="select-group">
+                    {(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`select-chip ${editPriority === p ? 'select-chip--active' : ''}`}
+                        style={{ '--chip-color': PRIORITY_COLORS[p] } as React.CSSProperties}
+                        onClick={() => setEditPriority(p)}
+                      >
+                        {PRIORITY_ICONS[p]}
+                        {TASK_PRIORITY_LABELS[p]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Статус</label>
+                  <div className="select-group">
+                    {(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`select-chip ${editStatus === s ? 'select-chip--active' : ''}`}
+                        style={{ '--chip-color': STATUS_COLORS[s] } as React.CSSProperties}
+                        onClick={() => setEditStatus(s)}
+                      >
+                        {STATUS_ICONS[s]}
+                        {TASK_STATUS_LABELS[s]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Теги</label>
+                  <TagPicker selectedTags={editTags} onChange={setEditTags} />
+                </div>
+              </div>
             </div>
           ) : (
             <div className="task-detail__header">
+              <div className="task-detail__badges">
+                <span
+                  className="task-badge task-badge--priority task-badge--lg"
+                  style={{ '--badge-color': PRIORITY_COLORS[taskPriority] } as React.CSSProperties}
+                >
+                  {PRIORITY_ICONS[taskPriority]}
+                  {TASK_PRIORITY_LABELS[taskPriority]}
+                </span>
+                <span
+                  className="task-badge task-badge--status task-badge--lg"
+                  style={{ '--badge-color': STATUS_COLORS[taskStatus] } as React.CSSProperties}
+                >
+                  {STATUS_ICONS[taskStatus]}
+                  {TASK_STATUS_LABELS[taskStatus]}
+                </span>
+              </div>
+
               <h1 className="task-detail__title">{task.title}</h1>
-              <p className="task-detail__desc">{task.description}</p>
+
+              {task.description && (
+                <p className="task-detail__desc">{task.description}</p>
+              )}
+
+              {task.tags && task.tags.length > 0 && (
+                <div className="task-detail__tags">
+                  {task.tags.map((tag) => (
+                    <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="task-detail__dates">
+                <span>Обновлено: {new Date(task.updatedAt).toLocaleString('ru-RU')}</span>
+                <span>Создано: {new Date(task.createdAt).toLocaleString('ru-RU')}</span>
+              </div>
             </div>
           )}
 
+          {/* Sections */}
           <div className="task-detail__sections">
             {isEditing ? (
               <>
@@ -278,22 +458,19 @@ export function TaskDetailPage() {
                       <input
                         type="text"
                         value={section.title}
-                        onChange={(event) => updateSection(section.id, { title: event.target.value })}
+                        onChange={(e) => updateSection(section.id, { title: e.target.value })}
                         className="task-section-edit__title-input"
-                        placeholder="Название раздела (Тип объекта, Алгоритмы...)"
+                        placeholder="Название раздела..."
                       />
-                      <button
-                        className="btn btn-icon btn-danger-outline"
-                        onClick={() => handleRemoveSection(section.id)}
-                      >
+                      <button className="btn btn-icon btn-danger-outline" onClick={() => handleRemoveSection(section.id)}>
                         <Trash2 size={16} />
                       </button>
                     </div>
                     <textarea
                       className="task-section-edit__content-input"
                       value={section.content}
-                      onChange={(event) => updateSection(section.id, { content: event.target.value })}
-                      placeholder="Содержимое раздела (поддерживается Markdown)..."
+                      onChange={(e) => updateSection(section.id, { content: e.target.value })}
+                      placeholder="Содержимое (поддерживается Markdown)..."
                       rows={8}
                     />
                   </div>
@@ -318,6 +495,7 @@ export function TaskDetailPage() {
         </div>
       </div>
 
+      {/* Delete modal */}
       {isDeleteModalOpen && (
         <div
           className={deleteModalClassName}
@@ -327,15 +505,15 @@ export function TaskDetailPage() {
           onClick={handleCancelDelete}
         >
           <div className="task-modal__backdrop" />
-          <div className="task-modal__card" onClick={(event) => event.stopPropagation()}>
+          <div className="task-modal__card" onClick={(e) => e.stopPropagation()}>
             <div className="task-modal__icon">
               <AlertTriangle size={18} />
             </div>
             <h2 id="delete-task-modal-title" className="task-modal__title">
-              Удалить экземпляр?
+              Удалить задачу?
             </h2>
             <p className="task-modal__description">
-              Экземпляр <strong>{task.title}</strong> будет удалён без возможности восстановления.
+              Задача <strong>{task.title}</strong> будет удалена без возможности восстановления.
             </p>
             <div className="task-modal__actions">
               <button className="btn btn-secondary" onClick={handleCancelDelete} disabled={isDeleting}>

@@ -87,14 +87,52 @@ export interface TaskSection {
   content: string;
 }
 
+export type TaskPriority = 'critical' | 'high' | 'medium' | 'low';
+export type TaskStatus = 'open' | 'in_progress' | 'review' | 'done' | 'closed';
+
+export interface TaskTag {
+  id: string;
+  name: string;
+  color: string; // hex color
+}
+
 export interface TaskItem {
   id: string;
   title: string;
   description: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  tags: TaskTag[];
   createdAt: number;
   updatedAt: number;
   sections: TaskSection[];
 }
+
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+  critical: 'Критический',
+  high: 'Высокий',
+  medium: 'Средний',
+  low: 'Низкий',
+};
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  open: 'Открыта',
+  in_progress: 'В работе',
+  review: 'Ревью',
+  done: 'Готово',
+  closed: 'Закрыта',
+};
+
+export const TAG_COLOR_PRESETS = [
+  '#3b82f6', // blue
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#a855f7', // purple
+  '#ec4899', // pink
+  '#f97316', // orange
+  '#6b7280', // gray
+] as const;
 
 /**
  * Настройки подключения к базе данных

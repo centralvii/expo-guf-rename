@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TaskItem } from '../types';
+import type { TaskItem, TaskPriority, TaskStatus, TaskTag } from '../types';
 import { createTask, deleteTaskById, listTasks, updateTaskById } from '../lib/taskRepository';
 
 export function useTasks() {
@@ -56,11 +56,18 @@ export function useTasks() {
     }
   }, [loadTasks]);
 
-  const addTask = useCallback(async (title: string, description: string) => {
+  const addTask = useCallback(async (
+    title: string,
+    description: string,
+    options?: { priority?: TaskPriority; status?: TaskStatus; tags?: TaskTag[] }
+  ) => {
     const createdTask = await createTask({
       id: crypto.randomUUID(),
       title,
       description,
+      priority: options?.priority ?? 'medium',
+      status: options?.status ?? 'open',
+      tags: options?.tags ?? [],
       sections: [
         {
           id: crypto.randomUUID(),

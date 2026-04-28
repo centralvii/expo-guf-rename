@@ -1,11 +1,14 @@
 import { getSupabaseClient } from './supabase';
-import type { TaskItem, TaskSection, ConnectionMethod } from '../types';
+import type { TaskItem, TaskSection, TaskTag, TaskPriority, TaskStatus, ConnectionMethod } from '../types';
 
 type TaskRow = {
   id: string;
   title: string;
   description: string;
   sections: TaskSection[];
+  priority: TaskPriority;
+  status: TaskStatus;
+  tags: TaskTag[];
   created_at: string;
   updated_at: string;
 };
@@ -15,9 +18,12 @@ type TaskInsert = {
   title: string;
   description: string;
   sections: TaskSection[];
+  priority: TaskPriority;
+  status: TaskStatus;
+  tags: TaskTag[];
 };
 
-type TaskUpdate = Partial<Pick<TaskItem, 'title' | 'description' | 'sections'>>;
+type TaskUpdate = Partial<Pick<TaskItem, 'title' | 'description' | 'sections' | 'priority' | 'status' | 'tags'>>;
 
 const TASKS_TABLE = 'task_helper_tasks';
 
@@ -27,6 +33,9 @@ function mapTaskRow(row: TaskRow): TaskItem {
     title: row.title,
     description: row.description,
     sections: Array.isArray(row.sections) ? row.sections : [],
+    priority: row.priority ?? 'medium',
+    status: row.status ?? 'open',
+    tags: Array.isArray(row.tags) ? row.tags : [],
     createdAt: Date.parse(row.created_at),
     updatedAt: Date.parse(row.updated_at),
   };
@@ -73,7 +82,7 @@ const SupabaseRepo: TaskRepository = {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from(TASKS_TABLE)
-      .select('id, title, description, sections, created_at, updated_at')
+      .select('id, title, description, sections, priority, status, tags, created_at, updated_at')
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
@@ -89,8 +98,11 @@ const SupabaseRepo: TaskRepository = {
         title: task.title,
         description: task.description,
         sections: task.sections,
+        priority: task.priority,
+        status: task.status,
+        tags: task.tags,
       })
-      .select('id, title, description, sections, created_at, updated_at')
+      .select('id, title, description, sections, priority, status, tags, created_at, updated_at')
       .single();
 
     if (error) throw error;
@@ -106,7 +118,7 @@ const SupabaseRepo: TaskRepository = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', taskId)
-      .select('id, title, description, sections, created_at, updated_at')
+      .select('id, title, description, sections, priority, status, tags, created_at, updated_at')
       .single();
 
     if (error) throw error;
