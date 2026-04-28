@@ -59,7 +59,7 @@ interface ToolCard {
 const TOOLS: ToolCard[] = [
   {
     id: 'guf-packer',
-    title: 'GUF Packer',
+    title: 'Сборка GUF',
     description:
       'Пакетное переименование файлов .guf из ZIP-архива с поддержкой шаблонов, массового заполнения и drag-and-drop сортировки.',
     icon: <FileArchive size={22} />,
@@ -69,7 +69,7 @@ const TOOLS: ToolCard[] = [
   },
   {
     id: 'task-helper',
-    title: 'Task Helper',
+    title: 'Задачник',
     description:
       'Реестр экземпляров задач со структурированными разделами и поддержкой Markdown. Создавайте заметки и инструкции.',
     icon: <FileText size={22} />,
@@ -93,7 +93,7 @@ export function HomePage() {
   const typedText = useTypewriter(TYPEWRITER_WORDS);
 
   return (
-    <div className="home-dashboard">
+    <div className="home-dashboard anim-fade-in">
       {/* Welcome Banner */}
       <section className="welcome-banner">
         <div className="welcome-banner__content">
@@ -102,14 +102,14 @@ export function HomePage() {
           </div>
           <div className="welcome-banner__text">
             <h2 className="welcome-banner__title">
-              Добро пожаловать в <span className="welcome-banner__highlight">GD Helper</span>
+              Добро пожаловать в <span className="welcome-banner__highlight">GreenData Helper</span>
             </h2>
             <div className="typewriter">
               <span className="typewriter__text">{typedText}</span>
               <span className="typewriter__cursor">|</span>
             </div>
             <p className="welcome-banner__subtitle">
-              Инструменты для работы с проектами GD. Выберите нужный инструмент, чтобы начать.
+              Инструменты для работы с проектами GreenData. Выберите нужный инструмент, чтобы начать.
             </p>
           </div>
         </div>

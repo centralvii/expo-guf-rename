@@ -95,3 +95,15 @@ export interface TaskItem {
   updatedAt: number;
   sections: TaskSection[];
 }
+
+/**
+ * Настройки подключения к базе данных
+ */
+export type ConnectionMethod = 'supabase' | 'postgres';
+
+export interface AppSettings {
+  connectionMethod: ConnectionMethod;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  postgresUrl: string; // URL для локального API или прямого подключения (если используется прокси)
+}

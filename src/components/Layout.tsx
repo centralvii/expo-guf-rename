@@ -1,6 +1,7 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { Boxes, LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Boxes, LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { checkConnection } from '../lib/taskRepository';
 
 declare const __APP_GIT_COMMIT__: string;
 
@@ -16,7 +17,7 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: 'Дашборд',
     path: '/',
     icon: <LayoutDashboard size={18} />,
   },
@@ -25,13 +26,13 @@ const MAIN_NAV: NavItem[] = [
 const TOOLS_NAV: NavItem[] = [
   {
     id: 'guf-packer',
-    label: 'GUF Packer',
+    label: 'Сборка GUF',
     path: '/guf-packer',
     icon: <FileArchive size={18} />,
   },
   {
     id: 'task-helper',
-    label: 'Task Helper',
+    label: 'Задачник',
     path: '/task-helper',
     icon: <FileText size={18} />,
   },
@@ -47,6 +48,19 @@ const TOOLS_NAV: NavItem[] = [
 
 export function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Connection check
+  useEffect(() => {
+    const check = async () => {
+      const status = await checkConnection();
+      setIsOnline(status);
+    };
+
+    check();
+    const interval = setInterval(check, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-collapse on small screens
   useEffect(() => {
@@ -102,7 +116,7 @@ export function Layout() {
               <Boxes size={20} />
             </div>
             {!isCollapsed && (
-              <span className="sidebar__logo-text">GD Helper</span>
+              <span className="sidebar__logo-text">GreenData Helper</span>
             )}
           </Link>
         </div>
@@ -110,7 +124,7 @@ export function Layout() {
         <nav className="sidebar__nav">
           <div className="sidebar__section">
             {!isCollapsed && (
-              <span className="sidebar__section-label">MAIN</span>
+              <span className="sidebar__section-label">Основное</span>
             )}
             {MAIN_NAV.map(renderNavItem)}
           </div>
@@ -120,6 +134,15 @@ export function Layout() {
               <span className="sidebar__section-label">ИНСТРУМЕНТЫ</span>
             )}
             {TOOLS_NAV.map(renderNavItem)}
+          </div>
+
+          <div className="sidebar__section" style={{ marginTop: 'auto', paddingTop: '12px' }}>
+            {renderNavItem({
+              id: 'settings',
+              label: 'Настройки',
+              path: '/settings',
+              icon: <Settings size={18} />,
+            })}
           </div>
         </nav>
 
@@ -145,8 +168,8 @@ export function Layout() {
       <footer className="statusbar">
         <div className="statusbar__left">
           <span className="statusbar__item">
-            <span className="statusbar__dot" />
-            Online
+            <span className={`statusbar__dot ${!isOnline ? 'statusbar__dot--offline' : ''}`} />
+            {isOnline ? 'Online' : 'Offline'}
           </span>
         </div>
         <div className="statusbar__right">

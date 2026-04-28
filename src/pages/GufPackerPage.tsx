@@ -55,7 +55,7 @@ export function GufPackerPage() {
   }
 
   return (
-    <div className="tool-page">
+    <div className="tool-page anim-fade-in">
       <div className="tool-page__content">
         <FileUploader
           onFileLoaded={handleLoadZip}

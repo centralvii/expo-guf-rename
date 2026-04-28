@@ -5,6 +5,7 @@ import { HomePage } from './pages/HomePage';
 import { GufPackerPage } from './pages/GufPackerPage';
 import { TaskHelperPage } from './pages/TaskHelperPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
+import { SettingsPage } from './pages/SettingsPage';
 import './App.css';
 import './Dashboard.css';
 import './TaskHelper.css';
@@ -19,6 +20,7 @@ function App() {
             <Route path="guf-packer" element={<GufPackerPage />} />
             <Route path="task-helper" element={<TaskHelperPage />} />
             <Route path="task-helper/:taskId" element={<TaskDetailPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

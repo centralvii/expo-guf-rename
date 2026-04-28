@@ -68,6 +68,12 @@
   border-radius: 50%;
   background: var(--success);
   box-shadow: 0 0 4px rgba(12, 206, 107, 0.4);
+  transition: all 0.3s ease;
+}
+
+.statusbar__dot--offline {
+  background: var(--danger);
+  box-shadow: 0 0 4px rgba(238, 85, 85, 0.4);
 }
 
 /* ---- Sidebar ---- */

@@ -1,6 +1,6 @@
 import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Calendar, ChevronRight, FileText } from 'lucide-react';
+import { Plus, Search, Calendar, ChevronRight, FileText, AlertTriangle } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
 
@@ -48,15 +48,26 @@ export function TaskHelperPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="tool-page anim-fade-in">
+        <div className="tool-page__content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '32px', borderRadius: 'var(--radius-lg)', maxWidth: '400px' }}>
+            <AlertTriangle size={48} color="#ef4444" style={{ marginBottom: '16px' }} />
+            <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>Ошибка подключения</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>{error}</p>
+            <Link to="/settings" className="btn btn-primary">
+              Перейти в настройки
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tool-page anim-fade-in">
       <div className="tool-page__content">
-        {error && (
-          <div className="app-restore" style={{ marginBottom: '24px' }}>
-            <span>{error}</span>
-          </div>
-        )}
-
         <div className="task-registry__header" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
           <div className="search-box" style={{ flex: 1, margin: 0 }}>
             <Search size={16} className="search-icon" />

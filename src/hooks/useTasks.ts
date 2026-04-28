@@ -29,8 +29,8 @@ export function useTasks() {
           return;
         }
 
-        console.error('[tasks] Failed to load tasks from Supabase', err);
-        setError('Не удалось загрузить задачи из Supabase.');
+        console.error('[tasks] Failed to load tasks from database', err);
+        setError('Не удалось загрузить задачи из базы данных.');
       })
       .finally(() => {
         if (isMounted) {
@@ -49,8 +49,8 @@ export function useTasks() {
       setTasksState(data);
       setError(null);
     } catch (err) {
-      console.error('[tasks] Failed to reload tasks from Supabase', err);
-      setError('Не удалось загрузить задачи из Supabase.');
+      console.error('[tasks] Failed to reload tasks from database', err);
+      setError('Не удалось загрузить задачи из базы данных.');
     } finally {
       setIsLoaded(true);
     }
