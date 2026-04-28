@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { Boxes, LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 
