@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Wrench, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Wrench, Settings, PanelLeftDashed } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 
@@ -78,10 +78,8 @@ export function Layout() {
       return (
         <div key={item.id} className="sidebar__link sidebar__link--disabled" title={item.label}>
           <span className="sidebar__link-icon">{item.icon}</span>
-          {!isCollapsed && (
-            <span className="sidebar__link-label">{item.label}</span>
-          )}
-          {!isCollapsed && item.tag && (
+          <span className="sidebar__link-label">{item.label}</span>
+          {item.tag && (
             <span className="sidebar__link-tag">{item.tag}</span>
           )}
         </div>
@@ -99,9 +97,7 @@ export function Layout() {
         title={item.label}
       >
         <span className="sidebar__link-icon">{item.icon}</span>
-        {!isCollapsed && (
-          <span className="sidebar__link-label">{item.label}</span>
-        )}
+        <span className="sidebar__link-label">{item.label}</span>
       </NavLink>
     );
   };
@@ -115,28 +111,24 @@ export function Layout() {
             <div className="sidebar__logo-icon" style={{ background: 'none', padding: 0 }}>
               <img src="/logo.svg" alt="Logo" style={{ width: '100%', height: '100%' }} />
             </div>
-            {!isCollapsed && (
-              <span className="sidebar__logo-text">GreenData Helper</span>
-            )}
+            <span className="sidebar__logo-text">GreenData Helper</span>
           </Link>
         </div>
 
         <nav className="sidebar__nav">
           <div className="sidebar__section">
-            {!isCollapsed && (
-              <span className="sidebar__section-label">Основное</span>
-            )}
             {MAIN_NAV.map(renderNavItem)}
           </div>
 
+          <div className="sidebar__divider" />
+
           <div className="sidebar__section">
-            {!isCollapsed && (
-              <span className="sidebar__section-label">ИНСТРУМЕНТЫ</span>
-            )}
             {TOOLS_NAV.map(renderNavItem)}
           </div>
 
-          <div className="sidebar__section" style={{ marginTop: 'auto', paddingTop: '12px' }}>
+          <div className="sidebar__divider" />
+
+          <div className="sidebar__section">
             {renderNavItem({
               id: 'settings',
               label: 'Настройки',
@@ -152,7 +144,7 @@ export function Layout() {
             onClick={() => setIsCollapsed(!isCollapsed)}
             aria-label={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
           >
-            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            <PanelLeftDashed size={16} />
           </button>
         </div>
       </aside>

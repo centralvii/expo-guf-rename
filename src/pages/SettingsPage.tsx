@@ -18,13 +18,6 @@ export function SettingsPage() {
   return (
     <div className="tool-page anim-fade-in">
       <div className="tool-page__content">
-        <header className="page-header" style={{ marginBottom: '32px' }}>
-          <h1 className="page-header__title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Settings size={28} className="text-accent" />
-            Настройки
-          </h1>
-          <p className="page-header__desc">Управление параметрами приложения и методами подключения к данным</p>
-        </header>
 
         <div className="settings-grid" style={{ display: 'grid', gap: '24px' }}>
           {/* Connection Settings */}
@@ -33,11 +26,11 @@ export function SettingsPage() {
               <Database size={18} />
               Подключение к базе данных
             </h3>
-            
+
             <div className="form-group" style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>Метод подключения</label>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
+                <button
                   className={`btn ${settings.connectionMethod === 'supabase' ? 'btn--primary' : 'btn--ghost'}`}
                   onClick={() => updateSettings({ connectionMethod: 'supabase' })}
                   style={{ flex: 1 }}
@@ -45,7 +38,7 @@ export function SettingsPage() {
                   <Server size={16} style={{ marginRight: '8px' }} />
                   Supabase
                 </button>
-                <button 
+                <button
                   className={`btn ${settings.connectionMethod === 'postgres' ? 'btn--primary' : 'btn--ghost'}`}
                   onClick={() => updateSettings({ connectionMethod: 'postgres' })}
                   style={{ flex: 1 }}
@@ -60,8 +53,8 @@ export function SettingsPage() {
               <div className="connection-details anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="form-group">
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Supabase URL</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="text-input"
                     value={settings.supabaseUrl}
                     onChange={(e) => updateSettings({ supabaseUrl: e.target.value })}
@@ -70,8 +63,8 @@ export function SettingsPage() {
                 </div>
                 <div className="form-group">
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Supabase Anon Key</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     className="text-input"
                     value={settings.supabaseAnonKey}
                     onChange={(e) => updateSettings({ supabaseAnonKey: e.target.value })}
@@ -83,8 +76,8 @@ export function SettingsPage() {
               <div className="connection-details anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="form-group">
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>PostgreSQL Proxy/API URL</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="text-input"
                     value={settings.postgresUrl}
                     onChange={(e) => updateSettings({ postgresUrl: e.target.value })}
