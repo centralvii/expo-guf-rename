@@ -89,7 +89,7 @@ interface TagPickerProps {
 function TagPicker({ selectedTags, onChange }: TagPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState(TAG_COLOR_PRESETS[0]);
+  const [newTagColor, setNewTagColor] = useState<string>(TAG_COLOR_PRESETS[0]);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
