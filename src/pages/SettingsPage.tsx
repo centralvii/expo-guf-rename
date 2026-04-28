@@ -1,6 +1,5 @@
-import { Settings, Info, ShieldCheck, Database, Server, Link as LinkIcon, RefreshCcw } from 'lucide-react';
+import { Settings, Info, ShieldCheck, Database, Server } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
-import type { ConnectionMethod } from '../types';
 import { resetSupabaseClient } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
 

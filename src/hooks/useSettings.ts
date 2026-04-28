@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { AppSettings, ConnectionMethod } from '../types';
 
 const SETTINGS_KEY = 'gd-helper-settings';
