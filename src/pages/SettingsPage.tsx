@@ -1,4 +1,4 @@
-import { Settings, Info, ShieldCheck, Database, Server } from 'lucide-react';
+import { Info, ShieldCheck, Database, Server } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { resetSupabaseClient } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
