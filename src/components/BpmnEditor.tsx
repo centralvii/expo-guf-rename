@@ -91,7 +91,7 @@ function addDotGrid(container: HTMLDivElement) {
 export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
   ({ initialXml, onChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const modelerRef = useRef<InstanceType<typeof BpmnModeler> | null>(null);
+    const modelerRef = useRef<any>(null);
 
     useImperativeHandle(ref, () => ({
       getXml: async () => {
@@ -190,7 +190,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
 
       const xml = initialXml || EMPTY_DIAGRAM;
       modeler.importXML(xml).then(() => {
-        modeler.get('canvas').zoom('fit-viewport');
+        (modeler as any).get('canvas').zoom('fit-viewport');
         if (containerRef.current) addDotGrid(containerRef.current);
       });
 
@@ -207,8 +207,8 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
           ) return;
 
           e.preventDefault();
-          const elementRegistry = modeler.get('elementRegistry');
-          const selection = modeler.get('selection');
+          const elementRegistry = (modeler as any).get('elementRegistry');
+          const selection = (modeler as any).get('selection');
           const allElements = elementRegistry.getAll().filter(
             (el: any) => el.type !== 'bpmn:Process' && el.type !== '__implicitroot'
           );
