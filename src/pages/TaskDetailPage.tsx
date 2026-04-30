@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus,
   Flame, ArrowUp, ArrowRight, ArrowDown, Circle, Clock, GitPullRequest,
-  CheckCircle2, XCircle, Tag, X
+  CheckCircle2, XCircle, Tag, X, ChevronUp, ChevronDown
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -299,6 +299,24 @@ export function TaskDetailPage() {
     setEditSections(editSections.filter((s) => s.id !== id));
   };
 
+  const handleMoveSectionUp = (index: number) => {
+    if (index === 0) return;
+    setEditSections((prev) => {
+      const arr = [...prev];
+      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+      return arr;
+    });
+  };
+
+  const handleMoveSectionDown = (index: number) => {
+    setEditSections((prev) => {
+      if (index === prev.length - 1) return prev;
+      const arr = [...prev];
+      [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+      return arr;
+    });
+  };
+
   const updateSection = (id: string, updates: Partial<TaskSection>) => {
     setEditSections(editSections.map((s) => (s.id === id ? { ...s, ...updates } : s)));
   };
@@ -452,9 +470,31 @@ export function TaskDetailPage() {
           <div className="task-detail__sections">
             {isEditing ? (
               <>
-                {editSections.map((section) => (
+                {editSections.map((section, index) => (
                   <div key={section.id} className="task-section-edit">
                     <div className="task-section-edit__header">
+                      <div className="task-section-edit__reorder">
+                        <button
+                          type="button"
+                          className="btn-section-move"
+                          onClick={() => handleMoveSectionUp(index)}
+                          disabled={index === 0}
+                          title="Переместить вверх"
+                          aria-label="Переместить раздел вверх"
+                        >
+                          <ChevronUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-section-move"
+                          onClick={() => handleMoveSectionDown(index)}
+                          disabled={index === editSections.length - 1}
+                          title="Переместить вниз"
+                          aria-label="Переместить раздел вниз"
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                      </div>
                       <input
                         type="text"
                         value={section.title}

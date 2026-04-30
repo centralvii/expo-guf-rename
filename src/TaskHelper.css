@@ -278,6 +278,16 @@
 /* ---- Section edit ---- */
 .task-section-edit { display: flex; flex-direction: column; gap: 10px; background: var(--bg-card); border: 1px dashed var(--border-hover); border-radius: var(--radius-lg); padding: 16px; }
 .task-section-edit__header { display: flex; align-items: center; gap: 12px; }
+.task-section-edit__reorder { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.btn-section-move {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: var(--radius-sm);
+  background: var(--bg-muted); border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer;
+  transition: all var(--transition); padding: 0;
+}
+.btn-section-move:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--border-hover); color: var(--text-primary); }
+.btn-section-move:disabled { opacity: 0.25; cursor: not-allowed; }
 .task-section-edit__title-input { flex: 1; font-size: 15px; font-weight: 600; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text-primary); font-family: inherit; }
 .task-section-edit__title-input:focus { outline: none; border-color: var(--border-focus); }
 .task-section-edit__content-input { font-size: 13px; font-family: var(--font-mono); background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; color: var(--text-primary); width: 100%; resize: vertical; line-height: 1.5; }
