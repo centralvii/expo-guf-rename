@@ -1,6 +1,6 @@
 import { type ReactNode, useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FileArchive, FileText, ArrowRight, Activity, Clock } from 'lucide-react';
+import { FileArchive, FileText, GitBranch, ArrowRight, Activity, Clock } from 'lucide-react';
 
 const TYPEWRITER_WORDS = [
   'Переименовывай.',
@@ -76,7 +76,17 @@ const TOOLS: ToolCard[] = [
     path: '/task-helper',
     tag: 'ГОТОВО',
     tagColor: 'green',
-  }
+  },
+  {
+    id: 'bpmn',
+    title: 'BPMN',
+    description:
+      'Визуальный редактор бизнес-процессов на базе bpmn.io. Создавайте, редактируйте и экспортируйте BPMN 2.0 диаграммы.',
+    icon: <GitBranch size={22} />,
+    path: '/bpmn',
+    tag: 'НОВОЕ',
+    tagColor: 'blue',
+  },
   // {
   //   id: 'another-tool',
   //   title: 'Новый инструмент',

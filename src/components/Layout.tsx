@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, GitBranch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 
@@ -41,15 +41,13 @@ const TOOLS_NAV: NavItem[] = [
     label: 'Задачник',
     path: '/task-helper',
     icon: <FileText size={18} />,
-  }
-  // {
-  //   id: 'new-tool',
-  //   label: 'Новый инструмент',
-  //   path: '#',
-  //   icon: <Wrench size={18} />,
-  //   disabled: true,
-  //   tag: 'СКОРО',
-  // },
+  },
+  {
+    id: 'bpmn',
+    label: 'BPMN',
+    path: '/bpmn',
+    icon: <GitBranch size={18} />,
+  },
 ];
 
 export function Layout() {

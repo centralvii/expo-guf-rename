@@ -1,5 +1,5 @@
 import {
-  FileArchive, FileText, Zap, Shield, Database,
+  FileArchive, FileText, GitBranch, Zap, Shield, Database,
   Code2, Layers
 } from 'lucide-react';
 
@@ -44,6 +44,20 @@ const TOOLS: ToolInfo[] = [
       'Экспорт задачи в .md файл',
       'Фильтрация по статусу, приоритету и тегам',
       'Синхронизация через Supabase',
+    ],
+  },
+  {
+    icon: <GitBranch size={20} />,
+    title: 'BPMN',
+    badge: 'НОВОЕ',
+    color: '#22c55e',
+    features: [
+      'Визуальный редактор BPMN 2.0 диаграмм',
+      'Полная палитра элементов: события, задачи, шлюзы',
+      'Импорт и экспорт .bpmn / .xml файлов',
+      'Сохранение диаграмм локально в браузере',
+      'Drag & Drop построение процессов',
+      'Масштабирование и навигация по холсту',
     ],
   },
 ];
