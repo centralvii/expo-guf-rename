@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 
@@ -15,6 +15,12 @@ interface NavItem {
 }
 
 const MAIN_NAV: NavItem[] = [
+  {
+    id: 'about',
+    label: 'О проекте',
+    path: '/about',
+    icon: <Info size={18} />,
+  },
   {
     id: 'dashboard',
     label: 'Дашборд',
@@ -163,6 +169,20 @@ export function Layout() {
             <span className={`statusbar__dot ${!isOnline ? 'statusbar__dot--offline' : ''}`} />
             {isOnline ? 'Online' : 'Offline'}
           </span>
+        </div>
+        <div className="statusbar__center">
+          <span className="statusbar__item statusbar__copy">
+            Сделано с ❤️ для ускорения разработки
+          </span>
+          <span className="statusbar__divider" />
+          <a
+            href="https://github.com/centralvii/expo-guf-rename"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="statusbar__item statusbar__link"
+          >
+            GitHub
+          </a>
         </div>
         <div className="statusbar__right">
           <span className="statusbar__item">
