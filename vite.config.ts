@@ -18,4 +18,7 @@ export default defineConfig({
   define: {
     __APP_GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
   },
+  server: {
+    historyApiFallback: true,
+  },
 });
