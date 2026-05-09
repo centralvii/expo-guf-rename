@@ -222,7 +222,7 @@ export function AboutPage() {
             <span className="about-v2__hero-title-line about-v2__hero-title-accent">Создавай.</span>
           </h1>
           <p className="about-v2__hero-desc">
-            GD Helper — коллекция веб-инструментов для работы с игровыми ресурсами, задачами
+            GD Helper — коллекция веб-инструментов для работы с проектными ресурсами, задачами
             и бизнес-процессами. Всё работает прямо в браузере, без установки.
           </p>
           <div className="about-v2__hero-actions">
