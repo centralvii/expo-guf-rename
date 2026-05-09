@@ -19,3 +19,9 @@ body {
 #root {
   min-height: 100vh;
 }
+
+*:focus,
+*:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}

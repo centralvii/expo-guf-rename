@@ -437,8 +437,7 @@ a {
 }
 
 .template-input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+  outline: none;
 }
 
 .template-tags {
@@ -591,8 +590,7 @@ a {
 }
 
 .mass-field__input:focus {
-  border-color: var(--accent-border);
-  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.08);
+  outline: none;
 }
 
 .mass-field__input::placeholder {
@@ -720,8 +718,7 @@ a {
 }
 
 .start-number-input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+  outline: none;
 }
 
 /* Add Variable Form */
@@ -748,7 +745,7 @@ a {
   transition: border-color var(--transition);
 }
 .add-var-form__input:focus {
-  border-color: var(--accent-border);
+  outline: none;
 }
 
 .btn--sm {
@@ -1175,8 +1172,7 @@ a {
 }
 
 .readme-card__textarea:focus {
-  border-color: var(--border);
-  box-shadow: none;
+  outline: none;
 }
 
 /* --- Hardened Tooltips --- */

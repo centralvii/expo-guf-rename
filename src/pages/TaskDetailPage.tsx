@@ -157,6 +157,38 @@ function TagPicker({ selectedTags, onChange }: TagPickerProps) {
   );
 }
 
+type EditDraft = {
+  title: string;
+  description: string;
+  sections: TaskSection[];
+  priority: TaskPriority;
+  status: TaskStatus;
+  tags: TaskTag[];
+};
+
+function getDraftKey(taskId: string) {
+  return `task-draft:${taskId}`;
+}
+
+function loadDraft(taskId: string): EditDraft | null {
+  try {
+    const raw = localStorage.getItem(getDraftKey(taskId));
+    return raw ? (JSON.parse(raw) as EditDraft) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(taskId: string, draft: EditDraft) {
+  try {
+    localStorage.setItem(getDraftKey(taskId), JSON.stringify(draft));
+  } catch { /* ignore */ }
+}
+
+function clearDraft(taskId: string) {
+  localStorage.removeItem(getDraftKey(taskId));
+}
+
 export function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -165,6 +197,7 @@ export function TaskDetailPage() {
 
   const task = taskId ? getTask(taskId) : undefined;
   const [isEditing, setIsEditing] = useState(false);
+  const [hasDraftWarning, setHasDraftWarning] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleteModalClosing, setIsDeleteModalClosing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -205,6 +238,20 @@ export function TaskDetailPage() {
     return () => window.clearTimeout(timeoutId);
   }, [isDeleteModalClosing]);
 
+  // Persist draft to localStorage on every edit change (must be before early returns)
+  useEffect(() => {
+    if (!isEditing || !taskId) return;
+    const draft: EditDraft = {
+      title: editTitle,
+      description: editDesc,
+      sections: editSections,
+      priority: editPriority,
+      status: editStatus,
+      tags: editTags,
+    };
+    saveDraft(taskId, draft);
+  }, [isEditing, taskId, editTitle, editDesc, editSections, editPriority, editStatus, editTags]);
+
   if (!isLoaded) return <div className="page-loading">Загрузка...</div>;
   if (error) return <div className="page-loading">{error}</div>;
   if (!task) return <div className="page-loading">Задача не найдена или удалена</div>;
@@ -212,13 +259,39 @@ export function TaskDetailPage() {
   const markdown = taskToMarkdown(task);
 
   const handleStartEditing = () => {
+    if (!taskId) return;
+    const draft = loadDraft(taskId);
+    if (draft) {
+      // Restore unsaved draft
+      setEditTitle(draft.title);
+      setEditDesc(draft.description);
+      setEditSections(draft.sections);
+      setEditPriority(draft.priority);
+      setEditStatus(draft.status);
+      setEditTags(draft.tags);
+      setHasDraftWarning(true);
+    } else {
+      setEditTitle(task.title);
+      setEditDesc(task.description);
+      setEditSections(task.sections);
+      setEditPriority(task.priority ?? 'medium');
+      setEditStatus(task.status ?? 'open');
+      setEditTags(task.tags ?? []);
+      setHasDraftWarning(false);
+    }
+    setIsEditing(true);
+  };
+
+  const handleDiscardDraft = () => {
+    if (!taskId) return;
+    clearDraft(taskId);
     setEditTitle(task.title);
     setEditDesc(task.description);
     setEditSections(task.sections);
     setEditPriority(task.priority ?? 'medium');
     setEditStatus(task.status ?? 'open');
     setEditTags(task.tags ?? []);
-    setIsEditing(true);
+    setHasDraftWarning(false);
   };
 
   const handleCopyMarkdown = async () => {
@@ -255,7 +328,9 @@ export function TaskDetailPage() {
         status: editStatus,
         tags: editTags,
       });
+      clearDraft(taskId);
       setIsEditing(false);
+      setHasDraftWarning(false);
       notify('Изменения сохранены');
     } catch (saveError) {
       console.error('[task-helper] Failed to save task', saveError);
@@ -363,6 +438,17 @@ export function TaskDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Draft warning banner */}
+          {isEditing && hasDraftWarning && (
+            <div className="draft-warning">
+              <AlertTriangle size={15} />
+              <span>Восстановлены несохранённые изменения с предыдущей сессии</span>
+              <button className="draft-warning__discard" onClick={handleDiscardDraft}>
+                Сбросить
+              </button>
+            </div>
+          )}
 
           {/* Header */}
           {isEditing ? (
