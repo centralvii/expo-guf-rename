@@ -1,192 +1,344 @@
+import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FileArchive, FileText, GitBranch, Zap, Shield, Database,
-  Code2, Layers
+  Layers, ArrowRight, Check, Sparkles, Globe, Lock
 } from 'lucide-react';
 
-interface FeatureItem {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
+/* ---- Data ---- */
 
 interface ToolInfo {
   icon: React.ReactNode;
   title: string;
+  description: string;
   badge: string;
+  badgeVariant: 'green' | 'blue';
   features: string[];
   color: string;
+  path: string;
 }
 
 const TOOLS: ToolInfo[] = [
   {
-    icon: <FileArchive size={20} />,
+    icon: <FileArchive size={22} />,
     title: 'Сборка GUF',
+    description: 'Пакетная обработка и переименование .guf файлов из ZIP-архива.',
     badge: 'ГОТОВО',
+    badgeVariant: 'green',
     color: '#0070f3',
+    path: '/guf-packer',
     features: [
-      'Пакетное переименование .guf файлов из ZIP-архива',
-      'Гибкие шаблоны с тегами: {cleanName}, {date}, {index} и др.',
+      'Шаблоны с тегами: {cleanName}, {date}, {index}',
       'Drag & Drop сортировка файлов',
       'Массовое заполнение переменных',
       'Генератор README для архива',
-      'Экспорт готового ZIP одной кнопкой',
+      'Экспорт готового ZIP',
     ],
   },
   {
-    icon: <FileText size={20} />,
+    icon: <FileText size={22} />,
     title: 'Задачник',
+    description: 'Реестр задач с приоритетами, статусами и поддержкой Markdown.',
     badge: 'ГОТОВО',
+    badgeVariant: 'green',
     color: '#7928ca',
+    path: '/task-helper',
     features: [
-      'Реестр задач с приоритетами и статусами',
-      'Структурированные разделы с поддержкой Markdown',
+      'Структурированные разделы',
       'Теги с цветовой маркировкой',
-      'Экспорт задачи в .md файл',
-      'Фильтрация по статусу, приоритету и тегам',
+      'Фильтрация и поиск',
+      'Экспорт в Markdown',
       'Синхронизация через Supabase',
     ],
   },
   {
-    icon: <GitBranch size={20} />,
-    title: 'BPMN',
+    icon: <GitBranch size={22} />,
+    title: 'BPMN Редактор',
+    description: 'Визуальный конструктор бизнес-процессов на базе BPMN 2.0.',
     badge: 'НОВОЕ',
+    badgeVariant: 'blue',
     color: '#22c55e',
+    path: '/bpmn',
     features: [
-      'Визуальный редактор BPMN 2.0 диаграмм',
-      'Полная палитра элементов: события, задачи, шлюзы',
-      'Импорт и экспорт .bpmn / .xml файлов',
-      'Сохранение диаграмм локально в браузере',
-      'Drag & Drop построение процессов',
-      'Масштабирование и навигация по холсту',
+      'Палитра событий, задач и шлюзов',
+      'Импорт / экспорт .bpmn и .xml',
+      'Сохранение диаграмм в браузере',
+      'Drag & Drop построение',
+      'Масштабирование и навигация',
     ],
   },
 ];
 
-const HIGHLIGHTS: FeatureItem[] = [
+interface PrincipleItem {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  gradient: string;
+}
+
+const PRINCIPLES: PrincipleItem[] = [
   {
-    icon: <Shield size={18} />,
+    icon: <Lock size={20} />,
     title: 'Приватность',
-    description: 'Файлы обрабатываются локально в браузере и никогда не передаются на сервер.',
+    description: 'Все файлы обрабатываются локально в браузере. Ничего не отправляется на сервер.',
+    gradient: 'linear-gradient(135deg, #0070f3, #00a6ff)',
   },
   {
-    icon: <Zap size={18} />,
-    title: 'Скорость',
-    description: 'Мгновенный отклик благодаря React 19 + Vite и оптимизированному рендерингу.',
+    icon: <Zap size={20} />,
+    title: 'Мгновенный отклик',
+    description: 'React 19 + Vite обеспечивают молниеносную скорость рендеринга и сборки.',
+    gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
   },
   {
-    icon: <Database size={18} />,
-    title: 'Персистентность',
-    description: 'Состояние сохраняется в IndexedDB — данные не теряются после перезагрузки.',
+    icon: <Database size={20} />,
+    title: 'Сохранность данных',
+    description: 'Состояние хранится в IndexedDB и Supabase — данные не теряются после перезагрузки.',
+    gradient: 'linear-gradient(135deg, #22c55e, #10b981)',
   },
   {
-    icon: <Layers size={18} />,
+    icon: <Layers size={20} />,
     title: 'Дизайн-система',
-    description: 'Единый CSS-дизайн с тёмной темой, glassmorphism и плавными анимациями.',
+    description: 'Единый CSS с тёмной темой, glassmorphism эффектами и плавными анимациями.',
+    gradient: 'linear-gradient(135deg, #7928ca, #a855f7)',
+  },
+  {
+    icon: <Globe size={20} />,
+    title: 'Доступность',
+    description: 'Развёрнут на Vercel. Доступен из любого браузера без установки.',
+    gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+  },
+  {
+    icon: <Shield size={20} />,
+    title: 'Надёжность',
+    description: 'TypeScript strict mode, ESLint, постоянное тестирование на реальных данных.',
+    gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
   },
 ];
 
 const STACK = [
-  { name: 'React 19', desc: 'UI-фреймворк', color: '#61dafb' },
-  { name: 'TypeScript', desc: 'Strict mode', color: '#3178c6' },
-  { name: 'Vite', desc: 'Сборщик', color: '#646cff' },
-  { name: 'Supabase', desc: 'База данных', color: '#3ecf8e' },
-  { name: 'PostgreSQL', desc: 'SQL база', color: '#336791' },
-  { name: 'lucide-react', desc: 'Иконки', color: '#f97316' },
-  { name: '@dnd-kit', desc: 'Drag & Drop', color: '#a855f7' },
-  { name: 'jszip', desc: 'ZIP-архивы', color: '#f59e0b' },
-  { name: 'react-markdown', desc: 'Markdown', color: '#22c55e' },
-  { name: 'remark-gfm', desc: 'GFM таблицы', color: '#16a34a' },
-  { name: 'idb-keyval', desc: 'IndexedDB', color: '#e879f9' },
-  { name: 'react-router-dom', desc: 'Роутинг', color: '#ef4444' },
-  { name: 'CSS3', desc: 'Дизайн-система', color: '#2563eb' },
-  { name: 'Glassmorphism', desc: 'UI-стиль', color: '#7dd3fc' },
-  { name: 'Vite PWA', desc: 'Оффлайн', color: '#818cf8' },
-  { name: 'ESLint', desc: 'Линтер', color: '#4b32c3' },
-  { name: 'crypto.randomUUID', desc: 'ID генерация', color: '#94a3b8' },
-  { name: 'Vercel', desc: 'Деплой', color: '#ffffff' },
+  { name: 'React 19', color: '#61dafb' },
+  { name: 'TypeScript', color: '#3178c6' },
+  { name: 'Vite', color: '#646cff' },
+  { name: 'Supabase', color: '#3ecf8e' },
+  { name: 'PostgreSQL', color: '#336791' },
+  { name: 'lucide-react', color: '#f97316' },
+  { name: '@dnd-kit', color: '#a855f7' },
+  { name: 'jszip', color: '#f5a623' },
+  { name: 'react-markdown', color: '#22c55e' },
+  { name: 'remark-gfm', color: '#16a34a' },
+  { name: 'idb-keyval', color: '#e879f9' },
+  { name: 'react-router', color: '#ef4444' },
+  { name: 'CSS3', color: '#2563eb' },
+  { name: 'bpmn.io', color: '#ff6600' },
+  { name: 'Vercel', color: '#ffffff' },
+  { name: 'ESLint', color: '#4b32c3' },
 ];
+
+const STATS = [
+  { value: '3', label: 'Инструмента' },
+  { value: '100%', label: 'Клиентская обработка' },
+  { value: '0', label: 'Утечек данных' },
+  { value: '∞', label: 'Возможностей' },
+];
+
+/* ---- Floating particles canvas ---- */
+
+function ParticlesCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const particles: { x: number; y: number; vx: number; vy: number; r: number; o: number }[] = [];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+
+    for (let i = 0; i < 40; i++) {
+      particles.push({
+        x: Math.random() * canvas.offsetWidth,
+        y: Math.random() * canvas.offsetHeight,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.5 + 0.5,
+        o: Math.random() * 0.3 + 0.1,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.offsetWidth;
+        if (p.x > canvas.offsetWidth) p.x = 0;
+        if (p.y < 0) p.y = canvas.offsetHeight;
+        if (p.y > canvas.offsetHeight) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 112, 243, ${p.o})`;
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    window.addEventListener('resize', resize);
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="about-v2__particles" />;
+}
+
+/* ---- Component ---- */
 
 export function AboutPage() {
   return (
-    <div className="about-page anim-fade-in">
+    <div className="about-v2 anim-fade-in">
 
-      {/* Hero */}
-      <section className="about-hero">
-        <div className="about-hero__logo">
-          <img src="/logo.svg" alt="GreenData Helper" />
-        </div>
-        <div className="about-hero__text">
-          <h1 className="about-hero__title">
-            GreenData <span className="about-hero__accent">Helper</span>
+      {/* ===== HERO ===== */}
+      <section className="about-v2__hero">
+        <ParticlesCanvas />
+        <div className="about-v2__hero-glow" />
+        <div className="about-v2__hero-content">
+          <div className="about-v2__hero-badge">
+            <Sparkles size={12} />
+            <span>Набор инструментов для GreenData</span>
+          </div>
+          <h1 className="about-v2__hero-title">
+            <span className="about-v2__hero-title-line">Автоматизируй.</span>
+            <span className="about-v2__hero-title-line">Документируй.</span>
+            <span className="about-v2__hero-title-line about-v2__hero-title-accent">Создавай.</span>
           </h1>
-          <p className="about-hero__subtitle">
-            Набор инструментов для автоматизации рутинных процессов при работе с игровыми ресурсами и документацией.
+          <p className="about-v2__hero-desc">
+            GD Helper — коллекция веб-инструментов для работы с игровыми ресурсами, задачами
+            и бизнес-процессами. Всё работает прямо в браузере, без установки.
           </p>
-          <div className="about-hero__badges">
-            <span className="about-badge about-badge--blue">React 19</span>
-            <span className="about-badge about-badge--blue">TypeScript</span>
-            <span className="about-badge about-badge--purple">Vite</span>
-            <span className="about-badge about-badge--green">Open Source</span>
+          <div className="about-v2__hero-actions">
+            <Link to="/" className="about-v2__cta-primary">
+              Начать работу <ArrowRight size={16} />
+            </Link>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="about-v2__cta-secondary"
+            >
+              GitHub
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Stack marquee */}
-      <div className="about-marquee-wrap">
-        <div className="about-marquee">
-          <div className="about-marquee__track">
-            {[...STACK, ...STACK].map((item, i) => (
-              <span key={i} className="about-marquee__item">
-                <span className="about-marquee__dot" style={{ background: item.color }} />
-                <span className="about-marquee__name">{item.name}</span>
-                <span className="about-marquee__desc">{item.desc}</span>
-              </span>
-            ))}
+      {/* ===== STATS ===== */}
+      <section className="about-v2__stats">
+        {STATS.map((stat) => (
+          <div key={stat.label} className="about-v2__stat">
+            <div className="about-v2__stat-value">{stat.value}</div>
+            <div className="about-v2__stat-label">{stat.label}</div>
           </div>
-        </div>
-      </div>
-
-      {/* Highlights */}
-      <section className="about-section">
-        <h2 className="about-section__title">Ключевые принципы</h2>
-        <div className="about-highlights">
-          {HIGHLIGHTS.map((item) => (
-            <div key={item.title} className="about-highlight-card">
-              <div className="about-highlight-card__icon">{item.icon}</div>
-              <div>
-                <div className="about-highlight-card__title">{item.title}</div>
-                <div className="about-highlight-card__desc">{item.description}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        ))}
       </section>
 
-      {/* Tools */}
-      <section className="about-section">
-        <h2 className="about-section__title">Инструменты</h2>
-        <div
-          className="about-tools"
-          style={{ gridTemplateColumns: `repeat(${Math.min(TOOLS.length, 4)}, 1fr)` }}
-        >
+      {/* ===== TOOLS ===== */}
+      <section className="about-v2__section">
+        <div className="about-v2__section-header">
+          <span className="about-v2__section-tag">Инструменты</span>
+          <h2 className="about-v2__section-title">Всё необходимое в одном месте</h2>
+          <p className="about-v2__section-desc">Три специализированных инструмента для повседневной работы</p>
+        </div>
+        <div className="about-v2__tools-grid">
           {TOOLS.map((tool) => (
-            <div key={tool.title} className="about-tool-card" style={{ '--tool-color': tool.color } as React.CSSProperties}>
-              <div className="about-tool-card__header">
-                <div className="about-tool-card__icon">{tool.icon}</div>
-                <div className="about-tool-card__name">{tool.title}</div>
-                <span className="about-tool-card__badge">{tool.badge}</span>
+            <Link
+              to={tool.path}
+              key={tool.title}
+              className="about-v2__tool-card"
+              style={{ '--tool-color': tool.color } as React.CSSProperties}
+            >
+              <div className="about-v2__tool-card-glow" />
+              <div className="about-v2__tool-header">
+                <div className="about-v2__tool-icon">{tool.icon}</div>
+                <span className={`about-v2__tool-badge about-v2__tool-badge--${tool.badgeVariant}`}>
+                  {tool.badge}
+                </span>
               </div>
-              <ul className="about-tool-card__features">
+              <h3 className="about-v2__tool-title">{tool.title}</h3>
+              <p className="about-v2__tool-desc">{tool.description}</p>
+              <ul className="about-v2__tool-features">
                 {tool.features.map((f) => (
-                  <li key={f} className="about-tool-card__feature">
-                    <Code2 size={12} className="about-tool-card__feature-icon" />
-                    {f}
-                  </li>
+                  <li key={f}><Check size={14} /><span>{f}</span></li>
                 ))}
               </ul>
+              <div className="about-v2__tool-cta">
+                <span>Открыть</span>
+                <ArrowRight size={14} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== PRINCIPLES ===== */}
+      <section className="about-v2__section">
+        <div className="about-v2__section-header">
+          <span className="about-v2__section-tag">Принципы</span>
+          <h2 className="about-v2__section-title">Почему GD Helper?</h2>
+          <p className="about-v2__section-desc">Продуманный подход к каждому аспекту</p>
+        </div>
+        <div className="about-v2__principles-grid">
+          {PRINCIPLES.map((p) => (
+            <div key={p.title} className="about-v2__principle">
+              <div className="about-v2__principle-icon" style={{ background: p.gradient }}>
+                {p.icon}
+              </div>
+              <h4 className="about-v2__principle-title">{p.title}</h4>
+              <p className="about-v2__principle-desc">{p.description}</p>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ===== TECH STACK MARQUEE ===== */}
+      <section className="about-v2__section">
+        <div className="about-v2__section-header">
+          <span className="about-v2__section-tag">Стек</span>
+          <h2 className="about-v2__section-title">Технологии</h2>
+        </div>
+        <div className="about-v2__marquee-wrap">
+          <div className="about-v2__marquee">
+            <div className="about-v2__marquee-track">
+              {[...STACK, ...STACK].map((item, i) => (
+                <span key={i} className="about-v2__marquee-item">
+                  <span className="about-v2__marquee-dot" style={{ background: item.color }} />
+                  <span className="about-v2__marquee-name">{item.name}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== BOTTOM CTA ===== */}
+      <section className="about-v2__bottom-cta">
+        <div className="about-v2__bottom-cta-glow" />
+        <h2 className="about-v2__bottom-title">Готов начать?</h2>
+        <p className="about-v2__bottom-desc">
+          Выбери инструмент и приступай к работе. Никакой регистрации, никаких ограничений.
+        </p>
+        <Link to="/" className="about-v2__cta-primary about-v2__cta-primary--lg">
+          Перейти к инструментам <ArrowRight size={18} />
+        </Link>
       </section>
 
     </div>

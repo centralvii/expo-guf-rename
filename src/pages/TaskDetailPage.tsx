@@ -209,6 +209,8 @@ export function TaskDetailPage() {
   const [editStatus, setEditStatus] = useState<TaskStatus>('open');
   const [editTags, setEditTags] = useState<TaskTag[]>([]);
 
+  const skipNextDraftSave = useRef(false);
+
   useEffect(() => {
     if (!isDeleteModalOpen) return undefined;
 
@@ -241,6 +243,10 @@ export function TaskDetailPage() {
   // Persist draft to localStorage on every edit change (must be before early returns)
   useEffect(() => {
     if (!isEditing || !taskId) return;
+    if (skipNextDraftSave.current) {
+      skipNextDraftSave.current = false;
+      return;
+    }
     const draft: EditDraft = {
       title: editTitle,
       description: editDesc,
@@ -285,6 +291,7 @@ export function TaskDetailPage() {
   const handleDiscardDraft = () => {
     if (!taskId) return;
     clearDraft(taskId);
+    skipNextDraftSave.current = true;
     setEditTitle(task.title);
     setEditDesc(task.description);
     setEditSections(task.sections);

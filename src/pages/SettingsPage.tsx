@@ -100,7 +100,7 @@ export function SettingsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Версия:</span>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>0.1.0-alpha</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>1.1.3 release</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Среда:</span>
