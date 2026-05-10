@@ -1,5 +1,5 @@
 /**
- * Модуль импорта / экспорта ZIP-архивов.
+ * Модуль импорта / экспорта ZIP-архивов и .guf файлов.
  * Использует jszip для работы с архивами и file-saver для скачивания.
  */
 
@@ -23,11 +23,12 @@ function generateId(): string {
  */
 export async function extractZip(
   file: File,
-  filterGuf: boolean = true
+  filterGuf: boolean = true,
+  startOrder: number = 1
 ): Promise<FileRow[]> {
   const zip = await JSZip.loadAsync(file);
   const rows: FileRow[] = [];
-  let order = 1;
+  let order = startOrder;
 
   const entries: { path: string; zipObj: JSZip.JSZipObject }[] = [];
 
@@ -70,6 +71,34 @@ export async function extractZip(
   }
 
   return rows;
+}
+
+/**
+ * Конвертирует массив .guf File-объектов в FileRow[].
+ * Используется при прямой загрузке файлов без ZIP-обёртки.
+ * startOrder — с какого порядкового номера начинать (для добавления к существующим).
+ */
+export function gufFilesToRows(files: File[], startOrder: number = 1): FileRow[] {
+  return files.map((file, i) => {
+    const baseName = file.name;
+    const ext = getExtension(baseName);
+    const nameWithoutExt = getNameWithoutExtension(baseName);
+    const parsed = parseFileName(nameWithoutExt);
+
+    return {
+      id: generateId(),
+      order: startOrder + i,
+      originalPath: baseName,
+      originalName: baseName,
+      extension: ext,
+      file,
+      detectedDate: parsed.detectedDate,
+      detectedTime: parsed.detectedTime,
+      cleanName: parsed.cleanName,
+      variables: {},
+      newName: '',
+    };
+  });
 }
 
 /**

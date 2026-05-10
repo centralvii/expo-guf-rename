@@ -23,6 +23,11 @@ export function GufPackerPage() {
     }
   };
 
+  const handleGufFilesAdded = (files: File[]) => {
+    state.loadGufFiles(files);
+    notify(`Добавлено .guf файлов: ${files.length}`);
+  };
+
   const handleAddFiles = (files: File[]) => {
     state.addFiles(files);
     notify(`Добавлено файлов: ${files.length}`);
@@ -58,7 +63,8 @@ export function GufPackerPage() {
     <div className="tool-page anim-fade-in">
       <div className="tool-page__content">
         <FileUploader
-          onFileLoaded={handleLoadZip}
+          onZipLoaded={handleLoadZip}
+          onGufFilesAdded={handleGufFilesAdded}
           isLoading={state.isLoading}
           hasFiles={state.files.length > 0}
         />

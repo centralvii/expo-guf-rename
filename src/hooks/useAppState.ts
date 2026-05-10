@@ -10,7 +10,7 @@ import type { FileRow, CustomVariable, ValidationError } from '../types';
 import { DEFAULT_TEMPLATE, DEFAULT_VARIABLES } from '../types';
 import { recalculateAllNames } from '../utils/templateEngine';
 import { validateFiles } from '../utils/validation';
-import { extractZip, generateZip } from '../utils/zipHandler';
+import { extractZip, generateZip, gufFilesToRows } from '../utils/zipHandler';
 import { saveState, loadState, clearState } from '../utils/persistence';
 import { parseFileName, getExtension, getNameWithoutExtension } from '../utils/nameCleaner';
 
@@ -27,6 +27,7 @@ export interface AppState {
   isRestoring: boolean;
 
   loadZip: (file: File) => Promise<void>;
+  loadGufFiles: (files: File[]) => void;
   addFiles: (files: File[]) => void;
   setTemplate: (tpl: string) => void;
   resetTemplate: () => void;
@@ -129,18 +130,37 @@ export function useAppState(): AppState {
       setIsLoading(true);
       try {
         const rows = await extractZip(file, true);
-        // Ensure files have variables object
-        const withVars = rows.map((r) => ({
-          ...r,
-          variables: r.variables || {},
-        }));
-        const withNames = recalc(withVars, template, startNumber, variables);
-        setFiles(withNames);
+        
+        setFiles((prev) => {
+          const startOrder = prev.length + 1;
+          const withVars = rows.map((r, i) => ({
+            ...r,
+            order: startOrder + i,
+            variables: r.variables || {},
+          }));
+          return recalc([...prev, ...withVars], template, startNumber, variables);
+        });
+
         const baseName = file.name.replace(/\.zip$/i, '');
-        setArchiveName(`${baseName}_renamed.zip`);
+        // Обновляем имя архива только если оно стандартное
+        setArchiveName((prev) => (prev === 'renamed_files.zip' ? `${baseName}_renamed.zip` : prev));
       } finally {
         setIsLoading(false);
       }
+    },
+    [template, startNumber, variables, recalc]
+  );
+
+  // Загрузка .guf файлов напрямую (без ZIP)
+  const loadGufFiles = useCallback(
+    (newFiles: File[]) => {
+      setFiles((prev) => {
+        const startOrder = prev.length + 1;
+        const newRows = gufFilesToRows(newFiles, startOrder);
+        return recalc([...prev, ...newRows], template, startNumber, variables);
+      });
+      // Имя архива по умолчанию если ещё не задано
+      setArchiveName((prev) => (prev === 'renamed_files.zip' ? 'guf_pack.zip' : prev));
     },
     [template, startNumber, variables, recalc]
   );
@@ -305,6 +325,7 @@ export function useAppState(): AppState {
     archiveName,
     isRestoring,
     loadZip,
+    loadGufFiles,
     addFiles,
     setTemplate,
     resetTemplate,
