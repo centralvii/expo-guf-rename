@@ -1,7 +1,7 @@
 import { type ReactNode, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FileArchive, FileText, GitBranch, ArrowRight, Activity, Clock,
+  FileArchive, FileText, Workflow, ArrowRight, Activity, Clock,
   Flame, ArrowUp, ArrowDown, Circle, CheckCircle2, XCircle,
   GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles
 } from 'lucide-react';
@@ -93,7 +93,7 @@ const TOOLS: ToolCard[] = [
     id: 'bpmn',
     title: 'BPMN',
     description: 'Визуальный редактор бизнес-процессов на базе BPMN 2.0.',
-    icon: <GitBranch size={22} />,
+    icon: <Workflow size={22} />,
     path: '/bpmn',
     tag: 'НОВОЕ',
     tagColor: 'blue',

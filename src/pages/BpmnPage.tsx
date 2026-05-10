@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
-  Maximize2, Download, Upload, FilePlus, Save, Trash2, GitBranch, RotateCcw, FileImage, FileCode2, ChevronDown
+  Maximize2, Download, Upload, FilePlus, Save, Trash2, Workflow, RotateCcw, FileImage, FileCode2, ChevronDown
 } from 'lucide-react';
 import { BpmnEditor, type BpmnEditorHandle } from '../components/BpmnEditor';
 import { useToast } from '../hooks/useToast';
@@ -184,9 +184,6 @@ export function BpmnPage() {
         {/* Toolbar card */}
         <div className="bpmn-toolbar-card">
           <div className="bpmn-toolbar-card__left">
-            <div className="bpmn-toolbar-card__icon">
-              <GitBranch size={18} />
-            </div>
             <span className="bpmn-toolbar-card__name">
               {activeDiagram?.name ?? 'Новая диаграмма'}
               {isDirty && <span className="bpmn-toolbar__dirty"> ●</span>}

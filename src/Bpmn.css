@@ -21,19 +21,6 @@
   min-width: 0;
 }
 
-.bpmn-toolbar-card__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(0,112,243,0.12), rgba(121,40,202,0.12));
-  border: 1px solid rgba(0,112,243,0.2);
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
 .bpmn-toolbar-card__name {
   font-size: 15px;
   font-weight: 600;
@@ -80,13 +67,39 @@
 }
 
 @keyframes bpmn-panel-in {
-  from { opacity: 0; transform: translateY(-6px); max-height: 0; padding-top: 0; padding-bottom: 0; }
-  to   { opacity: 1; transform: translateY(0);    max-height: 80px; padding-top: 12px; padding-bottom: 12px; }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 80px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
 }
 
 @keyframes bpmn-panel-out {
-  from { opacity: 1; transform: translateY(0);    max-height: 80px; padding-top: 12px; padding-bottom: 12px; }
-  to   { opacity: 0; transform: translateY(-6px); max-height: 0; padding-top: 0; padding-bottom: 0; }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 80px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
 .bpmn-save-panel__input {
@@ -173,7 +186,7 @@
   background: #fafafa !important;
   border: 1px solid #cccccc !important;
   border-radius: 4px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
 }
 
 .bpmn-canvas-card .djs-palette .entry {
@@ -188,14 +201,14 @@
 .bpmn-canvas-card .djs-context-pad {
   background: #ffffff !important;
   border: 1px solid #cccccc !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* Попап */
 .bpmn-canvas-card .djs-popup {
   background: #ffffff !important;
   border: 1px solid #cccccc !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
   color: #000000 !important;
 }
 
@@ -253,8 +266,14 @@
   overflow-y: auto;
 }
 
-.bpmn-diagrams-card__list::-webkit-scrollbar { width: 4px; }
-.bpmn-diagrams-card__list::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+.bpmn-diagrams-card__list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.bpmn-diagrams-card__list::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 2px;
+}
 
 .bpmn-diagrams-card__empty {
   font-size: 12px;
@@ -351,13 +370,27 @@
 }
 
 @keyframes bpmn-menu-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes bpmn-menu-out {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-4px); }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .bpmn-export-menu--closing {
@@ -387,6 +420,7 @@
   background: var(--bg-hover);
   color: var(--text-primary);
 }
+
 .btn-bpmn {
   display: inline-flex;
   align-items: center;
@@ -429,6 +463,11 @@
 .btn-bpmn--danger:hover {
   background: var(--danger-soft);
   border-color: var(--danger);
+}
+
+/* Скрыть логотип bpmn.io */
+.bjs-powered-by {
+  display: none !important;
 }
 
 /* ---- Responsive ---- */

@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FileArchive, FileText, GitBranch, Zap, Shield, Database,
-  Layers, ArrowRight, Check, Sparkles, Globe, Lock
+  FileArchive, FileText, Zap, Shield, Database,
+  Layers, ArrowRight, Check, Sparkles, Globe, Lock,
+  Workflow
 } from 'lucide-react';
-
-/* ---- Data ---- */
 
 interface ToolInfo {
   icon: React.ReactNode;
@@ -52,7 +51,7 @@ const TOOLS: ToolInfo[] = [
     ],
   },
   {
-    icon: <GitBranch size={22} />,
+    icon: <Workflow size={22} />,
     title: 'BPMN Редактор',
     description: 'Визуальный конструктор бизнес-процессов на базе BPMN 2.0.',
     badge: 'НОВОЕ',

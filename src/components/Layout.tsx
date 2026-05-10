@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, GitBranch } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 
@@ -46,7 +46,7 @@ const TOOLS_NAV: NavItem[] = [
     id: 'bpmn',
     label: 'BPMN',
     path: '/bpmn',
-    icon: <GitBranch size={18} />,
+    icon: <Workflow size={18} />,
   },
 ];
 
