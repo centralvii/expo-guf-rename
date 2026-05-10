@@ -40,19 +40,18 @@ export function PdfViewerPage() {
   const [isBlobLoading, setIsBlobLoading] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
 
+  // UI State
+  const [zoomMode, setZoomMode] = useState<'fit-page' | 'fit-width' | 'custom'>('fit-page');
+  const [scale, setScale] = useState(1.0);
+  const [searchTerm, setSearchBase] = useState('');
+  const [showNotes, setShowNotes] = useState(true);
+  const [viewMode, setViewMode] = useState<'library' | 'viewer'>('library');
+
   // Modal State
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [modalData, setModalData] = useState<any>(null);
   const [modalValue, setModalValue] = useState('');
   const [isModalSubmitting, setIsModalSubmitting] = useState(false);
-
-  // New State for scaling
-  const [zoomMode, setZoomMode] = useState<'fit-page' | 'fit-width' | 'custom'>('fit-page');
-  const [scale, setScale] = useState(1.0);
-
-  const [searchTerm, setSearchBase] = useState('');
-  const [showNotes, setShowNotes] = useState(true);
-  const [viewMode, setViewMode] = useState<'library' | 'viewer'>('library');
 
   // Container measurement
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -60,27 +59,29 @@ export function PdfViewerPage() {
 
   const { notify } = useToast();
 
-  const activeDoc = useMemo(() =>
+  const activeDoc = useMemo(() => 
     documents.find(d => d.id === selectedDocId)
-    , [documents, selectedDocId]);
+  , [documents, selectedDocId]);
 
-  // Memoize the URL to prevent re-loading the whole PDF document when other state changes
+  // Memoize the URL
   const pdfUrl = useMemo(() => {
     if (!localBlob) return null;
     return URL.createObjectURL(localBlob);
   }, [localBlob]);
 
-  // Cleanup blob URL on unmount or change
+  // Cleanup blob URL
   useEffect(() => {
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
   }, [pdfUrl]);
 
+  // Initial Load
   useEffect(() => {
     loadDocs();
   }, []);
 
+  // Sync Data on selection
   useEffect(() => {
     if (selectedDocId) {
       loadDocumentData(selectedDocId);
@@ -88,45 +89,15 @@ export function PdfViewerPage() {
     } else {
       setAnnotations([]);
       setLocalBlob(null);
+      setSelectedAnnotationId(null);
     }
   }, [selectedDocId]);
 
-  async function loadDocumentData(docId: string) {
-    setIsBlobLoading(true);
-    try {
-      // 1. Check Cache
-      const cached = await getCachedPdfBlob(docId);
-      if (cached) {
-        setLocalBlob(cached);
-        setIsBlobLoading(false);
-        return;
-      }
-
-      // 2. Fetch from Network
-      const doc = documents.find(d => d.id === docId);
-      if (!doc) return;
-
-      const url = getPdfPublicUrl(doc.storagePath);
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      // 3. Save to Cache
-      await cachePdfBlob(docId, blob);
-      setLocalBlob(blob);
-    } catch (e) {
-      console.error(e);
-      notify('Не удалось загрузить файл документа', 'error');
-    } finally {
-      setIsBlobLoading(false);
-    }
-  }
-
-  // Handle container resizing with a small debounce to prevent infinite loops (epilepsy effect)
+  // Resize Observer
   useEffect(() => {
     if (!scrollContainerRef.current) return;
-
+    
     let timer: ReturnType<typeof setTimeout>;
-
     const observer = new ResizeObserver((entries) => {
       clearTimeout(timer);
       timer = setTimeout(() => {
@@ -136,7 +107,7 @@ export function PdfViewerPage() {
             height: entry.contentRect.height
           });
         }
-      }, 150); // Small debounce
+      }, 150);
     });
 
     observer.observe(scrollContainerRef.current);
@@ -145,6 +116,18 @@ export function PdfViewerPage() {
       clearTimeout(timer);
     };
   }, [viewMode]);
+
+  // Modal cleanup effect
+  useEffect(() => {
+    if (activeModal === null) {
+      const timer = setTimeout(() => {
+        setModalData(null);
+        setModalValue('');
+        setIsModalSubmitting(false);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [activeModal]);
 
   async function loadDocs() {
     setIsLoading(true);
@@ -155,6 +138,29 @@ export function PdfViewerPage() {
       notify('Ошибка при загрузке документов', 'error');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function loadDocumentData(docId: string) {
+    setIsBlobLoading(true);
+    try {
+      const cached = await getCachedPdfBlob(docId);
+      if (cached) {
+        setLocalBlob(cached);
+        setIsBlobLoading(false);
+        return;
+      }
+      const doc = documents.find(d => d.id === docId);
+      if (!doc) return;
+      const url = getPdfPublicUrl(doc.storagePath);
+      const response = await fetch(url);
+      const blob = await response.blob();
+      await cachePdfBlob(docId, blob);
+      setLocalBlob(blob);
+    } catch (e) {
+      notify('Не удалось загрузить файл', 'error');
+    } finally {
+      setIsBlobLoading(false);
     }
   }
 
@@ -173,20 +179,16 @@ export function PdfViewerPage() {
   const handleOpenDoc = (id: string) => {
     setSelectedDocId(id);
     setViewMode('viewer');
-    setZoomMode('fit-page'); // Default mode
+    setZoomMode('fit-page');
   };
 
   const handleBackToLibrary = () => {
     setViewMode('library');
     setSelectedDocId(null);
-    setSelectedAnnotationId(null);
   };
 
   const closeModal = () => {
     setActiveModal(null);
-    setModalData(null);
-    setModalValue('');
-    setIsModalSubmitting(false);
   };
 
   const handleAddAnnotation = (data: { pageNumber: number; boundingBox: PdfBoundingBox; textExcerpt: string }) => {
@@ -301,19 +303,20 @@ export function PdfViewerPage() {
     d.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- Rendering Modes ---
+  // --- Rendering Helpers ---
 
   const renderLibrary = () => (
     <div className="pdf-lib anim-fade-in">
-      {/* 1. Header Card */}
       <header className="pdf-lib__header">
         <div className="pdf-lib__title-group">
+          <div className="pdf-lib__icon-box">
+            <FileSearch size={18} />
+          </div>
           <div className="pdf-lib__stats">
             <h2>Библиотека</h2>
             <p>• {documents.length} PDF</p>
           </div>
         </div>
-
         <div className="pdf-lib__search-wrap">
           <Search size={18} className="pdf-lib__search-icon" />
           <input
@@ -324,13 +327,11 @@ export function PdfViewerPage() {
             onChange={(e) => setSearchBase(e.target.value)}
           />
         </div>
-
         <button className="btn btn-primary" onClick={() => setShowUploader(true)}>
           <FilePlus size={16} /> Загрузить PDF
         </button>
       </header>
 
-      {/* 2. Main List Card */}
       <div className="pdf-table-card">
         {isLoading ? (
           <div className="pdf-state-centered">
@@ -342,12 +343,8 @@ export function PdfViewerPage() {
             <div className="pdf-empty-icon">
               <FileSearch size={40} />
             </div>
-            <p style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
-              {searchTerm ? 'Ничего не найдено' : 'Библиотека пуста'}
-            </p>
-            <p style={{ fontSize: '13px', maxWidth: '300px', textAlign: 'center' }}>
-              Загрузите PDF документы для архивации и работы с заметками.
-            </p>
+            <p style={{ fontWeight: 500 }}>{searchTerm ? 'Ничего не найдено' : 'Библиотека пуста'}</p>
+            <p style={{ fontSize: '13px', opacity: 0.7 }}>Загрузите PDF документы для работы.</p>
           </div>
         ) : (
           <table className="pdf-table">
@@ -363,40 +360,16 @@ export function PdfViewerPage() {
             <tbody>
               {filteredDocs.map(doc => (
                 <tr key={doc.id} className="pdf-row" onClick={() => handleOpenDoc(doc.id)}>
-                  <td>
-                    <Bookmark size={18} className="pdf-row__icon" />
-                  </td>
-                  <td>
-                    <div className="pdf-row__title" title={doc.name}>{doc.name}</div>
-                  </td>
-                  <td>
-                    <div className="pdf-row__date">
-                      {new Date(doc.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </div>
-                  </td>
+                  <td><Bookmark size={18} className="pdf-row__icon" /></td>
+                  <td><div className="pdf-row__title" title={doc.name}>{doc.name}</div></td>
+                  <td><div className="pdf-row__date">{new Date(doc.createdAt).toLocaleDateString('ru-RU')}</div></td>
                   <td>
                     <div className="pdf-row__actions">
-                      <button
-                        onClick={(e) => handleRenameDoc(doc, e)}
-                        className="btn btn--ghost btn--sm"
-                        title="Переименовать"
-                      >
-                        <Edit3 size={14} />
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteDoc(doc, e)}
-                        className="btn btn--ghost btn--sm btn--danger"
-                        title="Удалить"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <button onClick={(e) => handleRenameDoc(doc, e)} className="btn btn--ghost btn--sm"><Edit3 size={14} /></button>
+                      <button onClick={(e) => handleDeleteDoc(doc, e)} className="btn btn--ghost btn--sm btn--danger"><Trash2 size={14} /></button>
                     </div>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div className="pdf-row__open-btn">
-                      Открыть <ArrowRight size={14} />
-                    </div>
-                  </td>
+                  <td style={{ textAlign: 'right' }}><div className="pdf-row__open-btn">Открыть <ArrowRight size={14} /></div></td>
                 </tr>
               ))}
             </tbody>
@@ -408,7 +381,6 @@ export function PdfViewerPage() {
 
   const renderViewer = () => (
     <div className="pdf-viewer-layout anim-fade-in">
-      {/* 1. Slim Toolbar (BPMN Style) */}
       <header className="pdf-viewer__toolbar">
         <div className="pdf-lib__title-group">
           <button className="btn btn-secondary pdf-viewer__back-btn" onClick={handleBackToLibrary}>
@@ -416,81 +388,33 @@ export function PdfViewerPage() {
           </button>
           <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
           <h2 className="pdf-viewer__doc-name" title={activeDoc?.name}>
-            {activeDoc?.name && activeDoc.name.length > 15
-              ? `${activeDoc.name.slice(0, 15)}...`
-              : activeDoc?.name}
+            {activeDoc?.name && activeDoc.name.length > 15 ? `${activeDoc.name.slice(0, 15)}...` : activeDoc?.name}
           </h2>
         </div>
-
         <div className="pdf-viewer__controls">
-          {/* Layout Mode Toggles */}
           <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-muted)', padding: '3px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-            <button
-              className={`btn btn--sm ${zoomMode === 'fit-page' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ height: '28px', padding: '0 8px' }}
-              onClick={() => setZoomMode('fit-page')}
-              title="Вписать страницу"
-            >
-              <Maximize size={14} />
-            </button>
-            <button
-              className={`btn btn--sm ${zoomMode === 'fit-width' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ height: '28px', padding: '0 8px' }}
-              onClick={() => setZoomMode('fit-width')}
-              title="По ширине"
-            >
-              <Expand size={14} />
-            </button>
+            <button className={`btn btn--sm ${zoomMode === 'fit-page' ? 'btn-primary' : 'btn-ghost'}`} style={{ height: '28px' }} onClick={() => setZoomMode('fit-page')}><Maximize size={14} /></button>
+            <button className={`btn btn--sm ${zoomMode === 'fit-width' ? 'btn-primary' : 'btn-ghost'}`} style={{ height: '28px' }} onClick={() => setZoomMode('fit-width')}><Expand size={14} /></button>
           </div>
-
           <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 4px' }} />
-
           <div className="pdf-viewer__zoom-group">
             <button className="btn btn-ghost btn--sm" onClick={handleZoomOut}><ZoomOut size={15} /></button>
-            <span className="pdf-viewer__zoom-val">
-              {zoomMode === 'custom' ? `${Math.round(scale * 100)}%` : 'Авто'}
-            </span>
+            <span className="pdf-viewer__zoom-val">{zoomMode === 'custom' ? `${Math.round(scale * 100)}%` : 'Авто'}</span>
             <button className="btn btn-ghost btn--sm" onClick={handleZoomIn}><ZoomIn size={15} /></button>
           </div>
-
           <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 4px' }} />
-
-          <a
-            href={pdfUrl || '#'}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-secondary btn--sm"
-            style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}
-            title="Оригинальный файл"
-          >
-            <ExternalLink size={16} />
-          </a>
-
-          <button
-            className={`btn btn--sm ${showNotes ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setShowNotes(!showNotes)}
-            style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}
-            title={showNotes ? 'Скрыть заметки' : 'Заметки'}
-          >
+          <a href={pdfUrl || '#'} target="_blank" rel="noreferrer" className="btn btn-secondary btn--sm" style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}><ExternalLink size={16} /></a>
+          <button className={`btn btn--sm ${showNotes ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setShowNotes(!showNotes)} style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}>
             {showNotes ? <PanelRightClose size={16} /> : <PanelRight size={16} />}
           </button>
-
-          <button className="btn btn-ghost btn--sm btn--danger" onClick={() => activeDoc && handleDeleteDoc(activeDoc)} title="Удалить">
-            <Trash2 size={16} />
-          </button>
+          <button className="btn btn-ghost btn--sm btn--danger" onClick={() => activeDoc && handleDeleteDoc(activeDoc)}><Trash2 size={16} /></button>
         </div>
       </header>
-
-      {/* 2. Unified Island Workspace */}
       <main className="pdf-viewer-island">
-        {/* PDF Area */}
         <div className="pdf-viewer__canvas-wrap">
           <div className="pdf-viewer__canvas-scroll" ref={scrollContainerRef}>
             {isBlobLoading ? (
-              <div className="pdf-state-centered">
-                <Loader2 size={48} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.3 }} />
-                <p>Подготовка документа...</p>
-              </div>
+              <div className="pdf-state-centered"><Loader2 size={48} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.3 }} /><p>Подготовка документа...</p></div>
             ) : pdfUrl && (
               <PdfDocumentViewer
                 url={pdfUrl}
@@ -505,14 +429,10 @@ export function PdfViewerPage() {
             )}
           </div>
         </div>
-
-        {/* Notes Sidebar with smooth transition */}
         <aside className={`pdf-notes-sidebar-wrap ${!showNotes ? 'pdf-notes-sidebar-wrap--collapsed' : ''}`}>
           <div className="pdf-notes-sidebar">
             {isAnnotationsLoading ? (
-              <div className="pdf-state-centered">
-                <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
-              </div>
+              <div className="pdf-state-centered"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} /></div>
             ) : (
               <PdfAnnotationSidebar
                 annotations={annotations}
@@ -520,14 +440,10 @@ export function PdfViewerPage() {
                 onDelete={handleDeleteAnnotation}
                 onNavigate={(p, annId) => {
                   setSelectedAnnotationId(annId);
-
-                  // Use a small timeout to let the highlight render and then scroll to it
                   setTimeout(() => {
                     const highlight = document.getElementById(`pdf-ann-${annId}`);
-                    if (highlight) {
-                      highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                      // Fallback to page container if highlight not found
+                    if (highlight) highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    else {
                       const el = document.querySelector(`.pdf-page-container[data-page-number="${p}"]`);
                       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
@@ -548,145 +464,25 @@ export function PdfViewerPage() {
           {viewMode === 'library' ? renderLibrary() : renderViewer()}
         </div>
       </div>
+      {showUploader && <PdfUploader onSuccess={loadDocs} onClose={() => setShowUploader(false)} />}
 
-      {showUploader && (
-        <PdfUploader
-          onSuccess={loadDocs}
-          onClose={() => setShowUploader(false)}
-        />
-      )}
-
-      {/* --- MODALS --- */}
-
-      {/* Rename Document */}
-      <Modal
-        isOpen={activeModal === 'rename-doc'}
-        onClose={closeModal}
-        title="Переименовать документ"
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={closeModal}>Отмена</button>
-            <button
-              className="btn btn-primary"
-              onClick={onConfirmRenameDoc}
-              disabled={isModalSubmitting || !modalValue.trim() || modalValue === modalData?.name}
-            >
-              {isModalSubmitting ? 'Сохранение...' : 'Сохранить'}
-            </button>
-          </>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Название файла</label>
-          <input
-            type="text"
-            className="template-input"
-            value={modalValue}
-            onChange={(e) => setModalValue(e.target.value)}
-            placeholder="Введите название..."
-            autoFocus
-          />
-        </div>
+      <Modal isOpen={activeModal === 'rename-doc'} onClose={closeModal} title="Переименовать" footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-primary" onClick={onConfirmRenameDoc} disabled={isModalSubmitting || !modalValue.trim()}>Сохранить</button></>}>
+        <input type="text" className="template-input" value={modalValue} onChange={(e) => setModalValue(e.target.value)} autoFocus style={{ width: '100%' }} />
       </Modal>
 
-      {/* Delete Document */}
-      <Modal
-        isOpen={activeModal === 'delete-doc'}
-        onClose={closeModal}
-        title="Удалить документ?"
-        variant="danger"
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={closeModal}>Отмена</button>
-            <button
-              className="btn btn-danger btn-primary" // use danger style but primary structure
-              style={{ background: 'var(--danger)', color: 'white', borderColor: 'var(--danger)' }}
-              onClick={onConfirmDeleteDoc}
-              disabled={isModalSubmitting}
-            >
-              {isModalSubmitting ? 'Удаление...' : 'Удалить навсегда'}
-            </button>
-          </>
-        }
-      >
-        <p>Вы собираетесь удалить документ <strong>{modalData?.name}</strong>.</p>
-        <p style={{ marginTop: '8px', color: 'var(--danger)' }}>Это действие необратимо и удалит все связанные заметки.</p>
+      <Modal isOpen={activeModal === 'delete-doc'} onClose={closeModal} title="Удалить?" variant="danger" footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-danger" style={{ background: 'var(--danger)', color: 'white' }} onClick={onConfirmDeleteDoc} disabled={isModalSubmitting}>Удалить</button></>}>
+        <p>Удалить <strong>{modalData?.name}</strong>?</p>
       </Modal>
 
-      {/* Add Annotation */}
-      <Modal
-        isOpen={activeModal === 'add-annotation'}
-        onClose={closeModal}
-        title="Новая заметка"
-        icon={<Bookmark size={24} />}
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={closeModal}>Отмена</button>
-            <button
-              className="btn btn-primary"
-              onClick={onConfirmAddAnnotation}
-              disabled={isModalSubmitting || !modalValue.trim()}
-            >
-              {isModalSubmitting ? 'Сохранение...' : 'Добавить заметку'}
-            </button>
-          </>
-        }
-      >
+      <Modal isOpen={activeModal === 'add-annotation'} onClose={closeModal} title="Новая заметка" icon={<Bookmark size={24} />} footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-primary" onClick={onConfirmAddAnnotation} disabled={isModalSubmitting || !modalValue.trim()}>Добавить</button></>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {modalData?.textExcerpt && (
-            <div
-              className="custom-scrollbar"
-              style={{
-                padding: '12px',
-                background: 'var(--bg-muted)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '12px',
-                fontStyle: 'italic',
-                borderLeft: '3px solid var(--accent)',
-                maxHeight: '140px',
-                overflowY: 'auto',
-                lineHeight: '1.6',
-                color: 'var(--text-secondary)'
-              }}
-            >
-              "{modalData.textExcerpt}"
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ваш комментарий</label>
-            <textarea
-              className="template-input"
-              style={{ minHeight: '100px', resize: 'vertical', padding: '12px' }}
-              value={modalValue}
-              onChange={(e) => setModalValue(e.target.value)}
-              placeholder="О чем эта заметка?..."
-              autoFocus
-            />
-          </div>
+          {modalData?.textExcerpt && <div className="custom-scrollbar" style={{ padding: '12px', background: 'var(--bg-muted)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontStyle: 'italic', borderLeft: '3px solid var(--accent)', maxHeight: '140px', overflowY: 'auto' }}>"{modalData.textExcerpt}"</div>}
+          <textarea className="template-input" style={{ minHeight: '100px', resize: 'vertical' }} value={modalValue} onChange={(e) => setModalValue(e.target.value)} placeholder="Ваш комментарий..." autoFocus />
         </div>
       </Modal>
 
-      {/* Delete Annotation */}
-      <Modal
-        isOpen={activeModal === 'delete-annotation'}
-        onClose={closeModal}
-        title="Удалить заметку?"
-        variant="danger"
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={closeModal}>Отмена</button>
-            <button
-              className="btn btn-danger"
-              style={{ background: 'var(--danger)', color: 'white', borderColor: 'var(--danger)' }}
-              onClick={onConfirmDeleteAnnotation}
-              disabled={isModalSubmitting}
-            >
-              {isModalSubmitting ? 'Удаление...' : 'Удалить'}
-            </button>
-          </>
-        }
-      >
-        <p>Вы уверены, что хотите удалить эту заметку? Она исчезнет из списка и из разметки документа.</p>
+      <Modal isOpen={activeModal === 'delete-annotation'} onClose={closeModal} title="Удалить заметку?" variant="danger" footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-danger" style={{ background: 'var(--danger)', color: 'white' }} onClick={onConfirmDeleteAnnotation} disabled={isModalSubmitting}>Удалить</button></>}>
+        <p>Вы уверены?</p>
       </Modal>
     </div>
   );

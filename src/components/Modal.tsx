@@ -37,7 +37,12 @@ export function Modal({
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+
+    // Cleanup function: runs on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, shouldRender]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

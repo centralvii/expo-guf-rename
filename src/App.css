@@ -1503,10 +1503,18 @@ a {
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+  display: inline-block !important;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
 
 /* =========== Responsive =========== */
 @media (max-width: 768px) {
