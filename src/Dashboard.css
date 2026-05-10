@@ -1177,6 +1177,179 @@
 }
 
 /* =========================================
+   Skeleton Loading
+   ========================================= */
+
+@keyframes sk-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* Base shimmer block */
+.sk {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-muted) 0%,
+    var(--bg-elevated) 40%,
+    var(--bg-muted) 80%
+  );
+  background-size: 800px 100%;
+  animation: sk-shimmer 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Reveal animation — applied when real content mounts after skeleton */
+@keyframes sk-reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sk-reveal {
+  animation: sk-reveal 350ms ease forwards;
+}
+
+/* ---- Stat card skeleton ---- */
+.sk-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex-shrink: 0;
+}
+
+.sk-stat-value {
+  width: 48px;
+  height: 22px;
+  margin-bottom: 4px;
+}
+
+.sk-stat-label {
+  width: 72px;
+  height: 12px;
+}
+
+/* ---- Widget bar skeleton ---- */
+.sk-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sk-bar-label {
+  width: 72px;
+  height: 12px;
+}
+
+.sk-bar-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.sk-bar-count {
+  width: 16px;
+  height: 12px;
+}
+
+/* ---- Urgent item skeleton ---- */
+.sk-urgent-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sk-urgent-title {
+  flex: 1;
+  height: 13px;
+  border-radius: 4px;
+}
+
+.sk-urgent-badge {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* ---- Priority cell skeleton ---- */
+.sk-priority-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.sk-priority-count {
+  width: 28px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.sk-priority-label {
+  width: 40px;
+  height: 10px;
+}
+
+/* ---- Recent item skeleton ---- */
+.sk-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sk-recent-item:last-child {
+  border-bottom: none;
+}
+
+.sk-recent-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sk-recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sk-recent-title {
+  height: 13px;
+  width: 55%;
+  border-radius: 4px;
+}
+
+.sk-recent-desc {
+  height: 11px;
+  width: 35%;
+  border-radius: 4px;
+}
+
+.sk-recent-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.sk-recent-priority {
+  width: 52px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.sk-recent-time {
+  width: 56px;
+  height: 11px;
+  border-radius: 4px;
+}
+
+/* =========================================
    About Page V2
    ========================================= */
 
