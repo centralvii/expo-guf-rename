@@ -9,51 +9,6 @@ import { useTasks } from '../hooks/useTasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '../types';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../types';
 
-/* ---- Typewriter ---- */
-
-const TYPEWRITER_WORDS = [
-  'Переименовывай.',
-  'Упаковывай.',
-  'Документируй.',
-  'Автоматизируй.',
-  'Создавай.',
-];
-
-function useTypewriter(words: string[], typingSpeed = 90, deletingSpeed = 50, pauseMs = 1800) {
-  const [text, setText] = useState('');
-  const [wordIndex, setWordIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const tick = useCallback(() => {
-    const currentWord = words[wordIndex];
-
-    if (!isDeleting) {
-      const next = currentWord.slice(0, text.length + 1);
-      setText(next);
-      if (next === currentWord) {
-        timerRef.current = setTimeout(() => setIsDeleting(true), pauseMs);
-        return;
-      }
-    } else {
-      const next = currentWord.slice(0, text.length - 1);
-      setText(next);
-      if (next === '') {
-        setIsDeleting(false);
-        setWordIndex((i) => (i + 1) % words.length);
-      }
-    }
-  }, [words, wordIndex, text, isDeleting, pauseMs]);
-
-  useEffect(() => {
-    const speed = isDeleting ? deletingSpeed : typingSpeed;
-    timerRef.current = setTimeout(tick, speed);
-    return () => clearTimeout(timerRef.current);
-  }, [tick, isDeleting, typingSpeed, deletingSpeed]);
-
-  return text;
-}
-
 /* ---- Tool data ---- */
 
 interface ToolCard {
@@ -132,6 +87,25 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   done: '#22c55e',
   closed: '#374151',
 };
+
+const STACK = [
+  { name: 'React 19', color: '#61dafb' },
+  { name: 'TypeScript', color: '#3178c6' },
+  { name: 'Vite', color: '#646cff' },
+  { name: 'Supabase', color: '#3ecf8e' },
+  { name: 'PostgreSQL', color: '#336791' },
+  { name: 'lucide-react', color: '#f97316' },
+  { name: '@dnd-kit', color: '#a855f7' },
+  { name: 'jszip', color: '#f5a623' },
+  { name: 'react-markdown', color: '#22c55e' },
+  { name: 'remark-gfm', color: '#16a34a' },
+  { name: 'idb-keyval', color: '#e879f9' },
+  { name: 'react-router', color: '#ef4444' },
+  { name: 'CSS3', color: '#2563eb' },
+  { name: 'bpmn.io', color: '#ff6600' },
+  { name: 'Vercel', color: '#ffffff' },
+  { name: 'ESLint', color: '#4b32c3' },
+];
 
 /* ---- Helpers ---- */
 
@@ -391,10 +365,7 @@ function SkRecentActivity({ loaded, recentTasks }: { loaded: boolean; recentTask
   );
 }
 
-/* ---- Main Component ---- */
-
 export function HomePage() {
-  const typedText = useTypewriter(TYPEWRITER_WORDS);
   const { tasks, isLoaded } = useTasks();
 
   const stats = useMemo(() => computeStats(tasks), [tasks]);
@@ -414,38 +385,6 @@ export function HomePage() {
 
   return (
     <div className="home-dashboard anim-fade-in">
-
-      {/* ===== Welcome Banner ===== */}
-      <section className="welcome-banner">
-        <div className="welcome-banner__content">
-          <div className="welcome-banner__icon" style={{ background: 'none', border: 'none' }}>
-            <img src="/logo.svg" alt="Logo" style={{ width: '64px', height: '64px' }} />
-          </div>
-          <div className="welcome-banner__text">
-            <h2 className="welcome-banner__title">
-              Добро пожаловать в <span className="welcome-banner__highlight">GD Helper</span>
-            </h2>
-            <div className="typewriter">
-              <span className="typewriter__text">{typedText}</span>
-              <span className="typewriter__cursor">|</span>
-            </div>
-            <p className="welcome-banner__subtitle">
-              Инструменты для работы с проектами GreenData. Выберите нужный инструмент.
-            </p>
-          </div>
-        </div>
-        <div className="welcome-banner__meta">
-          <div className="welcome-banner__stat">
-            <Activity size={14} />
-            <span>{TOOLS.filter(t => !t.disabled).length} активных</span>
-          </div>
-          <div className="welcome-banner__stat">
-            <Clock size={14} />
-            <span>{new Date().toLocaleDateString('ru-RU')}</span>
-          </div>
-        </div>
-      </section>
-
       {/* ===== Quick Stats — skeleton while loading ===== */}
       <SkStatCards loaded={isLoaded} stats={stats} />
 
@@ -496,6 +435,22 @@ export function HomePage() {
 
       {/* ===== Recent Activity — skeleton while loading ===== */}
       <SkRecentActivity loaded={isLoaded} recentTasks={recentTasks} />
+
+      {/* ===== Tech Stack Marquee ===== */}
+      <section className="dashboard-section" style={{ marginTop: '12px' }}>
+        <div className="about-v2__marquee-wrap" style={{ background: 'transparent', border: 'none' }}>
+          <div className="about-v2__marquee" style={{ padding: '8px 0' }}>
+            <div className="about-v2__marquee-track">
+              {[...STACK, ...STACK, ...STACK].map((item, i) => (
+                <span key={i} className="about-v2__marquee-item" style={{ borderRight: 'none', padding: '0 32px' }}>
+                  <span className="about-v2__marquee-dot" style={{ background: item.color }} />
+                  <span className="about-v2__marquee-name" style={{ opacity: 0.6 }}>{item.name}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

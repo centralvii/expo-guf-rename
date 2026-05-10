@@ -50,8 +50,13 @@ const TOOLS_NAV: NavItem[] = [
   },
 ];
 
+const SIDEBAR_STORAGE_KEY = 'gd-helper-sidebar-collapsed';
+
 export function Layout() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : false;
+  });
   const [isOnline, setIsOnline] = useState(true);
 
   // Connection check
@@ -69,13 +74,32 @@ export function Layout() {
   // Auto-collapse on small screens
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 900px)');
-    const handler = (e: MediaQueryListEvent) => setIsCollapsed(e.matches);
-    setIsCollapsed(mq.matches);
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsCollapsed(true);
+      } else {
+        // Восстанавливаем из стораджа при возврате на большой экран
+        const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+        setIsCollapsed(saved ? JSON.parse(saved) : false);
+      }
+    };
+    
+    // Initial check
+    if (mq.matches) setIsCollapsed(true);
+    
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
 
   const sidebarClass = `sidebar ${isCollapsed ? 'sidebar--collapsed' : ''}`;
+
+  const toggleSidebar = () => {
+    setIsCollapsed((prev: boolean) => {
+      const next = !prev;
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
 
   const renderNavItem = (item: NavItem) => {
     if (item.disabled) {
@@ -145,7 +169,7 @@ export function Layout() {
         <div className="sidebar__footer">
           <button
             className="sidebar__toggle"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={toggleSidebar}
             aria-label={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
           >
             <PanelLeftDashed size={16} />

@@ -1,10 +1,58 @@
-import { useEffect, useRef } from 'react';
+import { type ReactNode, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FileArchive, FileText, Zap, Shield, Database,
   Layers, ArrowRight, Check, Sparkles, Globe, Lock,
   Workflow
 } from 'lucide-react';
+
+/* ---- Typewriter ---- */
+
+const TYPEWRITER_WORDS = [
+  'Автоматизируй.',
+  'Документируй.',
+  'Оптимизируй.',
+  'Масштабируй.',
+  'Интегрируй.',
+  'Ускоряй.',
+  'Систематизируй.',
+  'Создавай.',
+];
+
+function useTypewriter(words: string[], typingSpeed = 90, deletingSpeed = 50, pauseMs = 1800) {
+  const [text, setText] = useState('');
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const tick = useCallback(() => {
+    const currentWord = words[wordIndex];
+
+    if (!isDeleting) {
+      const next = currentWord.slice(0, text.length + 1);
+      setText(next);
+      if (next === currentWord) {
+        timerRef.current = setTimeout(() => setIsDeleting(true), pauseMs);
+        return;
+      }
+    } else {
+      const next = currentWord.slice(0, text.length - 1);
+      setText(next);
+      if (next === '') {
+        setIsDeleting(false);
+        setWordIndex((i) => (i + 1) % words.length);
+      }
+    }
+  }, [words, wordIndex, text, isDeleting, pauseMs]);
+
+  useEffect(() => {
+    const speed = isDeleting ? deletingSpeed : typingSpeed;
+    timerRef.current = setTimeout(tick, speed);
+    return () => clearTimeout(timerRef.current);
+  }, [tick, isDeleting, typingSpeed, deletingSpeed]);
+
+  return text;
+}
 
 interface ToolInfo {
   icon: React.ReactNode;
@@ -203,6 +251,8 @@ function ParticlesCanvas() {
 /* ---- Component ---- */
 
 export function AboutPage() {
+  const typedText = useTypewriter(TYPEWRITER_WORDS);
+
   return (
     <div className="about-v2 anim-fade-in">
 
@@ -216,9 +266,10 @@ export function AboutPage() {
             <span>Набор инструментов для GreenData</span>
           </div>
           <h1 className="about-v2__hero-title">
-            <span className="about-v2__hero-title-line">Автоматизируй.</span>
-            <span className="about-v2__hero-title-line">Документируй.</span>
-            <span className="about-v2__hero-title-line about-v2__hero-title-accent">Создавай.</span>
+            <span className="about-v2__hero-title-accent" style={{ minHeight: '1.2em', display: 'block' }}>
+              {typedText}
+              <span className="typewriter__cursor">|</span>
+            </span>
           </h1>
           <p className="about-v2__hero-desc">
             GD Helper — коллекция веб-инструментов для работы с проектными ресурсами, задачами
@@ -229,7 +280,7 @@ export function AboutPage() {
               Начать работу <ArrowRight size={16} />
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/centralvii/expo-guf-rename"
               target="_blank"
               rel="noopener noreferrer"
               className="about-v2__cta-secondary"

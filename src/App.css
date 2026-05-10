@@ -1466,3 +1466,16 @@ a {
     justify-content: center;
   }
 }
+
+/* Typewriter cursor animation */
+.typewriter__cursor {
+  display: inline-block;
+  margin-left: 2px;
+  font-weight: 300;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  from, to { color: transparent }
+  50% { color: var(--accent) }
+}

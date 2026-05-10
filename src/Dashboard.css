@@ -1827,6 +1827,15 @@
   animation: marquee-scroll 35s linear infinite;
 }
 
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .about-v2__marquee-track:hover {
   animation-play-state: paused;
 }
