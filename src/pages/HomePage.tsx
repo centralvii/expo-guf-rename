@@ -1,7 +1,7 @@
-import { type ReactNode, useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FileArchive, FileText, Workflow, ArrowRight, Activity, Clock,
+  FileArchive, FileText, Workflow, ArrowRight, Clock,
   Flame, ArrowUp, ArrowDown, Circle, CheckCircle2, XCircle,
   GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles
 } from 'lucide-react';
