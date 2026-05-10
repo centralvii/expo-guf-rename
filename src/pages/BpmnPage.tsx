@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
-  Maximize2, Download, Upload, FilePlus, Save, Trash2, Workflow, RotateCcw, FileImage, FileCode2, ChevronDown
+  Maximize2, Download, Upload, FilePlus, Save, Trash2, RotateCcw, FileImage, FileCode2, ChevronDown
 } from 'lucide-react';
 import { BpmnEditor, type BpmnEditorHandle } from '../components/BpmnEditor';
 import { useToast } from '../hooks/useToast';
