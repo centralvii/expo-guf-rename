@@ -22,7 +22,7 @@
 
 .dashboard__content {
   flex: 1;
-  padding: 28px 32px 32px;
+  padding: 28px 32px;
   width: 100%;
   min-height: 0;
   overflow-y: auto;

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   FileArchive, FileText, Zap, Shield, Database,
   Layers, ArrowRight, Check, Sparkles, Globe, Lock,
-  Workflow
+  Workflow, FileSearch
 } from 'lucide-react';
 
 /* ---- Typewriter ---- */
@@ -100,10 +100,10 @@ const TOOLS: ToolInfo[] = [
   },
   {
     icon: <Workflow size={22} />,
-    title: 'BPMN Редактор',
+    title: 'BPMN',
     description: 'Визуальный конструктор бизнес-процессов на базе BPMN 2.0.',
-    badge: 'НОВОЕ',
-    badgeVariant: 'blue',
+    badge: 'ГОТОВО',
+    badgeVariant: 'green',
     color: '#22c55e',
     path: '/bpmn',
     features: [
@@ -112,6 +112,22 @@ const TOOLS: ToolInfo[] = [
       'Сохранение диаграмм в браузере',
       'Drag & Drop построение',
       'Масштабирование и навигация',
+    ],
+  },
+  {
+    icon: <FileSearch size={22} />,
+    title: 'PDF Просмотр',
+    description: 'Архивация и аннотирование PDF документов с привязкой к тексту.',
+    badge: 'НОВОЕ',
+    badgeVariant: 'blue',
+    color: '#ff0080',
+    path: '/pdf-viewer',
+    features: [
+      'Загрузка и хранение PDF в облаке',
+      'Умные заметки с привязкой к координатам',
+      'Мгновенная навигация по заметкам',
+      'Поиск по библиотеке документов',
+      'Прямые ссылки на PDF файлы',
     ],
   },
 ];
@@ -182,7 +198,7 @@ const STACK = [
 ];
 
 const STATS = [
-  { value: '3', label: 'Инструмента' },
+  { value: '4', label: 'Инструмента' },
   { value: '100%', label: 'Клиентская обработка' },
   { value: '0', label: 'Утечек данных' },
   { value: '∞', label: 'Возможностей' },
@@ -306,7 +322,7 @@ export function AboutPage() {
         <div className="about-v2__section-header">
           <span className="about-v2__section-tag">Инструменты</span>
           <h2 className="about-v2__section-title">Всё необходимое в одном месте</h2>
-          <p className="about-v2__section-desc">Три специализированных инструмента для повседневной работы</p>
+          <p className="about-v2__section-desc">Четыре специализированных инструмента для повседневной работы</p>
         </div>
         <div className="about-v2__tools-grid">
           {TOOLS.map((tool) => (

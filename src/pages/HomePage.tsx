@@ -1,9 +1,9 @@
 import { type ReactNode, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FileArchive, FileText, Workflow, ArrowRight, Clock,
+  FileArchive, FileText, ArrowRight, Clock,
   Flame, ArrowUp, ArrowDown, Circle, CheckCircle2, XCircle,
-  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles
+  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles, FileSearch, Workflow
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '../types';
@@ -50,9 +50,19 @@ const TOOLS: ToolCard[] = [
     description: 'Визуальный редактор бизнес-процессов на базе BPMN 2.0.',
     icon: <Workflow size={22} />,
     path: '/bpmn',
+    tag: 'ГОТОВО',
+    tagColor: 'green',
+    accentColor: '#22c55e',
+  },
+  {
+    id: 'pdf-viewer',
+    title: 'PDF Просмотр',
+    description: 'Инструмент для загрузки PDF и создания заметок с привязкой к тексту.',
+    icon: <FileSearch size={22} />,
+    path: '/pdf-viewer',
     tag: 'НОВОЕ',
     tagColor: 'blue',
-    accentColor: '#22c55e',
+    accentColor: '#ff0080',
   },
 ];
 
@@ -87,25 +97,6 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   done: '#22c55e',
   closed: '#374151',
 };
-
-const STACK = [
-  { name: 'React 19', color: '#61dafb' },
-  { name: 'TypeScript', color: '#3178c6' },
-  { name: 'Vite', color: '#646cff' },
-  { name: 'Supabase', color: '#3ecf8e' },
-  { name: 'PostgreSQL', color: '#336791' },
-  { name: 'lucide-react', color: '#f97316' },
-  { name: '@dnd-kit', color: '#a855f7' },
-  { name: 'jszip', color: '#f5a623' },
-  { name: 'react-markdown', color: '#22c55e' },
-  { name: 'remark-gfm', color: '#16a34a' },
-  { name: 'idb-keyval', color: '#e879f9' },
-  { name: 'react-router', color: '#ef4444' },
-  { name: 'CSS3', color: '#2563eb' },
-  { name: 'bpmn.io', color: '#ff6600' },
-  { name: 'Vercel', color: '#ffffff' },
-  { name: 'ESLint', color: '#4b32c3' },
-];
 
 /* ---- Helpers ---- */
 
@@ -147,10 +138,10 @@ function computeStats(tasks: TaskItem[]) {
 
 function SkStatCards({ loaded, stats }: { loaded: boolean; stats: ReturnType<typeof computeStats> }) {
   const cards = [
-    { iconClass: 'dash-stat-card__icon--blue',  icon: <BarChart3 size={18} />, value: stats.total,                                    label: 'Всего задач' },
-    { iconClass: 'dash-stat-card__icon--amber', icon: <Zap size={18} />,       value: stats.active,                                   label: 'В работе'    },
-    { iconClass: 'dash-stat-card__icon--green', icon: <CheckCircle2 size={18} />, value: stats.completed,                             label: 'Завершено'   },
-    { iconClass: 'dash-stat-card__icon--red',   icon: <Flame size={18} />,     value: stats.byPriority.critical + stats.byPriority.high, label: 'Срочных' },
+    { iconClass: 'dash-stat-card__icon--blue', icon: <BarChart3 size={18} />, value: stats.total, label: 'Всего задач' },
+    { iconClass: 'dash-stat-card__icon--amber', icon: <Zap size={18} />, value: stats.active, label: 'В работе' },
+    { iconClass: 'dash-stat-card__icon--green', icon: <CheckCircle2 size={18} />, value: stats.completed, label: 'Завершено' },
+    { iconClass: 'dash-stat-card__icon--red', icon: <Flame size={18} />, value: stats.byPriority.critical + stats.byPriority.high, label: 'Срочных' },
   ];
 
   return (
@@ -252,14 +243,14 @@ function SkSidebarWidgets({
             <div className="sk-reveal">
               {urgentTasks.length > 0
                 ? urgentTasks.map((t) => (
-                    <Link to={`/task-helper/${t.id}`} key={t.id} className="dash-urgent-item">
-                      <span className="dash-urgent-item__dot" style={{ background: PRIORITY_COLORS[t.priority] }} />
-                      <span className="dash-urgent-item__title">{t.title}</span>
-                      <span className="dash-urgent-item__badge" style={{ color: PRIORITY_COLORS[t.priority] }}>
-                        {PRIORITY_ICONS[t.priority]}
-                      </span>
-                    </Link>
-                  ))
+                  <Link to={`/task-helper/${t.id}`} key={t.id} className="dash-urgent-item">
+                    <span className="dash-urgent-item__dot" style={{ background: PRIORITY_COLORS[t.priority] }} />
+                    <span className="dash-urgent-item__title">{t.title}</span>
+                    <span className="dash-urgent-item__badge" style={{ color: PRIORITY_COLORS[t.priority] }}>
+                      {PRIORITY_ICONS[t.priority]}
+                    </span>
+                  </Link>
+                ))
                 : (
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', padding: '4px 10px' }}>
                     Срочных задач нет 🎉
@@ -436,21 +427,6 @@ export function HomePage() {
       {/* ===== Recent Activity — skeleton while loading ===== */}
       <SkRecentActivity loaded={isLoaded} recentTasks={recentTasks} />
 
-      {/* ===== Tech Stack Marquee ===== */}
-      <section className="dashboard-section" style={{ marginTop: '12px' }}>
-        <div className="about-v2__marquee-wrap" style={{ background: 'transparent', border: 'none' }}>
-          <div className="about-v2__marquee" style={{ padding: '8px 0' }}>
-            <div className="about-v2__marquee-track">
-              {[...STACK, ...STACK, ...STACK].map((item, i) => (
-                <span key={i} className="about-v2__marquee-item" style={{ borderRight: 'none', padding: '0 32px' }}>
-                  <span className="about-v2__marquee-dot" style={{ background: item.color }} />
-                  <span className="about-v2__marquee-name" style={{ opacity: 0.6 }}>{item.name}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

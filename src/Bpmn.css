@@ -11,7 +11,8 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 14px 20px;
+  padding: 0 20px;
+  height: 64px;
 }
 
 .bpmn-toolbar-card__left {
@@ -125,7 +126,9 @@
   display: grid;
   grid-template-columns: 1fr 220px;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ---- Canvas card ---- */
@@ -134,9 +137,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  /* statusbar(32) + padding-top(28) + toolbar-card(65) + gap(16) + gap(16) + padding-bottom(28) */
-  height: calc(100vh - 32px - 28px - 65px - 16px - 16px - 28px);
-  min-height: 400px;
+  height: 100%;
   position: relative;
   /* Светлая тема внутри */
   color-scheme: light;
@@ -262,7 +263,7 @@
   gap: 4px;
   padding: 8px;
   /* Та же высота что canvas минус header карточки (~45px) */
-  max-height: calc(100vh - 32px - 28px - 65px - 16px - 16px - 28px - 45px);
+  max-height: calc(100vh - 32px - 28px - 65px - 16px - 28px - 45px);
   overflow-y: auto;
 }
 

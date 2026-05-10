@@ -184,15 +184,22 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
 
       const modeler = new BpmnModeler({
         container: containerRef.current,
-        keyboard: { bindTo: containerRef.current },
+        // Keyboard binding is now handled differently or automatically in newer versions
       });
       modelerRef.current = modeler;
 
-      const xml = initialXml || EMPTY_DIAGRAM;
-      modeler.importXML(xml).then(() => {
-        (modeler as any).get('canvas').zoom('fit-viewport');
-        if (containerRef.current) addDotGrid(containerRef.current);
-      });
+      const loadInitial = async () => {
+        try {
+          const xml = initialXml || EMPTY_DIAGRAM;
+          await modeler.importXML(xml);
+          (modeler.get('canvas') as any).zoom('fit-viewport');
+          if (containerRef.current) addDotGrid(containerRef.current);
+        } catch (err) {
+          console.error('Error importing BPMN XML:', err);
+        }
+      };
+
+      loadInitial();
 
       if (onChange) {
         modeler.on('commandStack.changed', onChange);

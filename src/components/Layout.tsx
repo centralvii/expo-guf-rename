@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, FileSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { checkConnection } from '../lib/taskRepository';
 
@@ -47,6 +47,12 @@ const TOOLS_NAV: NavItem[] = [
     label: 'BPMN',
     path: '/bpmn',
     icon: <Workflow size={18} />,
+  },
+  {
+    id: 'pdf-viewer',
+    label: 'PDF Просмотр',
+    path: '/pdf-viewer',
+    icon: <FileSearch size={18} />,
   },
 ];
 

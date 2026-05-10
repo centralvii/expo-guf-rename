@@ -145,3 +145,31 @@ export interface AppSettings {
   supabaseAnonKey: string;
   postgresUrl: string; // URL для локального API или прямого подключения (если используется прокси)
 }
+
+/**
+ * PDF Viewer — Инструмент для работы с PDF документами
+ */
+export interface PdfBoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PdfAnnotation {
+  id: string;
+  documentId: string;
+  content: string;
+  pageNumber: number;
+  boundingBox: PdfBoundingBox;
+  textExcerpt?: string;
+  createdAt: number;
+}
+
+export interface PdfDocument {
+  id: string;
+  name: string;
+  storagePath: string;
+  createdAt: number;
+  updatedAt: number;
+}

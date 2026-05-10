@@ -179,7 +179,7 @@ export function BpmnPage() {
 
   return (
     <div className="tool-page anim-fade-in">
-      <div className="tool-page__content">
+      <div className="tool-page__content" style={{ height: 'calc(100vh - 88px)' }}>
 
         {/* Toolbar card */}
         <div className="bpmn-toolbar-card">
