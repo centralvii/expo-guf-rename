@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import type { CustomVariable } from '../types';
 import { Plus, X, Variable } from 'lucide-react';
+
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Input } from '../ui/Input/Input';
+import { Island } from '../ui/Layout/Island';
 
 interface MassActionsProps {
   template: string;
@@ -13,7 +18,7 @@ interface MassActionsProps {
   onStartNumberChange: (num: number) => void;
 }
 
-export function MassActions({
+export const MassActions = memo(({
   template,
   variables,
   onVariableChange,
@@ -22,12 +27,11 @@ export function MassActions({
   fileCount,
   startNumber,
   onStartNumberChange,
-}: MassActionsProps) {
+}: MassActionsProps) => {
   const [isAddingVar, setIsAddingVar] = useState(false);
   const [newVarKey, setNewVarKey] = useState('');
   const [newVarLabel, setNewVarLabel] = useState('');
 
-  // Show only variables that are used in the template
   const activeVars = variables.filter((v) => template.includes(`{${v.key}}`));
   const inactiveVars = variables.filter((v) => !template.includes(`{${v.key}}`));
 
@@ -47,7 +51,7 @@ export function MassActions({
   };
 
   return (
-    <div className="mass-actions-card">
+    <Island className="mass-actions-card" flex={false} style={{ padding: '20px' }}>
       <div className="mass-actions-card__header">
         <h2>
           <Variable size={18} />
@@ -79,7 +83,6 @@ export function MassActions({
                 <button
                   className="mass-field__remove"
                   onClick={() => onRemoveVariable(v.key)}
-                  title="Удалить переменную"
                 >
                   <X size={12} />
                 </button>
@@ -90,18 +93,17 @@ export function MassActions({
       ) : (
         <p className="mass-actions__hint">
           Добавьте переменные и используйте их в шаблоне как <code>{'{имя}'}</code>.
-          Например: <code>{'{prefix}'}</code>, <code>{'{author}'}</code>, <code>{'{version}'}</code>
         </p>
       )}
 
       {inactiveVars.length > 0 && (
         <div className="mass-actions__inactive">
-          <span className="mass-actions__inactive-label">Не используются в шаблоне:</span>
+          <span className="mass-actions__inactive-label">Не используются:</span>
           <div className="mass-actions__inactive-tags">
             {inactiveVars.map((v) => (
-              <span key={v.key} className="mass-actions__inactive-tag" title={`Добавьте {${v.key}} в шаблон`}>
+              <span key={v.key} className="mass-actions__inactive-tag">
                 {`{${v.key}}`}
-                <button onClick={() => onRemoveVariable(v.key)} title="Удалить">
+                <button onClick={() => onRemoveVariable(v.key)}>
                   <X size={10} />
                 </button>
               </span>
@@ -128,36 +130,27 @@ export function MassActions({
         <div className="mass-actions__add-area">
           {isAddingVar ? (
             <div className="add-var-form">
-              <input
-                className="add-var-form__input"
+              <Input
                 value={newVarKey}
                 onChange={(e) => setNewVarKey(e.target.value)}
                 onKeyDown={handleAddKeyDown}
                 placeholder="Ключ (англ.)"
                 autoFocus
+                size={30} // custom width hint
+                style={{ height: '32px' }}
               />
-              <input
-                className="add-var-form__input"
-                value={newVarLabel}
-                onChange={(e) => setNewVarLabel(e.target.value)}
-                onKeyDown={handleAddKeyDown}
-                placeholder="Название (опц.)"
-              />
-              <button className="btn btn--primary btn--sm" onClick={handleAddVariable} disabled={!newVarKey.trim()}>
-                <Plus size={14} />
-              </button>
-              <button className="btn btn--ghost btn--sm" onClick={() => setIsAddingVar(false)}>
-                <X size={14} />
-              </button>
+              <Button variant="primary" size="sm" onClick={handleAddVariable} disabled={!newVarKey.trim()} icon={<Plus size={14} />} />
+              <Button variant="ghost" size="sm" onClick={() => setIsAddingVar(false)} icon={<X size={14} />} />
             </div>
           ) : (
-            <button className="btn btn--ghost btn--sm" onClick={() => setIsAddingVar(true)}>
-              <Plus size={14} />
+            <Button variant="ghost" size="sm" onClick={() => setIsAddingVar(true)} icon={<Plus size={14} />}>
               Добавить переменную
-            </button>
+            </Button>
           )}
         </div>
       </div>
-    </div>
+    </Island>
   );
-}
+});
+
+MassActions.displayName = 'MassActions';

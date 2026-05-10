@@ -1,6 +1,11 @@
-import { useRef } from 'react';
+import { useRef, memo } from 'react';
 import { BUILTIN_TAGS, type CustomVariable } from '../types';
 import { RotateCcw, Tag, Save } from 'lucide-react';
+
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Input } from '../ui/Input/Input';
+import { Island } from '../ui/Layout/Island';
 
 interface TemplateEditorProps {
   template: string;
@@ -9,7 +14,7 @@ interface TemplateEditorProps {
   onReset: () => void;
 }
 
-export function TemplateEditor({ template, variables, onChange, onReset }: TemplateEditorProps) {
+export const TemplateEditor = memo(({ template, variables, onChange, onReset }: TemplateEditorProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const insertTag = (tag: string) => {
@@ -28,7 +33,6 @@ export function TemplateEditor({ template, variables, onChange, onReset }: Templ
 
     onChange(newTemplate);
 
-    // Restore cursor position after React re-renders
     requestAnimationFrame(() => {
       const newPos = start + tag.length;
       input.setSelectionRange(newPos, newPos);
@@ -36,38 +40,36 @@ export function TemplateEditor({ template, variables, onChange, onReset }: Templ
     });
   };
 
-  // User tags
   const userTags = variables.map((v) => `{${v.key}}`);
 
   return (
-    <div className="template-card">
+    <Island className="template-card" flex={false} style={{ padding: '20px' }}>
       <div className="template-card__header">
         <h2>
           <Tag size={18} />
           Шаблон переименования
-          <span className="template-saved-badge" title="Шаблон автоматически сохраняется в браузере">
+          <span className="template-saved-badge">
             <Save size={12} />
             сохранён
           </span>
         </h2>
-        <button
-          className="btn btn--ghost"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onReset}
-          title="Сбросить к шаблону по умолчанию"
+          icon={<RotateCcw size={14} />}
         >
-          <RotateCcw size={14} />
           Сбросить
-        </button>
+        </Button>
       </div>
 
-      <input
+      <Input
         ref={inputRef}
-        type="text"
-        className="template-input"
         value={template}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Введите шаблон переименования..."
         spellCheck={false}
+        fullWidth
       />
 
       <div className="template-tags">
@@ -78,7 +80,6 @@ export function TemplateEditor({ template, variables, onChange, onReset }: Templ
               key={tag}
               className="tag-btn"
               onClick={() => insertTag(tag)}
-              title={`Вставить ${tag}`}
             >
               {tag}
             </button>
@@ -95,7 +96,6 @@ export function TemplateEditor({ template, variables, onChange, onReset }: Templ
                 key={tag}
                 className={`tag-btn tag-btn--user ${template.includes(tag) ? 'tag-btn--active' : ''}`}
                 onClick={() => insertTag(tag)}
-                title={`Вставить ${tag}`}
               >
                 {tag}
               </button>
@@ -103,6 +103,8 @@ export function TemplateEditor({ template, variables, onChange, onReset }: Templ
           </div>
         </div>
       )}
-    </div>
+    </Island>
   );
-}
+});
+
+TemplateEditor.displayName = 'TemplateEditor';

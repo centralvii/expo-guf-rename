@@ -14,6 +14,7 @@ import './Dashboard.css';
 import './TaskHelper.css';
 import './Bpmn.css';
 import './Pdf.css';
+import './GufPacker.css';
 
 function App() {
   return (

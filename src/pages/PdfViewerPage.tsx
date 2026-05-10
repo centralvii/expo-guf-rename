@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   FilePlus, Search, Trash2, Edit3,
   ZoomIn, ZoomOut, Bookmark,
-  Loader2, ExternalLink, ArrowLeft,
+  Loader2,
+  ExternalLink, ArrowLeft,
   PanelRight, PanelRightClose,
   FileSearch,
   ArrowRight,
@@ -24,7 +25,15 @@ import { PdfDocumentViewer } from '../components/pdf/PdfDocumentViewer';
 import { PdfUploader } from '../components/pdf/PdfUploader';
 import { PdfAnnotationSidebar } from '../components/pdf/PdfAnnotationSidebar';
 import { getCachedPdfBlob, cachePdfBlob } from '../utils/pdfPersistence';
-import { Modal } from '../components/Modal';
+
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Input } from '../ui/Input/Input';
+import { Textarea } from '../ui/Input/Textarea';
+import { Modal } from '../ui/Modal/Modal';
+import { Toolbar } from '../ui/Toolbar/Toolbar';
+import { Island } from '../ui/Layout/Island';
+import { Table } from '../ui/Table/Table';
 
 type ModalType = 'rename-doc' | 'delete-doc' | 'add-annotation' | 'delete-annotation' | null;
 
@@ -59,9 +68,9 @@ export function PdfViewerPage() {
 
   const { notify } = useToast();
 
-  const activeDoc = useMemo(() => 
+  const activeDoc = useMemo(() =>
     documents.find(d => d.id === selectedDocId)
-  , [documents, selectedDocId]);
+    , [documents, selectedDocId]);
 
   // Memoize the URL
   const pdfUrl = useMemo(() => {
@@ -96,7 +105,7 @@ export function PdfViewerPage() {
   // Resize Observer
   useEffect(() => {
     if (!scrollContainerRef.current) return;
-    
+
     let timer: ReturnType<typeof setTimeout>;
     const observer = new ResizeObserver((entries) => {
       clearTimeout(timer);
@@ -307,36 +316,36 @@ export function PdfViewerPage() {
 
   const renderLibrary = () => (
     <div className="pdf-lib anim-fade-in">
-      <header className="pdf-lib__header">
-        <div className="pdf-lib__title-group">
-          <div className="pdf-lib__icon-box">
-            <FileSearch size={18} />
-          </div>
+      <Toolbar>
+        <Toolbar.Left>
           <div className="pdf-lib__stats">
             <h2>Библиотека</h2>
             <p>• {documents.length} PDF</p>
           </div>
-        </div>
+        </Toolbar.Left>
+
         <div className="pdf-lib__search-wrap">
-          <Search size={18} className="pdf-lib__search-icon" />
-          <input
-            type="text"
+          <Input
             placeholder="Быстрый поиск по названию..."
-            className="pdf-lib__search-input"
+            icon={<Search size={18} />}
             value={searchTerm}
             onChange={(e) => setSearchBase(e.target.value)}
+            fullWidth
           />
         </div>
-        <button className="btn btn-primary" onClick={() => setShowUploader(true)}>
-          <FilePlus size={16} /> Загрузить PDF
-        </button>
-      </header>
 
-      <div className="pdf-table-card">
+        <Toolbar.Right>
+          <Button variant="primary" size="sm" icon={<FilePlus size={16} />} onClick={() => setShowUploader(true)}>
+            Загрузить PDF
+          </Button>
+        </Toolbar.Right>
+      </Toolbar>
+
+      <Island className="pdf-table-card">
         {isLoading ? (
-          <div className="pdf-state-centered">
-            <Loader2 size={32} className="animate-spin" style={{ opacity: 0.2 }} />
-            <p>Загрузка библиотеки...</p>
+          <div className="pdf-state-centered island-loader">
+            <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
+            <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка библиотеки...</p>
           </div>
         ) : filteredDocs.length === 0 ? (
           <div className="pdf-state-centered">
@@ -347,74 +356,84 @@ export function PdfViewerPage() {
             <p style={{ fontSize: '13px', opacity: 0.7 }}>Загрузите PDF документы для работы.</p>
           </div>
         ) : (
-          <table className="pdf-table">
-            <thead>
-              <tr>
-                <th style={{ width: '40px' }}></th>
-                <th>Название документа</th>
-                <th style={{ width: '180px' }}>Дата загрузки</th>
-                <th style={{ width: '120px' }}>Управление</th>
-                <th style={{ width: '140px' }}></th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <Table.Head>
+              <Table.Row>
+                <Table.HeaderCell style={{ width: '40px' }}> </Table.HeaderCell>
+                <Table.HeaderCell>Название документа</Table.HeaderCell>
+                <Table.HeaderCell style={{ width: '180px' }}>Дата загрузки</Table.HeaderCell>
+                <Table.HeaderCell style={{ width: '120px' }}>Управление</Table.HeaderCell>
+                <Table.HeaderCell style={{ width: '140px' }}> </Table.HeaderCell>
+              </Table.Row>
+            </Table.Head>
+            <Table.Body>
               {filteredDocs.map(doc => (
-                <tr key={doc.id} className="pdf-row" onClick={() => handleOpenDoc(doc.id)}>
-                  <td><Bookmark size={18} className="pdf-row__icon" /></td>
-                  <td><div className="pdf-row__title" title={doc.name}>{doc.name}</div></td>
-                  <td><div className="pdf-row__date">{new Date(doc.createdAt).toLocaleDateString('ru-RU')}</div></td>
-                  <td>
+                <Table.Row key={doc.id} onClick={() => handleOpenDoc(doc.id)} className="pdf-row">
+                  <Table.Cell><Bookmark size={18} className="pdf-row__icon" /></Table.Cell>
+                  <Table.Cell><div className="pdf-row__title" title={doc.name}>{doc.name}</div></Table.Cell>
+                  <Table.Cell><div className="pdf-row__date">{new Date(doc.createdAt).toLocaleDateString('ru-RU')}</div></Table.Cell>
+                  <Table.Cell>
                     <div className="pdf-row__actions">
-                      <button onClick={(e) => handleRenameDoc(doc, e)} className="btn btn--ghost btn--sm"><Edit3 size={14} /></button>
-                      <button onClick={(e) => handleDeleteDoc(doc, e)} className="btn btn--ghost btn--sm btn--danger"><Trash2 size={14} /></button>
+                      <Button variant="ghost" size="sm" onClick={(e) => handleRenameDoc(doc, e)} title="Переименовать"><Edit3 size={14} /></Button>
+                      <Button variant="danger" size="sm" onClick={(e) => handleDeleteDoc(doc, e)} title="Удалить"><Trash2 size={14} /></Button>
                     </div>
-                  </td>
-                  <td style={{ textAlign: 'right' }}><div className="pdf-row__open-btn">Открыть <ArrowRight size={14} /></div></td>
-                </tr>
+                  </Table.Cell>
+                  <Table.Cell style={{ textAlign: 'right' }}><div className="pdf-row__open-btn">Открыть <ArrowRight size={14} /></div></Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
-          </table>
+            </Table.Body>
+          </Table>
         )}
-      </div>
+      </Island>
     </div>
   );
 
   const renderViewer = () => (
     <div className="pdf-viewer-layout anim-fade-in">
-      <header className="pdf-viewer__toolbar">
-        <div className="pdf-lib__title-group">
-          <button className="btn btn-secondary pdf-viewer__back-btn" onClick={handleBackToLibrary}>
-            <ArrowLeft size={16} /> Библиотека
-          </button>
-          <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
+      <Toolbar>
+        <Toolbar.Left>
+          <Button variant="secondary" size="sm" icon={<ArrowLeft size={16} />} onClick={handleBackToLibrary}>
+            Библиотека
+          </Button>
+          <Toolbar.Divider />
           <h2 className="pdf-viewer__doc-name" title={activeDoc?.name}>
             {activeDoc?.name && activeDoc.name.length > 15 ? `${activeDoc.name.slice(0, 15)}...` : activeDoc?.name}
           </h2>
-        </div>
-        <div className="pdf-viewer__controls">
+        </Toolbar.Left>
+
+        <Toolbar.Right>
           <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-muted)', padding: '3px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-            <button className={`btn btn--sm ${zoomMode === 'fit-page' ? 'btn-primary' : 'btn-ghost'}`} style={{ height: '28px' }} onClick={() => setZoomMode('fit-page')}><Maximize size={14} /></button>
-            <button className={`btn btn--sm ${zoomMode === 'fit-width' ? 'btn-primary' : 'btn-ghost'}`} style={{ height: '28px' }} onClick={() => setZoomMode('fit-width')}><Expand size={14} /></button>
+            <Button variant={zoomMode === 'fit-page' ? 'primary' : 'ghost'} size="sm" style={{ height: '28px', padding: '0 8px' }} onClick={() => setZoomMode('fit-page')} title="Вписать страницу"><Maximize size={14} /></Button>
+            <Button variant={zoomMode === 'fit-width' ? 'primary' : 'ghost'} size="sm" style={{ height: '28px', padding: '0 8px' }} onClick={() => setZoomMode('fit-width')} title="По ширине"><Expand size={14} /></Button>
           </div>
-          <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 4px' }} />
+          <Toolbar.Divider />
           <div className="pdf-viewer__zoom-group">
-            <button className="btn btn-ghost btn--sm" onClick={handleZoomOut}><ZoomOut size={15} /></button>
+            <Button variant="ghost" size="sm" onClick={handleZoomOut}><ZoomOut size={15} /></Button>
             <span className="pdf-viewer__zoom-val">{zoomMode === 'custom' ? `${Math.round(scale * 100)}%` : 'Авто'}</span>
-            <button className="btn btn-ghost btn--sm" onClick={handleZoomIn}><ZoomIn size={15} /></button>
+            <Button variant="ghost" size="sm" onClick={handleZoomIn}><ZoomIn size={15} /></Button>
           </div>
-          <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 4px' }} />
-          <a href={pdfUrl || '#'} target="_blank" rel="noreferrer" className="btn btn-secondary btn--sm" style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}><ExternalLink size={16} /></a>
-          <button className={`btn btn--sm ${showNotes ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setShowNotes(!showNotes)} style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}>
+          <Toolbar.Divider />
+          <Button variant="secondary" size="sm" icon={<ExternalLink size={16} />} onClick={() => window.open(pdfUrl || '', '_blank')} style={{ width: '36px', padding: 0 }} title="Оригинал" />
+
+          <Button
+            variant={showNotes ? 'primary' : 'secondary'}
+            size="sm"
+            onClick={() => setShowNotes(!showNotes)}
+            style={{ width: '36px', height: '32px', padding: 0, justifyContent: 'center' }}
+            title={showNotes ? 'Скрыть заметки' : 'Заметки'}
+          >
             {showNotes ? <PanelRightClose size={16} /> : <PanelRight size={16} />}
-          </button>
-          <button className="btn btn-ghost btn--sm btn--danger" onClick={() => activeDoc && handleDeleteDoc(activeDoc)}><Trash2 size={16} /></button>
-        </div>
-      </header>
+          </Button>
+
+          <Button variant="danger" size="sm" onClick={() => activeDoc && handleDeleteDoc(activeDoc)} title="Удалить"><Trash2 size={16} /></Button>
+        </Toolbar.Right>
+      </Toolbar>
+
       <main className="pdf-viewer-island">
-        <div className="pdf-viewer__canvas-wrap">
-          <div className="pdf-viewer__canvas-scroll" ref={scrollContainerRef}>
+        <Island className="pdf-viewer__canvas-wrap" flex>
+          <Island.ScrollArea ref={scrollContainerRef} className="pdf-viewer__canvas-scroll">
             {isBlobLoading ? (
-              <div className="pdf-state-centered"><Loader2 size={48} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.3 }} /><p>Подготовка документа...</p></div>
+              <div className="pdf-state-centered"><Button variant="ghost" isLoading size="lg" disabled>Подготовка документа...</Button></div>
             ) : pdfUrl && (
               <PdfDocumentViewer
                 url={pdfUrl}
@@ -427,12 +446,13 @@ export function PdfViewerPage() {
                 containerHeight={dimensions.height}
               />
             )}
-          </div>
-        </div>
+          </Island.ScrollArea>
+        </Island>
+
         <aside className={`pdf-notes-sidebar-wrap ${!showNotes ? 'pdf-notes-sidebar-wrap--collapsed' : ''}`}>
           <div className="pdf-notes-sidebar">
             {isAnnotationsLoading ? (
-              <div className="pdf-state-centered"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} /></div>
+              <div className="pdf-state-centered"><Button variant="ghost" isLoading size="lg" disabled /></div>
             ) : (
               <PdfAnnotationSidebar
                 annotations={annotations}
@@ -460,28 +480,26 @@ export function PdfViewerPage() {
   return (
     <div className="tool-page anim-fade-in">
       <div className="tool-page__content">
-        <div className="pdf-page">
-          {viewMode === 'library' ? renderLibrary() : renderViewer()}
-        </div>
+        {viewMode === 'library' ? renderLibrary() : renderViewer()}
       </div>
       {showUploader && <PdfUploader onSuccess={loadDocs} onClose={() => setShowUploader(false)} />}
 
-      <Modal isOpen={activeModal === 'rename-doc'} onClose={closeModal} title="Переименовать" footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-primary" onClick={onConfirmRenameDoc} disabled={isModalSubmitting || !modalValue.trim()}>Сохранить</button></>}>
-        <input type="text" className="template-input" value={modalValue} onChange={(e) => setModalValue(e.target.value)} autoFocus style={{ width: '100%' }} />
+      <Modal isOpen={activeModal === 'rename-doc'} onClose={closeModal} title="Переименовать" footer={<><Button size="sm" onClick={closeModal}>Отмена</Button><Button size="sm" variant="primary" onClick={onConfirmRenameDoc} disabled={isModalSubmitting || !modalValue.trim()}>Сохранить</Button></>}>
+        <Input value={modalValue} onChange={(e) => setModalValue(e.target.value)} autoFocus label="Название файла" fullWidth />
       </Modal>
 
-      <Modal isOpen={activeModal === 'delete-doc'} onClose={closeModal} title="Удалить?" variant="danger" footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-danger" style={{ background: 'var(--danger)', color: 'white' }} onClick={onConfirmDeleteDoc} disabled={isModalSubmitting}>Удалить</button></>}>
+      <Modal isOpen={activeModal === 'delete-doc'} onClose={closeModal} title="Удалить?" variant="danger" footer={<><Button size="sm" onClick={closeModal}>Отмена</Button><Button size="sm" variant="danger" onClick={onConfirmDeleteDoc} disabled={isModalSubmitting}>Удалить</Button></>}>
         <p>Удалить <strong>{modalData?.name}</strong>?</p>
       </Modal>
 
-      <Modal isOpen={activeModal === 'add-annotation'} onClose={closeModal} title="Новая заметка" icon={<Bookmark size={24} />} footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-primary" onClick={onConfirmAddAnnotation} disabled={isModalSubmitting || !modalValue.trim()}>Добавить</button></>}>
+      <Modal isOpen={activeModal === 'add-annotation'} onClose={closeModal} title="Новая заметка" icon={<Bookmark size={24} />} footer={<><Button size="sm" onClick={closeModal}>Отмена</Button><Button size="sm" variant="primary" onClick={onConfirmAddAnnotation} disabled={isModalSubmitting || !modalValue.trim()}>Добавить</Button></>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {modalData?.textExcerpt && <div className="custom-scrollbar" style={{ padding: '12px', background: 'var(--bg-muted)', borderRadius: 'var(--radius-md)', fontSize: '12px', fontStyle: 'italic', borderLeft: '3px solid var(--accent)', maxHeight: '140px', overflowY: 'auto' }}>"{modalData.textExcerpt}"</div>}
-          <textarea className="template-input" style={{ minHeight: '100px', resize: 'vertical' }} value={modalValue} onChange={(e) => setModalValue(e.target.value)} placeholder="Ваш комментарий..." autoFocus />
+          <Textarea label="Ваш комментарий" value={modalValue} onChange={(e) => setModalValue(e.target.value)} placeholder="О чем эта заметка?..." autoFocus fullWidth />
         </div>
       </Modal>
 
-      <Modal isOpen={activeModal === 'delete-annotation'} onClose={closeModal} title="Удалить заметку?" variant="danger" footer={<><button className="btn btn-secondary" onClick={closeModal}>Отмена</button><button className="btn btn-danger" style={{ background: 'var(--danger)', color: 'white' }} onClick={onConfirmDeleteAnnotation} disabled={isModalSubmitting}>Удалить</button></>}>
+      <Modal isOpen={activeModal === 'delete-annotation'} onClose={closeModal} title="Удалить заметку?" variant="danger" footer={<><Button size="sm" onClick={closeModal}>Отмена</Button><Button size="sm" variant="danger" onClick={onConfirmDeleteAnnotation} disabled={isModalSubmitting}>Удалить</Button></>}>
         <p>Вы уверены?</p>
       </Modal>
     </div>

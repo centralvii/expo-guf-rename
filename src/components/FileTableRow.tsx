@@ -1,8 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Pencil, Check, X } from 'lucide-react';
 import type { FileRow } from '../types';
+
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Input } from '../ui/Input/Input';
 
 interface FileTableRowProps {
   row: FileRow;
@@ -10,7 +14,7 @@ interface FileTableRowProps {
   onCleanNameChange?: (fileId: string, cleanName: string) => void;
 }
 
-export function FileTableRow({ row, hasError, onCleanNameChange }: FileTableRowProps) {
+export const FileTableRow = memo(({ row, hasError, onCleanNameChange }: FileTableRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(row.cleanName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -65,40 +69,42 @@ export function FileTableRow({ row, hasError, onCleanNameChange }: FileTableRowP
       style={style}
       className={`file-item ${hasError ? 'file-item--error' : ''} ${isDragging ? 'file-item--dragging' : ''}`}
     >
-      {/* 1. Drag handle */}
       <div className="file-item__handle" {...attributes} {...listeners}>
         <GripVertical size={14} />
       </div>
 
-      {/* 2. Order number */}
       <div className="file-item__order">{row.order}</div>
 
-      {/* 3. Original name / description (editable) */}
       <div className="file-item__clean">
         {isEditing ? (
           <div className="inline-edit">
-            <input
-              ref={inputRef}
-              className="inline-edit__input"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={confirmEdit}
-            />
-            <button
-              className="inline-edit__btn inline-edit__btn--confirm"
+            <div style={{ flex: 1 }}>
+              <Input
+                ref={inputRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={confirmEdit}
+                noContainer
+                style={{ height: '32px', fontSize: '13px' }}
+              />
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
               onMouseDown={(e) => { e.preventDefault(); confirmEdit(); }}
-              title="Подтвердить"
+              style={{ width: '32px', height: '32px', padding: 0 }}
             >
-              <Check size={13} />
-            </button>
-            <button
-              className="inline-edit__btn inline-edit__btn--cancel"
+              <Check size={14} />
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }}
-              title="Отмена"
+              style={{ width: '32px', height: '32px', padding: 0 }}
             >
-              <X size={13} />
-            </button>
+              <X size={14} />
+            </Button>
           </div>
         ) : (
           <div className="inline-edit-display" onClick={startEditing} title="Нажмите для редактирования описания">
@@ -108,10 +114,11 @@ export function FileTableRow({ row, hasError, onCleanNameChange }: FileTableRowP
         )}
       </div>
 
-      {/* 4. Final name (result) */}
       <div className="file-item__new-name" title={row.newName}>
         {row.newName}
       </div>
     </div>
   );
-}
+});
+
+FileTableRow.displayName = 'FileTableRow';

@@ -1,36 +1,34 @@
+import { memo } from 'react';
 import type { ValidationError } from '../types';
-import { AlertTriangle, XCircle, Copy, FileWarning } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+
+// --- UI-Kit Imports ---
+import { Badge } from '../ui/Badge/Badge';
+import { Island } from '../ui/Layout/Island';
 
 interface ValidationPanelProps {
   errors: ValidationError[];
 }
 
-const ICON_MAP = {
-  empty: <XCircle size={14} />,
-  duplicate: <Copy size={14} />,
-  forbidden_chars: <AlertTriangle size={14} />,
-  no_extension: <FileWarning size={14} />,
-};
-
-export function ValidationPanel({ errors }: ValidationPanelProps) {
+export const ValidationPanel = memo(({ errors }: ValidationPanelProps) => {
   if (errors.length === 0) return null;
 
   return (
-    <div className="validation-panel">
-      <div className="validation-panel__header">
-        <AlertTriangle size={18} />
-        <span>
-          Найдено ошибок: <strong>{errors.length}</strong>
-        </span>
+    <Island className="validation-panel" flex={false} style={{ padding: '16px 20px', borderLeft: '4px solid var(--danger)' }}>
+      <div className="validation-panel__header" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--danger)', fontWeight: 700, marginBottom: '12px' }}>
+        <AlertTriangle size={20} />
+        <span>Обнаружено проблем: {errors.length}</span>
       </div>
-      <ul className="validation-panel__list">
+      <ul className="validation-panel__list" style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {errors.map((err, idx) => (
-          <li key={`${err.fileId}-${err.type}-${idx}`} className={`validation-item validation-item--${err.type}`}>
-            {ICON_MAP[err.type]}
-            <span>{err.message}</span>
+          <li key={`${err.fileId}-${err.type}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+            <Badge variant="danger" dot>{err.type}</Badge>
+            <span style={{ color: 'var(--text-secondary)' }}>{err.message}</span>
           </li>
         ))}
       </ul>
-    </div>
+    </Island>
   );
-}
+});
+
+ValidationPanel.displayName = 'ValidationPanel';

@@ -1,5 +1,6 @@
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState, memo } from 'react';
 import { X, AlertCircle, Info } from 'lucide-react';
+import './Modal.css';
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface ModalProps {
   icon?: ReactNode;
 }
 
-export function Modal({ 
+export const Modal = memo(({ 
   isOpen, 
   onClose, 
   title, 
@@ -19,7 +20,7 @@ export function Modal({
   footer, 
   variant = 'primary',
   icon 
-}: ModalProps) {
+}: ModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
@@ -38,7 +39,6 @@ export function Modal({
       return () => clearTimeout(timer);
     }
 
-    // Cleanup function: runs on unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -64,9 +64,9 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         <button 
-          className="app-toast__close" 
-          style={{ position: 'absolute', top: '20px', right: '20px', width: '32px', height: '32px' }}
+          className="modal-card__close" 
           onClick={onClose}
+          aria-label="Закрыть"
         >
           <X size={18} />
         </button>
@@ -78,7 +78,7 @@ export function Modal({
           <h2 className="modal-title">{title}</h2>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body custom-scrollbar">
           {children}
         </div>
 
@@ -90,4 +90,6 @@ export function Modal({
       </div>
     </div>
   );
-}
+});
+
+Modal.displayName = 'Modal';

@@ -2,14 +2,6 @@
    PDF Viewer — Modern Workbench Styles
    ========================================= */
 
-.pdf-page {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  height: calc(100vh - 88px);
-  min-height: 500px;
-}
-
 /* ---- Library View ---- */
 .pdf-lib {
   display: flex;
@@ -375,7 +367,28 @@
   color: var(--text-secondary);
 }
 
-/* Loading & Empty states */
+/* Floating Annotation Trigger */
+.pdf-floating-wrap {
+  position: absolute;
+  z-index: 100;
+  pointer-events: auto;
+  animation: modal-card-in 200ms ease-out;
+}
+
+.pdf-floating-btn {
+  border-radius: 100px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  padding: 0 16px !important;
+  height: 36px !important;
+  font-size: 13px !important;
+  background: var(--text-primary) !important;
+  color: var(--text-inverse) !important;
+}
+
+.pdf-floating-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  background: white !important;
+}
 .pdf-state-centered {
   flex: 1;
   display: flex;

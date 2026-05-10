@@ -1,4 +1,4 @@
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Trash2, Loader2 } from 'lucide-react';
 import { FileTable } from '../components/FileTable';
 import { FileUploader } from '../components/FileUploader';
 import { MassActions } from '../components/MassActions';
@@ -8,7 +8,15 @@ import { ValidationPanel } from '../components/ValidationPanel';
 import { useAppState } from '../hooks/useAppState';
 import { useToast } from '../hooks/useToast';
 
-export function GufPackerPage() {
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Island } from '../ui/Layout/Island';
+
+/**
+ * GufPackerPage - Пакетровщик .guf файлов.
+ * Позволяет массово переименовывать и упаковывать файлы.
+ */
+export const GufPackerPage = () => {
   const state = useAppState();
   const { notify } = useToast();
 
@@ -52,8 +60,8 @@ export function GufPackerPage() {
     return (
       <div className="tool-page">
         <div className="app-restore">
-          <div className="spinner" />
-          <span>Восстановление сессии...</span>
+          <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
+          <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Восстановление сессии...</span>
         </div>
       </div>
     );
@@ -61,7 +69,7 @@ export function GufPackerPage() {
 
   return (
     <div className="tool-page anim-fade-in">
-      <div className="tool-page__content">
+      <div className="tool-page__content tool-page__content--auto">
         <FileUploader
           onZipLoaded={handleLoadZip}
           onGufFilesAdded={handleGufFilesAdded}
@@ -106,36 +114,33 @@ export function GufPackerPage() {
 
             <ValidationPanel errors={state.errors} />
 
-            <div className="export-bar">
-              <button
-                className="btn btn--ghost btn--danger"
+            <Island className="export-bar" flex={false} style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleClearFiles}
+                icon={<Trash2 size={16} />}
               >
-                <Trash2 size={16} />
-                Очистить
-              </button>
+                Очистить список
+              </Button>
 
-              <button
-                className="btn btn--export"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleExportZip}
                 disabled={state.hasErrors || state.isExporting}
+                isLoading={state.isExporting}
+                icon={<Download size={18} />}
+                style={{ minWidth: '180px' }}
               >
-                {state.isExporting ? (
-                  <>
-                    <div className="spinner spinner--sm" />
-                    Упаковка...
-                  </>
-                ) : (
-                  <>
-                    <Download size={18} />
-                    Скачать ZIP
-                  </>
-                )}
-              </button>
-            </div>
+                Скачать ZIP
+              </Button>
+            </Island>
           </>
         )}
       </div>
     </div>
   );
-}
+};
+
+GufPackerPage.displayName = 'GufPackerPage';

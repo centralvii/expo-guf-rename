@@ -25,16 +25,6 @@ interface ToolCard {
 
 const TOOLS: ToolCard[] = [
   {
-    id: 'guf-packer',
-    title: 'Сборка GUF',
-    description: 'Пакетное переименование файлов .guf из ZIP-архива с шаблонами и drag-and-drop.',
-    icon: <FileArchive size={22} />,
-    path: '/guf-packer',
-    tag: 'ГОТОВО',
-    tagColor: 'green',
-    accentColor: '#0070f3',
-  },
-  {
     id: 'task-helper',
     title: 'Задачник',
     description: 'Реестр задач с приоритетами, статусами, Markdown и синхронизацией.',
@@ -45,24 +35,34 @@ const TOOLS: ToolCard[] = [
     accentColor: '#7928ca',
   },
   {
-    id: 'bpmn',
-    title: 'BPMN',
-    description: 'Визуальный редактор бизнес-процессов на базе BPMN 2.0.',
-    icon: <Workflow size={22} />,
-    path: '/bpmn',
+    id: 'guf-packer',
+    title: 'Сборка GUF',
+    description: 'Пакетное переименование файлов .guf из ZIP-архива с шаблонами и drag-and-drop.',
+    icon: <FileArchive size={22} />,
+    path: '/guf-packer',
     tag: 'ГОТОВО',
     tagColor: 'green',
-    accentColor: '#22c55e',
+    accentColor: '#0070f3',
   },
   {
     id: 'pdf-viewer',
-    title: 'PDF Просмотр',
+    title: 'Просмотр PDF',
     description: 'Инструмент для загрузки PDF и создания заметок с привязкой к тексту.',
     icon: <FileSearch size={22} />,
     path: '/pdf-viewer',
     tag: 'НОВОЕ',
     tagColor: 'blue',
     accentColor: '#ff0080',
+  },
+  {
+    id: 'bpmn',
+    title: 'Полигон BPMN',
+    description: 'Визуальный редактор бизнес-процессов на базе BPMN 2.0.',
+    icon: <Workflow size={22} />,
+    path: '/bpmn',
+    tag: 'ГОТОВО',
+    tagColor: 'green',
+    accentColor: '#22c55e',
   },
 ];
 

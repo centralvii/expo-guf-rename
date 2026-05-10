@@ -1,5 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
-import { Upload, Archive, AlertCircle, FilePlus } from 'lucide-react';
+import { useCallback, useRef, useState, memo } from 'react';
+import { Upload, Archive, AlertCircle, FilePlus, Loader2 } from 'lucide-react';
+
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Island } from '../ui/Layout/Island';
 
 interface FileUploaderProps {
   onZipLoaded: (file: File) => Promise<void>;
@@ -8,13 +12,11 @@ interface FileUploaderProps {
   hasFiles: boolean;
 }
 
-export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles }: FileUploaderProps) {
+export const FileUploader = memo(({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles }: FileUploaderProps) => {
   const zipInputRef = useRef<HTMLInputElement>(null);
   const gufInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // ---------- handlers ----------
 
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -28,12 +30,12 @@ export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles
       );
 
       if (other.length > 0) {
-        setError(`Неподдерживаемые файлы: ${other.map((f) => f.name).join(', ')}. Принимаются только .zip и .guf`);
+        setError(`Неподдерживаемые файлы: ${other.map((f) => f.name).join(', ')}`);
         return;
       }
 
       if (zips.length > 0 && gufs.length > 0) {
-        setError('Нельзя смешивать ZIP-архив и .guf файлы в одной загрузке');
+        setError('Нельзя смешивать ZIP и .guf в одной загрузке');
         return;
       }
 
@@ -46,11 +48,7 @@ export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles
         try {
           await onZipLoaded(zips[0]);
         } catch (err) {
-          setError(
-            err instanceof Error
-              ? `Ошибка при чтении архива: ${err.message}`
-              : 'Неизвестная ошибка при чтении архива'
-          );
+          setError('Ошибка при чтении архива');
         }
         return;
       }
@@ -100,29 +98,20 @@ export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles
     [handleFiles]
   );
 
-  // ---------- render ----------
-
   return (
-    <div className="uploader-card">
-      {/* Main drop zone */}
+    <Island className="uploader-card" flex={false}>
       <div
         className={`dropzone ${isDragOver ? 'dropzone--active' : ''} ${hasFiles ? 'dropzone--compact' : ''}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        role="region"
-        aria-label="Зона загрузки файлов"
       >
-        {/* Hidden inputs */}
         <input
           ref={zipInputRef}
           type="file"
           accept=".zip"
           onChange={handleZipInputChange}
-          onClick={(e) => e.stopPropagation()}
-          className="dropzone__input"
           style={{ display: 'none' }}
-          aria-label="Загрузить ZIP-архив"
         />
         <input
           ref={gufInputRef}
@@ -130,44 +119,36 @@ export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles
           accept=".guf"
           multiple
           onChange={handleGufInputChange}
-          onClick={(e) => e.stopPropagation()}
-          className="dropzone__input"
           style={{ display: 'none' }}
-          aria-label="Загрузить .guf файлы"
         />
 
         {isLoading ? (
           <div className="dropzone__loading">
-            <div className="spinner" />
+            <Loader2 className="animate-spin" size={24} />
             <span>Обработка файлов…</span>
           </div>
         ) : hasFiles ? (
-          /* Compact mode — two buttons side by side */
           <div className="uploader-compact-actions">
-            <button
-              type="button"
-              className="uploader-action-btn"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => zipInputRef.current?.click()}
-              title="Загрузить ZIP-архив (заменит список)"
+              icon={<Archive size={16} />}
             >
-              <Archive size={16} />
-              <span>Загрузить ZIP</span>
-            </button>
-            <div className="uploader-action-divider" />
-            <button
-              type="button"
-              className="uploader-action-btn"
+              Заменить ZIP
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => gufInputRef.current?.click()}
-              title="Добавить .guf файлы к существующим"
+              icon={<FilePlus size={16} />}
             >
-              <FilePlus size={16} />
-              <span>Добавить .guf</span>
-            </button>
+              Добавить .guf
+            </Button>
             <div className="uploader-action-divider" />
             <span className="uploader-drag-hint">или перетащите файлы</span>
           </div>
         ) : (
-          /* Empty state — big upload zone with two action buttons */
           <>
             <div className="dropzone__icon">
               <Upload size={40} />
@@ -177,22 +158,20 @@ export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles
               <span>или выберите файлы ниже</span>
             </div>
             <div className="uploader-btn-row">
-              <button
-                type="button"
-                className="btn btn--secondary"
+              <Button
+                variant="secondary"
                 onClick={() => zipInputRef.current?.click()}
+                icon={<Archive size={16} />}
               >
-                <Archive size={16} />
                 Выбрать ZIP
-              </button>
-              <button
-                type="button"
-                className="btn btn--secondary"
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => gufInputRef.current?.click()}
+                icon={<FilePlus size={16} />}
               >
-                <FilePlus size={16} />
-                Выбрать .guf файлы
-              </button>
+                Выбрать .guf
+              </Button>
             </div>
           </>
         )}
@@ -204,6 +183,8 @@ export function FileUploader({ onZipLoaded, onGufFilesAdded, isLoading, hasFiles
           <span>{error}</span>
         </div>
       )}
-    </div>
+    </Island>
   );
-}
+});
+
+FileUploader.displayName = 'FileUploader';

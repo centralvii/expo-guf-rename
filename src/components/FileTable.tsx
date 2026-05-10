@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback, useRef, memo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,10 @@ import { FileIcon, Plus } from 'lucide-react';
 import type { FileRow } from '../types';
 import { FileTableRow } from './FileTableRow';
 
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Island } from '../ui/Layout/Island';
+
 interface FileTableProps {
   files: FileRow[];
   errorFileIds: Set<string>;
@@ -25,13 +29,13 @@ interface FileTableProps {
   onAddFiles?: (files: File[]) => void;
 }
 
-export function FileTable({
+export const FileTable = memo(({
   files,
   errorFileIds,
   onReorder,
   onCleanNameChange,
   onAddFiles,
-}: FileTableProps) {
+}: FileTableProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
@@ -65,7 +69,6 @@ export function FileTable({
     if (onAddFiles) {
       onAddFiles(Array.from(selectedFiles));
     }
-    // Reset input so same file can be re-added
     e.target.value = '';
   };
 
@@ -74,7 +77,7 @@ export function FileTable({
   }
 
   return (
-    <div className="table-card">
+    <Island className="table-card" flex={false}>
       <div className="table-card__header">
         <h2>
           <FileIcon size={18} />
@@ -91,14 +94,14 @@ export function FileTable({
               style={{ display: 'none' }}
               onChange={handleFileInputChange}
             />
-            <button
-              className="btn btn--ghost btn--sm"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
-              title="Добавить отдельные .guf файлы в конец списка"
+              icon={<Plus size={14} />}
             >
-              <Plus size={14} />
               Добавить файл
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -126,6 +129,8 @@ export function FileTable({
           </SortableContext>
         </div>
       </DndContext>
-    </div>
+    </Island>
   );
-}
+});
+
+FileTable.displayName = 'FileTable';

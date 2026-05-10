@@ -31,28 +31,28 @@ const MAIN_NAV: NavItem[] = [
 
 const TOOLS_NAV: NavItem[] = [
   {
-    id: 'guf-packer',
-    label: 'Сборка GUF',
-    path: '/guf-packer',
-    icon: <FileArchive size={18} />,
-  },
-  {
     id: 'task-helper',
     label: 'Задачник',
     path: '/task-helper',
     icon: <FileText size={18} />,
   },
   {
-    id: 'bpmn',
-    label: 'BPMN',
-    path: '/bpmn',
-    icon: <Workflow size={18} />,
+    id: 'guf-packer',
+    label: 'Сборка GUF',
+    path: '/guf-packer',
+    icon: <FileArchive size={18} />,
   },
   {
     id: 'pdf-viewer',
-    label: 'PDF Просмотр',
+    label: 'Просмотр PDF',
     path: '/pdf-viewer',
     icon: <FileSearch size={18} />,
+  },
+  {
+    id: 'bpmn',
+    label: 'Полигон BPMN',
+    path: '/bpmn',
+    icon: <Workflow size={18} />,
   },
 ];
 
@@ -89,10 +89,10 @@ export function Layout() {
         setIsCollapsed(saved ? JSON.parse(saved) : false);
       }
     };
-    
+
     // Initial check
     if (mq.matches) setIsCollapsed(true);
-    
+
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);

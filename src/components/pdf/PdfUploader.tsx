@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import { Upload, FileText, Loader2, CheckCircle2 } from 'lucide-react';
 import { uploadPdfDocument } from '../../lib/pdfRepository';
 import { useToast } from '../../hooks/useToast';
-import { Modal } from '../Modal';
+import { Button } from '../../ui/Button/Button';
+import { Modal } from '../../ui/Modal/Modal';
 
 interface PdfUploaderProps {
   onSuccess: () => void;
@@ -87,21 +88,24 @@ export function PdfUploader({ onSuccess, onClose }: PdfUploaderProps) {
       footer={
         status !== 'success' && (
           <>
-            <button 
-              className="btn btn-secondary" 
+            <Button 
+              variant="secondary" 
+              size="sm"
               onClick={onClose}
               disabled={isUploading}
+              style={{ flex: 1 }}
             >
               Отмена
-            </button>
-            <button 
-              className="btn btn-primary"
+            </Button>
+            <Button 
+              variant="primary"
+              size="sm"
               onClick={handleUpload}
               disabled={!file || isUploading}
-              style={{ minWidth: '140px' }}
+              style={{ flex: 2 }}
             >
               {isUploading ? 'Загрузка...' : 'Загрузить'}
-            </button>
+            </Button>
           </>
         )
       }

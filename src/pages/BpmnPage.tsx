@@ -1,9 +1,16 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import {
   Maximize2, Download, Upload, FilePlus, Save, Trash2, RotateCcw, FileImage, FileCode2, ChevronDown
 } from 'lucide-react';
 import { BpmnEditor, type BpmnEditorHandle } from '../components/BpmnEditor';
 import { useToast } from '../hooks/useToast';
+
+// --- UI-Kit Imports ---
+import { Button } from '../ui/Button/Button';
+import { Toolbar } from '../ui/Toolbar/Toolbar';
+import { Island } from '../ui/Layout/Island';
+import { Modal } from '../ui/Modal/Modal';
+import { Input } from '../ui/Input/Input';
 
 const STORAGE_KEY = 'bpmn_polygon_diagrams';
 
@@ -37,30 +44,14 @@ export function BpmnPage() {
   );
   const [isDirty, setIsDirty] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
-  const [showSavePanel, setShowSavePanel] = useState(false);
-  const [savePanelClosing, setSavePanelClosing] = useState(false);
-
-  const openSavePanel = useCallback(() => {
-    setSavePanelClosing(false);
-    setShowSavePanel(true);
-  }, []);
-
-  const closeSavePanel = useCallback(() => {
-    setSavePanelClosing(true);
-    setTimeout(() => {
-      setShowSavePanel(false);
-      setSavePanelClosing(false);
-    }, 180);
-  }, []);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [diagramToDelete, setDiagramToDelete] = useState<SavedDiagram | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportMenuClosing, setExportMenuClosing] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
-
-  const openExportMenu = useCallback(() => {
-    setExportMenuClosing(false);
-    setShowExportMenu(true);
-  }, []);
 
   const closeExportMenu = useCallback(() => {
     setExportMenuClosing(true);
@@ -81,7 +72,9 @@ export function BpmnPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, [showExportMenu, closeExportMenu]);
 
-  const activeDiagram = diagrams.find((d) => d.id === activeDiagramId) ?? null;
+  const activeDiagram = useMemo(() => 
+    diagrams.find((d) => d.id === activeDiagramId) ?? null
+  , [diagrams, activeDiagramId]);
 
   const handleNew = useCallback(() => {
     setActiveDiagramId(null);
@@ -114,7 +107,7 @@ export function BpmnPage() {
     }
 
     setIsDirty(false);
-    closeSavePanel();
+    setShowSaveModal(false);
     setSaveNameInput('');
     notify('Диаграмма сохранена');
   }, [editorRef, diagrams, activeDiagramId, activeDiagram, saveNameInput, notify]);
@@ -125,15 +118,23 @@ export function BpmnPage() {
     await editorRef.current?.importXml(diagram.xml);
   }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    const updated = diagrams.filter((d) => d.id !== id);
+  const handleDelete = useCallback((d: SavedDiagram) => {
+    setDiagramToDelete(d);
+    setShowDeleteModal(true);
+  }, []);
+
+  const onConfirmDelete = useCallback(() => {
+    if (!diagramToDelete) return;
+    const updated = diagrams.filter((d) => d.id !== diagramToDelete.id);
     saveDiagrams(updated);
     setDiagrams(updated);
-    if (activeDiagramId === id) {
+    if (activeDiagramId === diagramToDelete.id) {
       setActiveDiagramId(updated[0]?.id ?? null);
     }
     notify('Диаграмма удалена', 'error');
-  }, [diagrams, activeDiagramId, notify]);
+    setShowDeleteModal(false);
+    setDiagramToDelete(null);
+  }, [diagrams, activeDiagramId, diagramToDelete, notify]);
 
   const handleExportXml = useCallback(async () => {
     if (!editorRef.current) return;
@@ -167,46 +168,60 @@ export function BpmnPage() {
     e.target.value = '';
   }, [editorRef, notify]);
 
-  const handleReset = useCallback(async () => {
-    await editorRef.current?.resetDiagram();
-    setIsDirty(true);
-    notify('Диаграмма сброшена');
-  }, [notify]);
-
   const handleFit = useCallback(() => {
     editorRef.current?.fitViewport();
   }, []);
 
+  const handleReset = useCallback(() => {
+    setShowResetModal(true);
+  }, []);
+
+  const onConfirmReset = useCallback(async () => {
+    await editorRef.current?.resetDiagram();
+    setIsDirty(true);
+    notify('Диаграмма сброшена');
+    setShowResetModal(false);
+  }, [notify]);
+
   return (
     <div className="tool-page anim-fade-in">
-      <div className="tool-page__content" style={{ height: 'calc(100vh - 88px)' }}>
+      <div className="tool-page__content">
 
-        {/* Toolbar card */}
-        <div className="bpmn-toolbar-card">
-          <div className="bpmn-toolbar-card__left">
-            <span className="bpmn-toolbar-card__name">
+        {/* --- Toolbar --- */}
+        <Toolbar>
+          <Toolbar.Left>
+            <span style={{ fontSize: '15px', fontWeight: 700, paddingLeft: '4px' }}>
               {activeDiagram?.name ?? 'Новая диаграмма'}
-              {isDirty && <span className="bpmn-toolbar__dirty"> ●</span>}
+              {isDirty && <span style={{ color: 'var(--warning)', marginLeft: '6px' }}>●</span>}
             </span>
-          </div>
-          <div className="bpmn-toolbar-card__actions">
-            <button className="btn-bpmn" onClick={handleFit} title="Вписать в экран">
-              <Maximize2 size={14} /> Вписать
-            </button>
-            <button className="btn-bpmn" onClick={handleNew} title="Новая диаграмма">
-              <FilePlus size={14} /> Новая
-            </button>
-            <button className="btn-bpmn btn-bpmn--danger" onClick={handleReset} title="Сбросить разметку">
-              <RotateCcw size={14} /> Сброс
-            </button>
-            <div className="bpmn-toolbar__divider" />
-            <button className="btn-bpmn" onClick={handleImportXml}>
-              <Upload size={14} /> Импорт
-            </button>
+          </Toolbar.Left>
+
+          <Toolbar.Right>
+            <Button variant="secondary" size="sm" onClick={handleFit} title="Вписать в экран" icon={<Maximize2 size={14} />}>
+              Вписать
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleNew} title="Новая диаграмма" icon={<FilePlus size={14} />}>
+              Новая
+            </Button>
+            <Button variant="danger" size="sm" onClick={handleReset} title="Сбросить разметку" icon={<RotateCcw size={14} />}>
+              Сброс
+            </Button>
+            
+            <Toolbar.Divider />
+            
+            <Button variant="secondary" size="sm" onClick={handleImportXml} icon={<Upload size={14} />}>
+              Импорт
+            </Button>
+
             <div className="bpmn-export-wrap" ref={exportMenuRef}>
-              <button className="btn-bpmn" onClick={() => showExportMenu ? closeExportMenu() : openExportMenu()}>
-                <Download size={14} /> Экспорт <ChevronDown size={12} />
-              </button>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => showExportMenu ? closeExportMenu() : setShowExportMenu(true)}
+                icon={<Download size={14} />}
+              >
+                Экспорт <ChevronDown size={12} style={{ marginLeft: '4px' }} />
+              </Button>
               {showExportMenu && (
                 <div className={`bpmn-export-menu ${exportMenuClosing ? 'bpmn-export-menu--closing' : ''}`}>
                   <button className="bpmn-export-menu__item" onClick={() => { handleExportXml(); closeExportMenu(); }}>
@@ -218,63 +233,41 @@ export function BpmnPage() {
                 </div>
               )}
             </div>
-            <div className="bpmn-toolbar__divider" />
-            <button
-              className="btn-bpmn btn-bpmn--primary"
-              onClick={() => showSavePanel ? closeSavePanel() : openSavePanel()}
-            >
-              <Save size={14} /> Сохранить
-            </button>
-          </div>
-        </div>
 
-        {/* Save panel */}
-        {showSavePanel && (
-          <div className={`bpmn-save-panel ${savePanelClosing ? 'bpmn-save-panel--closing' : ''}`}>
-            <input
-              autoFocus
-              type="text"
-              className="bpmn-save-panel__input"
-              placeholder={activeDiagram?.name ?? 'Название диаграммы...'}
-              value={saveNameInput}
-              onChange={(e) => setSaveNameInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSave();
-                if (e.key === 'Escape') closeSavePanel();
+            <Toolbar.Divider />
+            
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Save size={14} />}
+              onClick={() => {
+                setSaveNameInput(activeDiagram?.name || '');
+                setShowSaveModal(true);
               }}
-            />
-            <button className="btn-bpmn btn-bpmn--primary" onClick={handleSave}>
+            >
               Сохранить
-            </button>
-            <button className="btn-bpmn" onClick={closeSavePanel}>
-              Отмена
-            </button>
-          </div>
-        )}
+            </Button>
+          </Toolbar.Right>
+        </Toolbar>
 
-        {/* Editor + saved diagrams side by side */}
+        {/* --- Main Workspace --- */}
         <div className="bpmn-workspace">
-
-          {/* Canvas card */}
-          <div className="bpmn-canvas-card">
+          <Island className="bpmn-canvas-card">
             <BpmnEditor
               ref={editorRef}
               initialXml={activeDiagram?.xml}
               onChange={() => setIsDirty(true)}
             />
-          </div>
+          </Island>
 
-          {/* Saved diagrams card */}
-          <div className="bpmn-diagrams-card">
+          <aside className="bpmn-diagrams-card">
             <div className="bpmn-diagrams-card__header">
               <span className="bpmn-diagrams-card__title">Сохранённые</span>
               <span className="bpmn-diagrams-card__count">{diagrams.length}</span>
             </div>
-            <div className="bpmn-diagrams-card__list">
+            <div className="bpmn-diagrams-card__list custom-scrollbar">
               {diagrams.length === 0 && (
-                <div className="bpmn-diagrams-card__empty">
-                  Нет сохранённых диаграмм
-                </div>
+                <div className="bpmn-diagrams-card__empty">Нет сохранённых диаграмм</div>
               )}
               {diagrams.map((d) => (
                 <div
@@ -284,24 +277,67 @@ export function BpmnPage() {
                 >
                   <div className="bpmn-diagram-item__info">
                     <div className="bpmn-diagram-item__name">{d.name}</div>
-                    <div className="bpmn-diagram-item__date">
-                      {new Date(d.updatedAt).toLocaleDateString('ru-RU')}
-                    </div>
+                    <div className="bpmn-diagram-item__date">{new Date(d.updatedAt).toLocaleDateString('ru-RU')}</div>
                   </div>
                   <button
                     className="bpmn-diagram-item__delete"
-                    onClick={(e) => { e.stopPropagation(); handleDelete(d.id); }}
-                    title="Удалить"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(d); }}
                   >
                     <Trash2 size={13} />
                   </button>
                 </div>
               ))}
             </div>
-          </div>
-
+          </aside>
         </div>
       </div>
+
+      {/* --- Modals --- */}
+      <Modal 
+        isOpen={showSaveModal} 
+        onClose={() => setShowSaveModal(false)} 
+        title="Сохранить диаграмму"
+        footer={<>
+          <Button size="sm" onClick={() => setShowSaveModal(false)}>Отмена</Button>
+          <Button size="sm" variant="primary" onClick={handleSave} disabled={!saveNameInput.trim()}>Сохранить</Button>
+        </>}
+      >
+        <Input 
+          autoFocus 
+          label="Название диаграммы" 
+          value={saveNameInput} 
+          onChange={(e) => setSaveNameInput(e.target.value)} 
+          placeholder="Введите название..."
+          fullWidth
+          onKeyDown={(e) => e.key === 'Enter' && saveNameInput.trim() && handleSave()}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Удалить диаграмму?"
+        variant="danger"
+        footer={<>
+          <Button size="sm" onClick={() => setShowDeleteModal(false)}>Отмена</Button>
+          <Button size="sm" variant="danger" onClick={onConfirmDelete}>Удалить</Button>
+        </>}
+      >
+        <p>Вы уверены, что хотите удалить диаграмму <strong>{diagramToDelete?.name}</strong>?</p>
+      </Modal>
+
+      <Modal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        title="Сбросить холст?"
+        variant="danger"
+        footer={<>
+          <Button size="sm" onClick={() => setShowResetModal(false)}>Отмена</Button>
+          <Button size="sm" variant="danger" onClick={onConfirmReset}>Сбросить</Button>
+        </>}
+      >
+        <p>Это действие полностью очистит текущую диаграмму. Все несохранённые изменения будут потеряны.</p>
+      </Modal>
 
       <input
         ref={fileInputRef}

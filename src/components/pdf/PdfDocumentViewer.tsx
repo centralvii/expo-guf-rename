@@ -5,6 +5,9 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import type { PdfAnnotation, PdfBoundingBox } from '../../types';
 
+// --- UI-Kit Imports ---
+import { Button } from '../../ui/Button/Button';
+
 // Set up worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -127,28 +130,23 @@ export const PdfDocumentViewer = memo(({
     >
       {/* Floating Selection Menu */}
       {selectionMenu && (
-        <button
-          onClick={handleAddClick}
-          className="btn btn-primary"
+        <div 
+          className="pdf-floating-wrap"
           style={{
-            position: 'absolute',
             left: `${selectionMenu.x}px`,
             top: `${selectionMenu.y}px`,
             transform: 'translateX(-50%)',
-            zIndex: 100,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-            padding: '6px 14px',
-            borderRadius: '10px',
-            fontSize: '13px',
-            fontWeight: 700,
-            gap: '8px',
-            whiteSpace: 'nowrap',
-            animation: 'modal-card-in 200ms ease-out'
           }}
         >
-          <Plus size={14} strokeWidth={3} />
-          Заметка
-        </button>
+          <Button
+            variant="primary"
+            className="pdf-floating-btn"
+            onClick={handleAddClick}
+            icon={<Plus size={14} strokeWidth={3} />}
+          >
+            Заметка
+          </Button>
+        </div>
       )}
 
       <Document

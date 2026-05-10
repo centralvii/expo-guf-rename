@@ -1,0 +1,20 @@
+.ui-island {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  min-height: 0;
+  position: relative; /* Base for absolute children */
+}
+
+.ui-island--flex {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-island__scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
