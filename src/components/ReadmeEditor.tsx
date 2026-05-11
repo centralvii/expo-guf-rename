@@ -135,7 +135,7 @@ export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
   const lineCount = value ? value.split('\n').length : 0;
 
   return (
-    <Island className="readme-card" flex={false} style={{ padding: '20px' }}>
+    <Island className="readme-card" flex={false}>
       <div className="readme-card__header">
         <h2><FileText size={18} /> Заметки к поставке</h2>
         <div className="readme-card__actions">
@@ -173,8 +173,8 @@ export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
 
       {!showPreview && (
         <div className="readme-card__status">
-          <span className="readme-card__hint" style={{ marginRight: 'auto' }}>Включено как README.txt</span>
-          <div style={{ display: 'flex', gap: '12px', opacity: value.length > 0 ? 1 : 0 }}>
+          <span className="readme-card__hint">Включено как README.txt</span>
+          <div className={`readme-card__counters ${value.length > 0 ? 'readme-card__counters--visible' : ''}`}>
             <span>{lineCount} строк</span>
             <span>{charCount} симв.</span>
           </div>

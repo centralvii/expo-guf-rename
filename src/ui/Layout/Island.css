@@ -18,3 +18,62 @@
   overflow-y: auto;
   min-height: 0;
 }
+
+/* ---- Custom scrollbar для всех скроллящихся элементов внутри Island ---- */
+.ui-island ::-webkit-scrollbar,
+.ui-island::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ui-island ::-webkit-scrollbar-track,
+.ui-island::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ui-island ::-webkit-scrollbar-thumb,
+.ui-island::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.ui-island ::-webkit-scrollbar-thumb:hover,
+.ui-island::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ui-island ::-webkit-scrollbar-corner,
+.ui-island::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+.ui-island,
+.ui-island * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* =========================================
+   Page Title — заголовок страницы/инструмента
+   ========================================= */
+
+.ui-page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-page-title__dot {
+  color: var(--warning);
+  font-size: 10px;
+  flex-shrink: 0;
+}

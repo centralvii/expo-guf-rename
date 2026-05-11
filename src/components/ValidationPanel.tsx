@@ -14,16 +14,16 @@ export const ValidationPanel = memo(({ errors }: ValidationPanelProps) => {
   if (errors.length === 0) return null;
 
   return (
-    <Island className="validation-panel" flex={false} style={{ padding: '16px 20px', borderLeft: '4px solid var(--danger)' }}>
-      <div className="validation-panel__header" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--danger)', fontWeight: 700, marginBottom: '12px' }}>
+    <Island className="validation-panel" flex={false}>
+      <div className="validation-panel__header">
         <AlertTriangle size={20} />
         <span>Обнаружено проблем: {errors.length}</span>
       </div>
-      <ul className="validation-panel__list" style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <ul className="validation-panel__list">
         {errors.map((err, idx) => (
-          <li key={`${err.fileId}-${err.type}-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+          <li key={`${err.fileId}-${err.type}-${idx}`} className="validation-panel__item">
             <Badge variant="danger" dot>{err.type}</Badge>
-            <span style={{ color: 'var(--text-secondary)' }}>{err.message}</span>
+            <span className="validation-panel__message">{err.message}</span>
           </li>
         ))}
       </ul>

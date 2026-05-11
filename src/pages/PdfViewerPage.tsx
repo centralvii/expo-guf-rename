@@ -33,6 +33,7 @@ import { Textarea } from '../ui/Input/Textarea';
 import { Modal } from '../ui/Modal/Modal';
 import { Toolbar } from '../ui/Toolbar/Toolbar';
 import { Island } from '../ui/Layout/Island';
+import { PageTitle } from '../ui/Layout/PageTitle';
 import { Table } from '../ui/Table/Table';
 
 type ModalType = 'rename-doc' | 'delete-doc' | 'add-annotation' | 'delete-annotation' | null;
@@ -318,10 +319,12 @@ export function PdfViewerPage() {
     <div className="pdf-lib anim-fade-in">
       <Toolbar>
         <Toolbar.Left>
-          <div className="pdf-lib__stats">
-            <h2>Библиотека</h2>
-            <p>• {documents.length} PDF</p>
-          </div>
+          <PageTitle>
+            Библиотека
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '8px', fontSize: '14px' }}>
+              • {documents.length} PDF
+            </span>
+          </PageTitle>
         </Toolbar.Left>
 
         <div className="pdf-lib__search-wrap">
@@ -396,9 +399,9 @@ export function PdfViewerPage() {
             Библиотека
           </Button>
           <Toolbar.Divider />
-          <h2 className="pdf-viewer__doc-name" title={activeDoc?.name}>
-            {activeDoc?.name && activeDoc.name.length > 15 ? `${activeDoc.name.slice(0, 15)}...` : activeDoc?.name}
-          </h2>
+          <PageTitle>
+            {activeDoc?.name && activeDoc.name.length > 30 ? `${activeDoc.name.slice(0, 30)}...` : activeDoc?.name}
+          </PageTitle>
         </Toolbar.Left>
 
         <Toolbar.Right>

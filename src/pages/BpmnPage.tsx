@@ -9,6 +9,7 @@ import { useToast } from '../hooks/useToast';
 import { Button } from '../ui/Button/Button';
 import { Toolbar } from '../ui/Toolbar/Toolbar';
 import { Island } from '../ui/Layout/Island';
+import { PageTitle } from '../ui/Layout/PageTitle';
 import { Modal } from '../ui/Modal/Modal';
 import { Input } from '../ui/Input/Input';
 
@@ -190,10 +191,9 @@ export function BpmnPage() {
         {/* --- Toolbar --- */}
         <Toolbar>
           <Toolbar.Left>
-            <span style={{ fontSize: '15px', fontWeight: 700, paddingLeft: '4px' }}>
+            <PageTitle isDirty={isDirty}>
               {activeDiagram?.name ?? 'Новая диаграмма'}
-              {isDirty && <span style={{ color: 'var(--warning)', marginLeft: '6px' }}>●</span>}
-            </span>
+            </PageTitle>
           </Toolbar.Left>
 
           <Toolbar.Right>

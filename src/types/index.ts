@@ -173,3 +173,87 @@ export interface PdfDocument {
   createdAt: number;
   updatedAt: number;
 }
+
+
+/**
+ * API Client "Запросник" — Инструмент для тестирования API запросов
+ */
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+
+export const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+export type ApiAuthType = 'none' | 'bearer' | 'basic' | 'api-key';
+
+export type ApiBodyType = 'none' | 'json' | 'text' | 'form-urlencoded';
+
+/** Универсальная пара ключ-значение для headers / params / form */
+export interface ApiKeyValue {
+  id: string;
+  key: string;
+  value: string;
+  enabled: boolean;
+}
+
+/** Конфигурация аутентификации */
+export interface ApiAuthConfig {
+  type: ApiAuthType;
+  bearerToken?: string;
+  basicUsername?: string;
+  basicPassword?: string;
+  apiKeyName?: string;
+  apiKeyValue?: string;
+  apiKeyIn?: 'header' | 'query';
+}
+
+/** Описание одного запроса (вкладка / сохранённый коллекционный запрос) */
+export interface ApiRequest {
+  id: string;
+  name: string;
+  method: HttpMethod;
+  url: string;
+  params: ApiKeyValue[];
+  headers: ApiKeyValue[];
+  auth: ApiAuthConfig;
+  bodyType: ApiBodyType;
+  bodyContent: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Результат выполнения запроса */
+export interface ApiResponse {
+  status: number;
+  statusText: string;
+  ok: boolean;
+  headers: Record<string, string>;
+  body: string;
+  contentType: string;
+  /** Время выполнения запроса в ms */
+  durationMs: number;
+  /** Размер тела ответа в bytes */
+  sizeBytes: number;
+  /** Время получения ответа */
+  timestamp: number;
+}
+
+/** Запись в истории запросов */
+export interface ApiHistoryEntry {
+  id: string;
+  method: HttpMethod;
+  url: string;
+  status: number;
+  durationMs: number;
+  timestamp: number;
+}
+
+export const DEFAULT_API_REQUEST: Omit<ApiRequest, 'id' | 'createdAt' | 'updatedAt'> = {
+  name: 'Новый запрос',
+  method: 'GET',
+  url: '',
+  params: [],
+  headers: [],
+  auth: { type: 'none' },
+  bodyType: 'none',
+  bodyContent: '',
+};

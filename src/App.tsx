@@ -9,12 +9,15 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AboutPage } from './pages/AboutPage';
 import { BpmnPage } from './pages/BpmnPage';
 import { PdfViewerPage } from './pages/PdfViewerPage';
+import { ApiClientPage } from './pages/ApiClientPage';
 import './App.css';
 import './Dashboard.css';
 import './TaskHelper.css';
 import './Bpmn.css';
 import './Pdf.css';
 import './GufPacker.css';
+import './ApiClient.css';
+import './Settings.css';
 
 function App() {
   return (
@@ -29,6 +32,7 @@ function App() {
             <Route path="task-helper/:taskId" element={<TaskDetailPage />} />
             <Route path="bpmn" element={<BpmnPage />} />
             <Route path="pdf-viewer" element={<PdfViewerPage />} />
+            <Route path="api-client" element={<ApiClientPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>

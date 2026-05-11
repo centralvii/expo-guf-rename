@@ -43,7 +43,7 @@ export const TemplateEditor = memo(({ template, variables, onChange, onReset }: 
   const userTags = variables.map((v) => `{${v.key}}`);
 
   return (
-    <Island className="template-card" flex={false} style={{ padding: '20px' }}>
+    <Island className="template-card" flex={false}>
       <div className="template-card__header">
         <h2>
           <Tag size={18} />

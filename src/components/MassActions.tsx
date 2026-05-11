@@ -1,6 +1,6 @@
 import { useState, memo } from 'react';
 import type { CustomVariable } from '../types';
-import { Plus, X, Variable } from 'lucide-react';
+import { Plus, X, Braces } from 'lucide-react';
 
 // --- UI-Kit Imports ---
 import { Button } from '../ui/Button/Button';
@@ -51,10 +51,10 @@ export const MassActions = memo(({
   };
 
   return (
-    <Island className="mass-actions-card" flex={false} style={{ padding: '20px' }}>
+    <Island className="mass-actions-card" flex={false}>
       <div className="mass-actions-card__header">
         <h2>
-          <Variable size={18} />
+          <Braces size={18} />
           Переменные шаблона
         </h2>
         <div className="mass-actions-card__right">
@@ -73,12 +73,12 @@ export const MassActions = memo(({
                 <span className="mass-field__tag">{`{${v.key}}`}</span>
               </div>
               <div className="mass-field__input-wrap">
-                <input
-                  type="text"
-                  className="mass-field__input"
+                <Input
                   value={v.value}
                   onChange={(e) => onVariableChange(v.key, e.target.value)}
                   placeholder={`Значение для {${v.key}}`}
+                  fullWidth
+                  noContainer
                 />
                 <button
                   className="mass-field__remove"
@@ -115,15 +115,16 @@ export const MassActions = memo(({
       <div className="mass-actions__footer">
         <label className="start-number-label">
           Нумерация с:
-          <input
+          <Input
             type="number"
-            className="start-number-input"
             min={0}
             value={startNumber}
             onChange={(e) => {
               const val = parseInt(e.target.value, 10);
               onStartNumberChange(Number.isFinite(val) ? val : 1);
             }}
+            noContainer
+            className="start-number-input"
           />
         </label>
 
@@ -136,8 +137,8 @@ export const MassActions = memo(({
                 onKeyDown={handleAddKeyDown}
                 placeholder="Ключ (англ.)"
                 autoFocus
-                size={30} // custom width hint
-                style={{ height: '32px' }}
+                noContainer
+                className="add-var-input"
               />
               <Button variant="primary" size="sm" onClick={handleAddVariable} disabled={!newVarKey.trim()} icon={<Plus size={14} />} />
               <Button variant="ghost" size="sm" onClick={() => setIsAddingVar(false)} icon={<X size={14} />} />

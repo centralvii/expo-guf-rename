@@ -1,0 +1,213 @@
+/* =========================================
+   Settings Page — design system aligned
+   ========================================= */
+
+/* ---- Section (Island extension) ---- */
+.settings-section {
+  padding: 0;
+  overflow: hidden;
+}
+
+.settings-section__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-muted);
+}
+
+.settings-section__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  flex-shrink: 0;
+}
+
+.settings-section__headings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-section__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.settings-section__desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.settings-section__body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Row ---- */
+.settings-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 320px);
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row:hover {
+  background: var(--bg-hover);
+}
+
+.settings-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-row__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-row__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.settings-row__control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.settings-row__control > .ui-input-wrapper,
+.settings-row__control > .ui-input-container,
+.settings-row__control > .ui-select {
+  width: 100%;
+}
+
+.settings-row__control .ui-btn {
+  width: auto;
+}
+
+.settings-row__control .ui-badge {
+  width: auto;
+}
+
+.settings-row__control .settings-value,
+.settings-row__control .settings-value--mono {
+  width: auto;
+}
+
+/* ---- Inline value ---- */
+.settings-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-value--mono {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* ---- Info banner ---- */
+.settings-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 20px;
+  background: var(--accent-soft);
+  border-top: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-info svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.settings-info span {
+  color: var(--text-secondary);
+}
+
+/* ---- Error banner ---- */
+.settings-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.settings-error-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.settings-error-banner__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-error-banner__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.settings-error-banner__desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 720px) {
+  .settings-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .settings-row__control {
+    justify-content: flex-start;
+  }
+}

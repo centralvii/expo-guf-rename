@@ -69,13 +69,10 @@ interface TaskRepository {
  */
 const SupabaseRepo: TaskRepository = {
   async checkConnection() {
-    try {
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.from(TASKS_TABLE).select('id').limit(1);
-      return !error;
-    } catch (e) {
-      return false;
-    }
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.from(TASKS_TABLE).select('id').limit(1);
+    if (error) throw new Error(error.message);
+    return true;
   },
 
   async listTasks() {
@@ -137,13 +134,10 @@ const SupabaseRepo: TaskRepository = {
  */
 const PostgresRepo: TaskRepository = {
   async checkConnection() {
-    try {
-      const settings = getSettings();
-      const response = await fetch(`${settings.postgresUrl}/tasks`, { method: 'HEAD' });
-      return response.ok;
-    } catch (e) {
-      return false;
-    }
+    const settings = getSettings();
+    const response = await fetch(`${settings.postgresUrl}/tasks`, { method: 'HEAD' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return true;
   },
 
   async listTasks() {

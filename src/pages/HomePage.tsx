@@ -3,35 +3,25 @@ import { Link } from 'react-router-dom';
 import {
   FileArchive, FileText, ArrowRight, Clock,
   Flame, ArrowUp, ArrowDown, Circle, CheckCircle2, XCircle,
-  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles, FileSearch, Workflow
+  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles, FileSearch, Workflow, Send
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '../types';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../types';
+import { ToolCard } from '../ui/ToolCard/ToolCard';
+import type { ToolCardProps } from '../ui/ToolCard/ToolCard';
 
 /* ---- Tool data ---- */
 
-interface ToolCard {
-  id: string;
-  title: string;
-  description: string;
-  icon: ReactNode;
-  path: string;
-  tag: string;
-  tagColor: string;
-  accentColor: string;
-  disabled?: boolean;
-}
-
-const TOOLS: ToolCard[] = [
+const TOOLS: ToolCardProps[] = [
   {
     id: 'task-helper',
     title: 'Задачник',
     description: 'Реестр задач с приоритетами, статусами, Markdown и синхронизацией.',
     icon: <FileText size={22} />,
     path: '/task-helper',
-    tag: 'ГОТОВО',
-    tagColor: 'green',
+    badge: 'Готово',
+    badgeVariant: 'success',
     accentColor: '#7928ca',
   },
   {
@@ -40,8 +30,8 @@ const TOOLS: ToolCard[] = [
     description: 'Пакетное переименование файлов .guf из ZIP-архива с шаблонами и drag-and-drop.',
     icon: <FileArchive size={22} />,
     path: '/guf-packer',
-    tag: 'ГОТОВО',
-    tagColor: 'green',
+    badge: 'Готово',
+    badgeVariant: 'success',
     accentColor: '#0070f3',
   },
   {
@@ -50,8 +40,8 @@ const TOOLS: ToolCard[] = [
     description: 'Инструмент для загрузки PDF и создания заметок с привязкой к тексту.',
     icon: <FileSearch size={22} />,
     path: '/pdf-viewer',
-    tag: 'НОВОЕ',
-    tagColor: 'blue',
+    badge: 'Готово',
+    badgeVariant: 'success',
     accentColor: '#ff0080',
   },
   {
@@ -60,9 +50,19 @@ const TOOLS: ToolCard[] = [
     description: 'Визуальный редактор бизнес-процессов на базе BPMN 2.0.',
     icon: <Workflow size={22} />,
     path: '/bpmn',
-    tag: 'ГОТОВО',
-    tagColor: 'green',
+    badge: 'Готово',
+    badgeVariant: 'success',
     accentColor: '#22c55e',
+  },
+  {
+    id: 'api-client',
+    title: 'Запросник',
+    description: 'Клиент для тестирования REST API с коллекциями, историей и авторизацией.',
+    icon: <Send size={22} />,
+    path: '/api-client',
+    badge: 'Готово',
+    badgeVariant: 'success',
+    accentColor: '#f59e0b',
   },
 ];
 
@@ -390,32 +390,7 @@ export function HomePage() {
           </div>
           <div className="dashboard-grid">
             {TOOLS.map((tool) => (
-              <Link
-                to={tool.disabled ? "#" : tool.path}
-                key={tool.id}
-                className={`dash-card ${tool.disabled ? 'dash-card--disabled' : ''}`}
-                onClick={(e) => tool.disabled && e.preventDefault()}
-              >
-                <div className="dash-card__header">
-                  <div className={`dash-card__icon ${tool.disabled ? 'dash-card__icon--muted' : ''}`}>
-                    {tool.icon}
-                  </div>
-                  <span className={`dash-card__tag dash-card__tag--${tool.tagColor}`}>
-                    {tool.tag}
-                  </span>
-                </div>
-                <h3 className={`dash-card__title ${tool.disabled ? 'dash-card__title--muted' : ''}`}>
-                  {tool.title}
-                </h3>
-                <p className="dash-card__desc">{tool.description}</p>
-                <div className="dash-card__footer">
-                  <span className="dash-card__link">
-                    {tool.disabled ? 'В разработке' : (
-                      <>Открыть <ArrowRight size={14} /></>
-                    )}
-                  </span>
-                </div>
-              </Link>
+              <ToolCard key={tool.id} {...tool} />
             ))}
           </div>
         </section>

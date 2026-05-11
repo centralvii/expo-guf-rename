@@ -1,7 +1,7 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, FileSearch } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, FileSearch, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { checkConnection } from '../lib/taskRepository';
+import { refreshConnection, subscribeToConnection, type ConnectionState } from '../lib/connectionStatus';
 
 declare const __APP_GIT_COMMIT__: string;
 
@@ -37,6 +37,12 @@ const TOOLS_NAV: NavItem[] = [
     icon: <FileText size={18} />,
   },
   {
+    id: 'api-client',
+    label: 'Запросник',
+    path: '/api-client',
+    icon: <Send size={18} />,
+  },
+  {
     id: 'guf-packer',
     label: 'Сборка GUF',
     path: '/guf-packer',
@@ -63,18 +69,46 @@ export function Layout() {
     const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
     return saved ? JSON.parse(saved) : false;
   });
-  const [isOnline, setIsOnline] = useState(true);
+  const [connectionState, setConnectionState] = useState<ConnectionState>('unknown');
 
-  // Connection check
+  // Connection status: подписка на глобальный менеджер с exponential backoff
   useEffect(() => {
-    const check = async () => {
-      const status = await checkConnection();
-      setIsOnline(status);
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let failures = 0;
+
+    const unsubscribe = subscribeToConnection((snap) => {
+      if (!cancelled) setConnectionState(snap.state);
+    });
+
+    const scheduleNext = (delay: number) => {
+      if (cancelled) return;
+      timeoutId = setTimeout(tick, delay);
     };
 
-    check();
-    const interval = setInterval(check, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
+    const tick = async () => {
+      if (cancelled) return;
+      const snap = await refreshConnection(true);
+      if (cancelled) return;
+      if (snap.state === 'online') {
+        failures = 0;
+        scheduleNext(60_000); // 1 минута при стабильном соединении
+      } else {
+        failures = Math.min(failures + 1, 6);
+        // 15s → 30s → 1m → 2m → 4m → 5m (cap)
+        const delay = Math.min(15_000 * 2 ** (failures - 1), 300_000);
+        scheduleNext(delay);
+      }
+    };
+
+    // Первичная проверка сразу
+    tick();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, []);
 
   // Auto-collapse on small screens
@@ -194,8 +228,10 @@ export function Layout() {
       <footer className="statusbar">
         <div className="statusbar__left">
           <span className="statusbar__item">
-            <span className={`statusbar__dot ${!isOnline ? 'statusbar__dot--offline' : ''}`} />
-            {isOnline ? 'Online' : 'Offline'}
+            <span className={`statusbar__dot statusbar__dot--${connectionState}`} />
+            {connectionState === 'online' && 'Online'}
+            {connectionState === 'offline' && 'Offline'}
+            {connectionState === 'unknown' && 'Проверка...'}
           </span>
         </div>
         <div className="statusbar__center">

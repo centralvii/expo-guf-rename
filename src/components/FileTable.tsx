@@ -113,7 +113,7 @@ export const FileTable = memo(({
         <div className="file-list">
           <div className="file-list-header">
             <div /> {/* handle */}
-            <div style={{ textAlign: 'center' }}>№</div>
+            <div className="file-list-header__center">№</div>
             <div>Оригинальное название (описание)</div>
             <div>Итоговое название файла</div>
           </div>
