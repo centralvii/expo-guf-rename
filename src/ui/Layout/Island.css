@@ -5,6 +5,7 @@
   box-shadow: var(--shadow-sm);
   min-height: 0;
   position: relative; /* Base for absolute children */
+  overflow: hidden;
 }
 
 .ui-island--flex {

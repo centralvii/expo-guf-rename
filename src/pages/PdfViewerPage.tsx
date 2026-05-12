@@ -316,7 +316,7 @@ export function PdfViewerPage() {
   // --- Rendering Helpers ---
 
   const renderLibrary = () => (
-    <div className="pdf-lib anim-fade-in">
+    <>
       <Toolbar>
         <Toolbar.Left>
           <PageTitle>
@@ -344,7 +344,7 @@ export function PdfViewerPage() {
         </Toolbar.Right>
       </Toolbar>
 
-      <Island className="pdf-table-card">
+      <Island className="pdf-table-card anim-fade-in">
         {isLoading ? (
           <div className="pdf-state-centered island-loader">
             <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
@@ -388,11 +388,11 @@ export function PdfViewerPage() {
           </Table>
         )}
       </Island>
-    </div>
+    </>
   );
 
   const renderViewer = () => (
-    <div className="pdf-viewer-layout anim-fade-in">
+    <>
       <Toolbar>
         <Toolbar.Left>
           <Button variant="secondary" size="sm" icon={<ArrowLeft size={16} />} onClick={handleBackToLibrary}>
@@ -432,7 +432,7 @@ export function PdfViewerPage() {
         </Toolbar.Right>
       </Toolbar>
 
-      <main className="pdf-viewer-island">
+      <main className="pdf-viewer-island anim-fade-in">
         <Island className="pdf-viewer__canvas-wrap" flex>
           <Island.ScrollArea ref={scrollContainerRef} className="pdf-viewer__canvas-scroll">
             {isBlobLoading ? (
@@ -477,7 +477,7 @@ export function PdfViewerPage() {
           </div>
         </aside>
       </main>
-    </div>
+    </>
   );
 
   return (

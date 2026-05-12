@@ -9,8 +9,6 @@
 .file-list {
   display: flex;
   flex-direction: column;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  overflow: hidden;
 }
 
 /* --- File Uploader / Dropzone --- */
@@ -150,7 +148,7 @@
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg-card);
+  background: var(--bg-muted);
 }
 
 .mass-actions-card__header h2,
@@ -187,6 +185,12 @@
   letter-spacing: 0.05em;
 }
 
+.file-list-header > div {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .file-item {
   display: grid;
   grid-template-columns: 24px 36px 1fr 1fr;
@@ -208,6 +212,34 @@
 
 .file-item__order { font-weight: 700; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); text-align: center; }
 
+.file-item__clean {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.file-item__clean .inline-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-item__clean .inline-edit-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.file-item__clean .inline-edit-display:hover { background: var(--bg-hover); }
+.file-item__clean .inline-edit-display__text { font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-item__clean .inline-edit-display__icon { color: var(--text-muted); opacity: 0; transition: opacity var(--transition); flex-shrink: 0; }
+.file-item__clean .inline-edit-display:hover .inline-edit-display__icon { opacity: 1; }
+
 .file-item__new-name {
   font-family: var(--font-mono);
   font-size: 13px;
@@ -216,6 +248,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .inline-edit-display {
