@@ -14,7 +14,6 @@ import './App.css';
 import './Dashboard.css';
 import './TaskHelper.css';
 import './Bpmn.css';
-import './Pdf.css';
 import './GufPacker.css';
 import './ApiClient.css';
 import './Settings.css';
