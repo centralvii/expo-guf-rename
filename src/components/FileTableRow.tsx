@@ -5,8 +5,7 @@ import { GripVertical, Pencil, Check, X } from 'lucide-react';
 import type { FileRow } from '../types';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
+import { IconButton, Input } from '../ui';
 
 interface FileTableRowProps {
   row: FileRow;
@@ -89,22 +88,22 @@ export const FileTableRow = memo(({ row, hasError, onCleanNameChange }: FileTabl
                 style={{ height: '32px', fontSize: '13px' }}
               />
             </div>
-            <Button
+            <IconButton
               variant="primary"
               size="sm"
               onMouseDown={(e) => { e.preventDefault(); confirmEdit(); }}
+              icon={<Check size={14} />}
+              label="Confirm"
               style={{ width: '32px', height: '32px', padding: 0 }}
-            >
-              <Check size={14} />
-            </Button>
-            <Button
+            />
+            <IconButton
               variant="secondary"
               size="sm"
               onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }}
+              icon={<X size={14} />}
+              label="Cancel"
               style={{ width: '32px', height: '32px', padding: 0 }}
-            >
-              <X size={14} />
-            </Button>
+            />
           </div>
         ) : (
           <div className="inline-edit-display" onClick={startEditing} title="Нажмите для редактирования описания">

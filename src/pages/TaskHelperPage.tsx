@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Plus, Search, Calendar, ChevronRight, FileText, AlertTriangle,
   X, Tag, Flame, ArrowUp, ArrowRight, ArrowDown, Circle,
-  Clock, CheckCircle2, GitPullRequest, XCircle, Filter, SlidersHorizontal,
-  Loader2
+  Clock, CheckCircle2, GitPullRequest, XCircle, Filter, SlidersHorizontal
 } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
@@ -14,14 +13,8 @@ import {
 } from '../types';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
-import { Textarea } from '../ui/Input/Textarea';
-import { Toolbar } from '../ui/Toolbar/Toolbar';
-import { Island } from '../ui/Layout/Island';
-import { Drawer } from '../ui/Layout/Drawer';
-import { Badge } from '../ui/Badge/Badge';
-import type { BadgeVariant } from '../ui/Badge/Badge';
+import { Badge, Button, Drawer, IconButton, Input, Island, Loader, Textarea, Toolbar } from '../ui';
+import type { BadgeVariant } from '../ui';
 
 /* ---- helpers ---- */
 function formatRelativeTime(timestamp: number): string {
@@ -122,9 +115,13 @@ function TagPicker({ selectedTags, onChange }: TagPickerProps) {
         {selectedTags.map((tag) => (
           <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>
             {tag.name}
-            <button type="button" onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))} className="task-tag__remove">
-              <X size={10} />
-            </button>
+            <IconButton
+              type="button"
+              onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))}
+              className="task-tag__remove"
+              icon={<X size={10} />}
+              label="Remove tag"
+            />
           </span>
         ))}
         <button type="button" className="tag-picker__add-btn" onClick={() => setIsOpen(!isOpen)}>
@@ -330,7 +327,7 @@ export function TaskHelperPage() {
     return (
       <div className="tool-page">
         <div className="app-restore">
-          <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
+          <Loader size="lg" />
           <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка задач...</span>
         </div>
       </div>
@@ -372,9 +369,12 @@ export function TaskHelperPage() {
                   style={{ width: '100%', paddingLeft: '38px' }}
                 />
                 {searchQuery && (
-                  <button className="search-clear" onClick={() => setSearchQuery('')}>
-                    <X size={14} />
-                  </button>
+                  <IconButton
+                    className="search-clear"
+                    onClick={() => setSearchQuery('')}
+                    icon={<X size={14} />}
+                    label="Clear search"
+                  />
                 )}
               </div>
             </Toolbar.Left>

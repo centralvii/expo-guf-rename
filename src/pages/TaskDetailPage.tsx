@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus,
   Flame, ArrowUp, ArrowRight, ArrowDown, Circle, Clock, GitPullRequest,
-  CheckCircle2, XCircle, Tag, X, ChevronUp, ChevronDown, Loader2
+  CheckCircle2, XCircle, Tag, X, ChevronUp, ChevronDown
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -15,14 +15,8 @@ import {
 } from '../types';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
-import { Textarea } from '../ui/Input/Textarea';
-import { Toolbar } from '../ui/Toolbar/Toolbar';
-import { Island } from '../ui/Layout/Island';
-import { Modal } from '../ui/Modal/Modal';
-import { Badge } from '../ui/Badge/Badge';
-import type { BadgeVariant } from '../ui/Badge/Badge';
+import { Badge, Button, IconButton, Input, Island, Loader, Modal, Textarea, Toolbar } from '../ui';
+import type { BadgeVariant } from '../ui';
 
 const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
   critical: <Flame size={12} />,
@@ -120,9 +114,13 @@ function TagPicker({ selectedTags, onChange }: TagPickerProps) {
         {selectedTags.map((tag) => (
           <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>
             {tag.name}
-            <button type="button" onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))} className="task-tag__remove">
-              <X size={10} />
-            </button>
+            <IconButton
+              type="button"
+              onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))}
+              className="task-tag__remove"
+              icon={<X size={10} />}
+              label="Remove tag"
+            />
           </span>
         ))}
         <button type="button" className="tag-picker__add-btn" onClick={() => setIsOpen(!isOpen)}>
@@ -216,7 +214,7 @@ export function TaskDetailPage() {
     return (
       <div className="tool-page">
         <div className="app-restore">
-          <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
+          <Loader size="lg" />
           <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка задачи...</span>
         </div>
       </div>
@@ -348,7 +346,7 @@ export function TaskDetailPage() {
             <div className="draft-warning" style={{ marginBottom: '20px' }}>
               <AlertTriangle size={15} />
               <span>Восстановлены несохранённые изменения</span>
-              <button className="draft-warning__discard" onClick={handleDiscardDraft}>Сбросить</button>
+              <Button variant="ghost" size="sm" className="draft-warning__discard" onClick={handleDiscardDraft}>Сбросить</Button>
             </div>
           )}
 

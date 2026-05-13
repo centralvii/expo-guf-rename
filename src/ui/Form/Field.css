@@ -1,0 +1,17 @@
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ui-field__head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ui-field__hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}

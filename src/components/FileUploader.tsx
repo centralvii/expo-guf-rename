@@ -1,9 +1,8 @@
 import { useCallback, useRef, useState, memo } from 'react';
-import { Upload, Archive, AlertCircle, FilePlus, Loader2 } from 'lucide-react';
+import { Upload, Archive, FilePlus } from 'lucide-react';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Island } from '../ui/Layout/Island';
+import { Button, InlineError, Island, Loader } from '../ui';
 
 interface FileUploaderProps {
   onZipLoaded: (file: File) => Promise<void>;
@@ -123,10 +122,7 @@ export const FileUploader = memo(({ onZipLoaded, onGufFilesAdded, isLoading, has
         />
 
         {isLoading ? (
-          <div className="dropzone__loading">
-            <Loader2 className="animate-spin" size={24} />
-            <span>Обработка файлов…</span>
-          </div>
+          <Loader className="dropzone__loading" label="Обработка файлов…" />
         ) : hasFiles ? (
           <div className="uploader-compact-actions">
             <Button
@@ -178,10 +174,7 @@ export const FileUploader = memo(({ onZipLoaded, onGufFilesAdded, isLoading, has
       </div>
 
       {error && (
-        <div className="uploader-error">
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
+        <InlineError className="uploader-error" message={error} />
       )}
     </Island>
   );

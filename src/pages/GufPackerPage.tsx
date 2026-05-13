@@ -1,4 +1,4 @@
-import { Download, Trash2, Loader2 } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import { FileTable } from '../components/FileTable';
 import { FileUploader } from '../components/FileUploader';
 import { MassActions } from '../components/MassActions';
@@ -9,8 +9,7 @@ import { useAppState } from '../hooks/useAppState';
 import { useToast } from '../hooks/useToast';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Island } from '../ui/Layout/Island';
+import { Button, Island, Loader } from '../ui';
 
 /**
  * GufPackerPage - Пакетровщик .guf файлов.
@@ -60,7 +59,7 @@ export const GufPackerPage = () => {
     return (
       <div className="tool-page">
         <div className="app-restore">
-          <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.5 }} />
+          <Loader size="lg" />
           <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Восстановление сессии...</span>
         </div>
       </div>

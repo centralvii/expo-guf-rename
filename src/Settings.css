@@ -8,6 +8,7 @@
   overflow: hidden;
 }
 
+.settings-section > .ui-section-header,
 .settings-section__header {
   display: flex;
   align-items: center;
@@ -17,6 +18,7 @@
   background: var(--bg-muted);
 }
 
+.settings-section > .ui-section-header .ui-section-header__icon,
 .settings-section__icon {
   display: flex;
   align-items: center;
@@ -30,6 +32,7 @@
   flex-shrink: 0;
 }
 
+.settings-section > .ui-section-header .ui-section-header__main,
 .settings-section__headings {
   display: flex;
   flex-direction: column;
@@ -37,6 +40,7 @@
   min-width: 0;
 }
 
+.settings-section > .ui-section-header .ui-section-header__title,
 .settings-section__title {
   font-size: 15px;
   font-weight: 700;
@@ -45,6 +49,7 @@
   margin: 0;
 }
 
+.settings-section > .ui-section-header .ui-section-header__desc,
 .settings-section__desc {
   font-size: 12px;
   color: var(--text-muted);

@@ -18,8 +18,7 @@ import type { FileRow } from '../types';
 import { FileTableRow } from './FileTableRow';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Island } from '../ui/Layout/Island';
+import { Button, Island } from '../ui';
 
 interface FileTableProps {
   files: FileRow[];

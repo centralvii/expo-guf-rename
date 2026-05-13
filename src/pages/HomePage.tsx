@@ -8,8 +8,7 @@ import {
 import { useTasks } from '../hooks/useTasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '../types';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../types';
-import { ToolCard } from '../ui/ToolCard/ToolCard';
-import type { ToolCardProps } from '../ui/ToolCard/ToolCard';
+import { SectionHeader, ToolCard, type ToolCardProps } from '../ui';
 
 /* ---- Tool data ---- */
 
@@ -292,14 +291,14 @@ function SkRecentActivity({ loaded, recentTasks }: { loaded: boolean; recentTask
   const skeletonRows = [0, 1, 2, 3, 4];
   return (
     <section className="dashboard-section">
-      <div className="dashboard-section__header">
-        <h3 className="dashboard-section__title">Недавняя активность</h3>
-        {loaded && (
+      <SectionHeader
+        title="Недавняя активность"
+        actions={loaded && (
           <Link to="/task-helper" className="dash-view-all sk-reveal">
             Все задачи <ArrowRight size={14} />
           </Link>
         )}
-      </div>
+      />
       <div className="dash-recent-list">
         {!loaded ? (
           skeletonRows.map((i) => (
@@ -374,10 +373,7 @@ export function HomePage() {
 
         {/* Left: Tools */}
         <section className="dashboard-section">
-          <div className="dashboard-section__header">
-            <h3 className="dashboard-section__title">Инструменты</h3>
-            <span className="dashboard-section__count">{TOOLS.length} шт.</span>
-          </div>
+          <SectionHeader title="Инструменты" count={`${TOOLS.length} шт.`} />
           <div className="dashboard-grid">
             {TOOLS.map((tool) => (
               <ToolCard key={tool.id} {...tool} />

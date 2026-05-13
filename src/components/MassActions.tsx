@@ -3,9 +3,7 @@ import type { CustomVariable } from '../types';
 import { Plus, X, Braces } from 'lucide-react';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
-import { Island } from '../ui/Layout/Island';
+import { Button, IconButton, Input, Island } from '../ui';
 
 interface MassActionsProps {
   template: string;
@@ -80,12 +78,14 @@ export const MassActions = memo(({
                   fullWidth
                   noContainer
                 />
-                <button
+                <IconButton
                   className="mass-field__remove"
+                  variant="ghost"
+                  size="sm"
+                  icon={<X size={12} />}
+                  label="Удалить переменную"
                   onClick={() => onRemoveVariable(v.key)}
-                >
-                  <X size={12} />
-                </button>
+                />
               </div>
             </div>
           ))}
@@ -103,9 +103,7 @@ export const MassActions = memo(({
             {inactiveVars.map((v) => (
               <span key={v.key} className="mass-actions__inactive-tag">
                 {`{${v.key}}`}
-                <button onClick={() => onRemoveVariable(v.key)}>
-                  <X size={10} />
-                </button>
+                <IconButton variant="ghost" size="sm" icon={<X size={10} />} label="Удалить переменную" onClick={() => onRemoveVariable(v.key)} />
               </span>
             ))}
           </div>

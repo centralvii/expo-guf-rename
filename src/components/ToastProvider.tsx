@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 import { ToastContext } from '../hooks/useToast';
+import { IconButton } from '../ui';
 
 type ToastTone = 'success' | 'error' | 'info';
 
@@ -60,13 +61,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className="app-toast__content">
               {getIcon(toast.tone)}
               <div className="app-toast__message">{toast.message}</div>
-              <button 
-                className="app-toast__close" 
+              <IconButton
+                className="app-toast__close"
+                variant="ghost"
+                size="sm"
+                icon={<X size={14} />}
+                label="Close notification"
                 onClick={() => removeToast(toast.id)}
-                aria-label="Close notification"
-              >
-                <X size={14} />
-              </button>
+              />
             </div>
             <div className="app-toast__progress">
               <div 

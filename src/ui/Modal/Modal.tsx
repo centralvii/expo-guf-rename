@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState, memo } from 'react';
 import { X, AlertCircle, Info } from 'lucide-react';
+import { IconButton } from '../Button/Button';
 import './Modal.css';
 
 interface ModalProps {
@@ -63,13 +64,7 @@ export const Modal = memo(({
         className="modal-card" 
         onClick={(e) => e.stopPropagation()}
       >
-        <button 
-          className="modal-card__close" 
-          onClick={onClose}
-          aria-label="Закрыть"
-        >
-          <X size={18} />
-        </button>
+        <IconButton className="modal-card__close" variant="ghost" icon={<X size={18} />} label="Закрыть" onClick={onClose} />
 
         <div className="modal-header">
           <div className={`modal-icon modal-icon--${variant}`}>

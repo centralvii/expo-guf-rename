@@ -94,3 +94,17 @@
 .ui-btn--loading {
   cursor: wait;
 }
+
+.ui-icon-btn {
+  width: 40px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.ui-icon-btn.ui-btn--sm {
+  width: 32px;
+}
+
+.ui-icon-btn.ui-btn--lg {
+  width: 48px;
+}

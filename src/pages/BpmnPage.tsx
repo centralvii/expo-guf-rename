@@ -5,13 +5,7 @@ import {
 import { BpmnEditor, type BpmnEditorHandle } from '../components/BpmnEditor';
 import { useToast } from '../hooks/useToast';
 
-// --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Toolbar } from '../ui/Toolbar/Toolbar';
-import { Island } from '../ui/Layout/Island';
-import { PageTitle } from '../ui/Layout/PageTitle';
-import { Modal } from '../ui/Modal/Modal';
-import { Input } from '../ui/Input/Input';
+import { Button, EmptyState, IconButton, Input, Island, Modal, PageTitle, Panel, SectionHeader, Toolbar } from '../ui';
 
 const STORAGE_KEY = 'bpmn_polygon_diagrams';
 
@@ -224,12 +218,12 @@ export function BpmnPage() {
               </Button>
               {showExportMenu && (
                 <div className={`bpmn-export-menu ${exportMenuClosing ? 'bpmn-export-menu--closing' : ''}`}>
-                  <button className="bpmn-export-menu__item" onClick={() => { handleExportXml(); closeExportMenu(); }}>
+                  <Button variant="ghost" size="sm" className="bpmn-export-menu__item" onClick={() => { handleExportXml(); closeExportMenu(); }}>
                     <FileCode2 size={14} /> BPMN файл (.bpmn)
-                  </button>
-                  <button className="bpmn-export-menu__item" onClick={() => { handleExportImage(); closeExportMenu(); }}>
+                  </Button>
+                  <Button variant="ghost" size="sm" className="bpmn-export-menu__item" onClick={() => { handleExportImage(); closeExportMenu(); }}>
                     <FileImage size={14} /> Изображение (.jpg)
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -260,14 +254,11 @@ export function BpmnPage() {
             />
           </Island>
 
-          <aside className="bpmn-diagrams-card">
-            <div className="bpmn-diagrams-card__header">
-              <span className="bpmn-diagrams-card__title">Сохранённые</span>
-              <span className="bpmn-diagrams-card__count">{diagrams.length}</span>
-            </div>
+          <Panel as="aside" className="bpmn-diagrams-card" padded={false}>
+            <SectionHeader className="bpmn-diagrams-card__header" title="Сохранённые" count={diagrams.length} />
             <div className="bpmn-diagrams-card__list custom-scrollbar">
               {diagrams.length === 0 && (
-                <div className="bpmn-diagrams-card__empty">Нет сохранённых диаграмм</div>
+                <EmptyState className="bpmn-diagrams-card__empty" icon={null} description="Нет сохранённых диаграмм" />
               )}
               {diagrams.map((d) => (
                 <div
@@ -279,16 +270,18 @@ export function BpmnPage() {
                     <div className="bpmn-diagram-item__name">{d.name}</div>
                     <div className="bpmn-diagram-item__date">{new Date(d.updatedAt).toLocaleDateString('ru-RU')}</div>
                   </div>
-                  <button
+                  <IconButton
                     className="bpmn-diagram-item__delete"
+                    variant="ghost"
+                    size="sm"
+                    icon={<Trash2 size={13} />}
+                    label="Удалить"
                     onClick={(e) => { e.stopPropagation(); handleDelete(d); }}
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  />
                 </div>
               ))}
             </div>
-          </aside>
+          </Panel>
         </div>
       </div>
 

@@ -1,8 +1,7 @@
 import { memo, useCallback } from 'react';
 import { Wand2 } from 'lucide-react';
 import type { ApiBodyType } from '../../types';
-import { Button } from '../../ui/Button/Button';
-import { Textarea } from '../../ui/Input/Textarea';
+import { Button, SegmentedControl, Textarea } from '../../ui';
 
 interface BodyEditorProps {
   bodyType: ApiBodyType;
@@ -39,16 +38,7 @@ export const BodyEditor = memo(function BodyEditor({
     <div className="body-editor">
       <div className="body-editor__toolbar">
         <div className="body-editor__types">
-          {BODY_TYPES.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              className={`body-editor__type ${bodyType === t.value ? 'body-editor__type--active' : ''}`}
-              onClick={() => onTypeChange(t.value)}
-            >
-              {t.label}
-            </button>
-          ))}
+          <SegmentedControl value={bodyType} options={BODY_TYPES} onChange={onTypeChange} size="sm" />
         </div>
         {bodyType === 'json' && (
           <Button

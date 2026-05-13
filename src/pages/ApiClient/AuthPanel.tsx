@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { ApiAuthConfig, ApiAuthType } from '../../types';
-import { Input } from '../../ui/Input/Input';
+import { Input, SegmentedControl } from '../../ui';
 
 interface AuthPanelProps {
   auth: ApiAuthConfig;
@@ -22,16 +22,7 @@ export const AuthPanel = memo(function AuthPanel({ auth, onChange }: AuthPanelPr
   return (
     <div className="auth-panel">
       <div className="auth-panel__type-group">
-        {AUTH_TYPES.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            className={`auth-panel__type ${auth.type === t.value ? 'auth-panel__type--active' : ''}`}
-            onClick={() => update({ type: t.value })}
-          >
-            {t.label}
-          </button>
-        ))}
+        <SegmentedControl value={auth.type} options={AUTH_TYPES} onChange={(type) => update({ type })} />
       </div>
 
       {auth.type === 'bearer' && (
@@ -88,20 +79,14 @@ export const AuthPanel = memo(function AuthPanel({ auth, onChange }: AuthPanelPr
           </div>
           <div className="auth-panel__in-group">
             <span className="ui-label">Передавать в:</span>
-            <button
-              type="button"
-              className={`auth-panel__type ${auth.apiKeyIn !== 'query' ? 'auth-panel__type--active' : ''}`}
-              onClick={() => update({ apiKeyIn: 'header' })}
-            >
-              Header
-            </button>
-            <button
-              type="button"
-              className={`auth-panel__type ${auth.apiKeyIn === 'query' ? 'auth-panel__type--active' : ''}`}
-              onClick={() => update({ apiKeyIn: 'query' })}
-            >
-              Query
-            </button>
+            <SegmentedControl
+              value={auth.apiKeyIn === 'query' ? 'query' : 'header'}
+              options={[
+                { value: 'header', label: 'Header' },
+                { value: 'query', label: 'Query' },
+              ]}
+              onChange={(apiKeyIn) => update({ apiKeyIn })}
+            />
           </div>
         </div>
       )}

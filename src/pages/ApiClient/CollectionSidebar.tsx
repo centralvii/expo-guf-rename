@@ -1,9 +1,7 @@
 import { memo, useState } from 'react';
 import { Bookmark, History, Trash2, FolderOpen } from 'lucide-react';
 import type { ApiRequest, ApiHistoryEntry } from '../../types';
-import { Button } from '../../ui/Button/Button';
-import { Badge } from '../../ui/Badge/Badge';
-import type { BadgeVariant } from '../../ui/Badge/Badge';
+import { Badge, Button, EmptyState, IconButton, type BadgeVariant } from '../../ui';
 
 type SidebarTab = 'collection' | 'history';
 
@@ -45,11 +43,12 @@ function CollectionList({
 }) {
   if (collection.length === 0) {
     return (
-      <div className="api-sidebar__empty">
-        <FolderOpen size={28} opacity={0.3} />
-        <p>Коллекция пуста</p>
-        <span>Сохраните запрос, чтобы он появился здесь</span>
-      </div>
+      <EmptyState
+        className="api-sidebar__empty"
+        icon={<FolderOpen size={28} />}
+        title="Коллекция пуста"
+        description="Сохраните запрос, чтобы он появился здесь"
+      />
     );
   }
 
@@ -70,13 +69,13 @@ function CollectionList({
               <span className="api-sidebar__item-url">{req.url || 'без URL'}</span>
             </div>
           </button>
-          <Button
+          <IconButton
             variant="ghost"
             size="sm"
             icon={<Trash2 size={13} />}
+            label="Удалить"
             onClick={() => onRemoveRequest(req.id)}
             className="api-sidebar__item-action"
-            title="Удалить"
           />
         </div>
       ))}
@@ -95,11 +94,12 @@ function HistoryList({
 }) {
   if (history.length === 0) {
     return (
-      <div className="api-sidebar__empty">
-        <History size={28} opacity={0.3} />
-        <p>Нет истории</p>
-        <span>Здесь появятся выполненные запросы</span>
-      </div>
+      <EmptyState
+        className="api-sidebar__empty"
+        icon={<History size={28} />}
+        title="Нет истории"
+        description="Здесь появятся выполненные запросы"
+      />
     );
   }
 

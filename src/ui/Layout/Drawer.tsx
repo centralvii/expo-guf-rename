@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState, memo } from 'react';
 import { X } from 'lucide-react';
+import { IconButton } from '../Button/Button';
 import './Drawer.css';
 
 interface DrawerProps {
@@ -56,9 +57,7 @@ export const Drawer = memo(({
       >
         <div className="ui-drawer__header">
           <h2 className="ui-drawer__title">{title}</h2>
-          <button className="ui-drawer__close" onClick={onClose} aria-label="Закрыть">
-            <X size={20} />
-          </button>
+          <IconButton className="ui-drawer__close" variant="ghost" icon={<X size={20} />} label="Закрыть" onClick={onClose} />
         </div>
 
         <div className="ui-drawer__body custom-scrollbar">

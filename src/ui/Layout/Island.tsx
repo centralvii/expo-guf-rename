@@ -1,4 +1,4 @@
-import { type ReactNode, memo, forwardRef } from 'react';
+import { type ElementType, type ReactNode, memo, forwardRef } from 'react';
 import './Island.css';
 
 interface IslandProps {
@@ -6,15 +6,16 @@ interface IslandProps {
   className?: string;
   style?: React.CSSProperties;
   flex?: boolean;
+  as?: ElementType;
 }
 
 export const Island = Object.assign(
-  memo(({ children, className = '', style, flex = true }: IslandProps) => {
+  memo(({ children, className = '', style, flex = true, as: Component = 'div' }: IslandProps) => {
     const flexClass = flex ? 'ui-island--flex' : '';
     return (
-      <div className={`ui-island ${flexClass} ${className}`} style={style}>
+      <Component className={`ui-island ${flexClass} ${className}`} style={style}>
         {children}
-      </div>
+      </Component>
     );
   }),
   {

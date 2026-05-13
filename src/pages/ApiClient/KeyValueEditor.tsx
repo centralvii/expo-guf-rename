@@ -1,8 +1,7 @@
 import { memo, useCallback } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { ApiKeyValue } from '../../types';
-import { Button } from '../../ui/Button/Button';
-import { Input } from '../../ui/Input/Input';
+import { Button, Checkbox, IconButton, Input } from '../../ui';
 
 interface KeyValueEditorProps {
   items: ApiKeyValue[];
@@ -60,8 +59,7 @@ export const KeyValueEditor = memo(function KeyValueEditor({
         <div className="kv-editor__list">
           {items.map((item) => (
             <div key={item.id} className="kv-editor__row">
-              <input
-                type="checkbox"
+              <Checkbox
                 className="kv-editor__checkbox"
                 checked={item.enabled}
                 onChange={(e) => handleUpdate(item.id, { enabled: e.target.checked })}
@@ -81,12 +79,12 @@ export const KeyValueEditor = memo(function KeyValueEditor({
                 noContainer
                 fullWidth
               />
-              <Button
+              <IconButton
                 variant="ghost"
                 size="sm"
                 icon={<Trash2 size={14} />}
+                label="Удалить"
                 onClick={() => handleRemove(item.id)}
-                title="Удалить"
                 className="kv-editor__remove"
               />
             </div>

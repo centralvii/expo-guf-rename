@@ -5,9 +5,11 @@ import './Button.css';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   icon?: ReactNode;
   isLoading?: boolean;
   fullWidth?: boolean;
@@ -17,6 +19,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = memo(({
   variant = 'secondary',
   size = 'md',
+  leftIcon,
+  rightIcon,
   icon,
   isLoading = false,
   fullWidth = false,
@@ -31,6 +35,8 @@ export const Button = memo(({
   const fullWidthClass = fullWidth ? `${baseClass}--full-width` : '';
   const loadingClass = isLoading ? `${baseClass}--loading` : '';
 
+  const resolvedLeftIcon = leftIcon ?? icon;
+
   return (
     <button
       className={`${baseClass} ${variantClass} ${sizeClass} ${fullWidthClass} ${loadingClass} ${className}`}
@@ -41,8 +47,9 @@ export const Button = memo(({
         <Loader2 className="animate-spin" size={size === 'sm' ? 14 : 18} />
       ) : (
         <>
-          {icon && <span className={`${baseClass}__icon`}>{icon}</span>}
+          {resolvedLeftIcon && <span className={`${baseClass}__icon`}>{resolvedLeftIcon}</span>}
           {children && <span className={`${baseClass}__text`}>{children}</span>}
+          {rightIcon && <span className={`${baseClass}__icon`}>{rightIcon}</span>}
         </>
       )}
     </button>
@@ -50,3 +57,28 @@ export const Button = memo(({
 });
 
 Button.displayName = 'Button';
+
+export interface IconButtonProps extends Omit<ButtonProps, 'children' | 'fullWidth' | 'icon' | 'leftIcon' | 'rightIcon'> {
+  icon: ReactNode;
+  label: string;
+}
+
+export const IconButton = memo(({
+  icon,
+  label,
+  className = '',
+  size = 'md',
+  ...props
+}: IconButtonProps) => (
+  <Button
+    className={`ui-icon-btn ${className}`}
+    size={size}
+    aria-label={label}
+    title={props.title ?? label}
+    {...props}
+  >
+    <span className="ui-btn__icon">{icon}</span>
+  </Button>
+));
+
+IconButton.displayName = 'IconButton';

@@ -1,7 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import {
   Info, Database, Server, Wifi, WifiOff, CircleCheck, CircleX,
-  Trash2, Download, Upload, Link2, Key, ShieldCheck, AlertTriangle,
+  Trash2, Download, Upload, Link2, Key, ShieldCheck,
 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { resetSupabaseClient } from '../lib/supabase';
@@ -12,16 +12,10 @@ import {
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
 
-// --- UI-Kit Imports ---
-import { Toolbar } from '../ui/Toolbar/Toolbar';
-import { Island } from '../ui/Layout/Island';
-import { PageTitle } from '../ui/Layout/PageTitle';
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
-import { Select } from '../ui/Select/Select';
-import type { SelectOption } from '../ui/Select/Select';
-import { Badge } from '../ui/Badge/Badge';
-import { Modal } from '../ui/Modal/Modal';
+import {
+  Badge, Button, InlineError, Input, Modal, PageTitle, Panel,
+  SectionHeader, Select, Toolbar, type SelectOption,
+} from '../ui';
 
 declare const __APP_GIT_COMMIT__: string;
 
@@ -53,18 +47,12 @@ interface SettingsSectionProps {
 
 function SettingsSection({ icon, title, description, children }: SettingsSectionProps) {
   return (
-    <Island flex={false} className="settings-section">
-      <header className="settings-section__header">
-        <div className="settings-section__icon">{icon}</div>
-        <div className="settings-section__headings">
-          <h3 className="settings-section__title">{title}</h3>
-          {description && <p className="settings-section__desc">{description}</p>}
-        </div>
-      </header>
+    <Panel className="settings-section">
+      <SectionHeader icon={icon} title={title} description={description} />
       <div className="settings-section__body">
         {children}
       </div>
-    </Island>
+    </Panel>
   );
 }
 
@@ -231,13 +219,11 @@ export function SettingsPage() {
           </Toolbar>
 
           {errorHint && (
-            <Island flex={false} className="settings-error-banner">
-              <AlertTriangle size={16} />
-              <div className="settings-error-banner__content">
-                <span className="settings-error-banner__title">Нет подключения к базе данных</span>
-                <span className="settings-error-banner__desc">{errorHint}</span>
-              </div>
-            </Island>
+            <InlineError
+              className="settings-error-banner"
+              title="Нет подключения к базе данных"
+              message={errorHint}
+            />
           )}
 
           {/* --- Connection --- */}

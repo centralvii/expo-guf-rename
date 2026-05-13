@@ -2,6 +2,7 @@ import { Outlet, NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { refreshConnection, subscribeToConnection, type ConnectionState } from '../lib/connectionStatus';
+import { IconButton } from '../ui';
 
 declare const __APP_GIT_COMMIT__: string;
 
@@ -201,13 +202,12 @@ export function Layout() {
         </nav>
 
         <div className="sidebar__footer">
-          <button
+          <IconButton
             className="sidebar__toggle"
             onClick={toggleSidebar}
-            aria-label={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
-          >
-            <PanelLeftDashed size={16} />
-          </button>
+            icon={<PanelLeftDashed size={16} />}
+            label={isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+          />
         </div>
       </aside>
 

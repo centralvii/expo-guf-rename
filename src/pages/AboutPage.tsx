@@ -8,11 +8,7 @@ import {
 import type { ReactNode } from 'react';
 
 // --- UI-Kit Imports ---
-import { Toolbar } from '../ui/Toolbar/Toolbar';
-import { Island } from '../ui/Layout/Island';
-import { PageTitle } from '../ui/Layout/PageTitle';
-import { Button } from '../ui/Button/Button';
-import { Badge } from '../ui/Badge/Badge';
+import { Badge, Button, Island, PageTitle, Toolbar } from '../ui';
 
 import './About/About.css';
 

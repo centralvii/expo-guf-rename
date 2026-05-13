@@ -1,9 +1,7 @@
 import { memo, useState, useMemo } from 'react';
-import { Copy, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import type { ApiResponse } from '../../types';
-import { Button } from '../../ui/Button/Button';
-import { Badge } from '../../ui/Badge/Badge';
-import type { BadgeVariant } from '../../ui/Badge/Badge';
+import { Badge, Button, EmptyState, InlineError, Loader, type BadgeVariant } from '../../ui';
 
 type ResponseTab = 'body' | 'headers';
 
@@ -65,29 +63,23 @@ export const ResponseViewer = memo(function ResponseViewer({
 
   if (isLoading) {
     return (
-      <div className="response-viewer__state">
-        <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)', opacity: 0.7 }} />
-        <p className="response-viewer__state-text">Отправка запроса...</p>
-      </div>
+      <Loader className="response-viewer__state" size="lg" label="Отправка запроса..." />
     );
   }
 
   if (error) {
     return (
-      <div className="response-viewer__state response-viewer__state--error">
-        <AlertCircle size={32} />
-        <p className="response-viewer__state-text">{error}</p>
-      </div>
+      <InlineError className="response-viewer__state response-viewer__state--error" message={error} />
     );
   }
 
   if (!response) {
     return (
-      <div className="response-viewer__state">
-        <p className="response-viewer__state-text">
-          Ответ появится здесь после отправки запроса.
-        </p>
-      </div>
+      <EmptyState
+        className="response-viewer__state"
+        icon={null}
+        description="Ответ появится здесь после отправки запроса."
+      />
     );
   }
 

@@ -3,8 +3,7 @@ import type { ValidationError } from '../types';
 import { AlertTriangle } from 'lucide-react';
 
 // --- UI-Kit Imports ---
-import { Badge } from '../ui/Badge/Badge';
-import { Island } from '../ui/Layout/Island';
+import { Badge, InlineError, Island } from '../ui';
 
 interface ValidationPanelProps {
   errors: ValidationError[];
@@ -15,10 +14,11 @@ export const ValidationPanel = memo(({ errors }: ValidationPanelProps) => {
 
   return (
     <Island className="validation-panel" flex={false}>
-      <div className="validation-panel__header">
-        <AlertTriangle size={20} />
-        <span>Обнаружено проблем: {errors.length}</span>
-      </div>
+      <InlineError
+        className="validation-panel__header"
+        icon={<AlertTriangle size={20} />}
+        message={`Обнаружено проблем: ${errors.length}`}
+      />
       <ul className="validation-panel__list">
         {errors.map((err, idx) => (
           <li key={`${err.fileId}-${err.type}-${idx}`} className="validation-panel__item">
@@ -32,3 +32,4 @@ export const ValidationPanel = memo(({ errors }: ValidationPanelProps) => {
 });
 
 ValidationPanel.displayName = 'ValidationPanel';
+

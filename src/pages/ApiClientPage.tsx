@@ -4,14 +4,10 @@ import { useApiClient } from '../hooks/useApiClient';
 import { useToast } from '../hooks/useToast';
 import { HTTP_METHODS, type HttpMethod } from '../types';
 
-// --- UI-Kit Imports ---
-import { Toolbar } from '../ui/Toolbar/Toolbar';
-import { Island } from '../ui/Layout/Island';
-import { PageTitle } from '../ui/Layout/PageTitle';
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
-import { Select } from '../ui/Select/Select';
-import type { SelectOption } from '../ui/Select/Select';
+import {
+  Button, IconButton, Input, Island, PageTitle, Select, Toolbar,
+  type SelectOption,
+} from '../ui';
 
 // --- Local subcomponents ---
 import { KeyValueEditor } from './ApiClient/KeyValueEditor';
@@ -157,23 +153,23 @@ export function ApiClientPage() {
                       </span>
                       <span className="api-tab__name">{tab.name}</span>
                     </button>
-                    <button
-                      type="button"
+                    <IconButton
                       className="api-tab__close"
+                      variant="ghost"
+                      size="sm"
+                      icon={<X size={12} />}
+                      label="Закрыть"
                       onClick={() => closeTab(tab.id)}
-                      title="Закрыть"
-                    >
-                      <X size={12} />
-                    </button>
+                    />
                   </div>
                 ))}
               </div>
-              <Button
+              <IconButton
                 variant="ghost"
                 size="sm"
                 icon={<Plus size={14} />}
+                label="Новый запрос"
                 onClick={createNewTab}
-                title="Новый запрос"
               />
             </div>
 

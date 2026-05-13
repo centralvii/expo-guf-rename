@@ -3,9 +3,7 @@ import { BUILTIN_TAGS, type CustomVariable } from '../types';
 import { RotateCcw, Tag, Save } from 'lucide-react';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Input } from '../ui/Input/Input';
-import { Island } from '../ui/Layout/Island';
+import { Button, Input, Island } from '../ui';
 
 interface TemplateEditorProps {
   template: string;
@@ -76,13 +74,15 @@ export const TemplateEditor = memo(({ template, variables, onChange, onReset }: 
         <span className="template-tags__label">Системные:</span>
         <div className="template-tags__list">
           {BUILTIN_TAGS.map((tag) => (
-            <button
+            <Button
               key={tag}
+              variant="ghost"
+              size="sm"
               className="tag-btn"
               onClick={() => insertTag(tag)}
             >
               {tag}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -92,13 +92,15 @@ export const TemplateEditor = memo(({ template, variables, onChange, onReset }: 
           <span className="template-tags__label">Переменные:</span>
           <div className="template-tags__list">
             {userTags.map((tag) => (
-              <button
+              <Button
                 key={tag}
+                variant="ghost"
+                size="sm"
                 className={`tag-btn tag-btn--user ${template.includes(tag) ? 'tag-btn--active' : ''}`}
                 onClick={() => insertTag(tag)}
               >
                 {tag}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

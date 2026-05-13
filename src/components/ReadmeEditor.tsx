@@ -6,8 +6,7 @@ import {
 } from 'lucide-react';
 
 // --- UI-Kit Imports ---
-import { Button } from '../ui/Button/Button';
-import { Island } from '../ui/Layout/Island';
+import { Button, IconButton, Island, Textarea } from '../ui';
 
 interface ReadmeEditorProps {
   value: string;
@@ -140,7 +139,7 @@ export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
         <h2><FileText size={18} /> Заметки к поставке</h2>
         <div className="readme-card__actions">
           {value && (
-            <Button variant="ghost" size="sm" onClick={() => onChange('')} icon={<Eraser size={14} />} />
+            <IconButton variant="ghost" size="sm" onClick={() => onChange('')} icon={<Eraser size={14} />} label="Очистить" />
           )}
           <Button 
             variant={showPreview ? 'primary' : 'ghost'} 
@@ -157,9 +156,7 @@ export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
             if ('separator' in item && item.separator) return <div key={i} className="readme-card__toolbar-sep" />;
             const action = item as MdAction;
             return (
-              <button key={i} className="readme-card__toolbar-btn" data-tooltip={action.title} onMouseDown={(e) => e.preventDefault()} onClick={() => { const ta = textareaRef.current; if (ta) action.action(ta, value, onChange); }}>
-                {action.icon}
-              </button>
+              <IconButton key={i} className="readme-card__toolbar-btn" variant="ghost" size="sm" icon={action.icon} label={action.title} data-tooltip={action.title} onMouseDown={(e) => e.preventDefault()} onClick={() => { const ta = textareaRef.current; if (ta) action.action(ta, value, onChange); }} />
             );
           })}
         </div>
@@ -168,7 +165,7 @@ export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
       {showPreview ? (
         <div className="readme-card__preview custom-scrollbar" dangerouslySetInnerHTML={{ __html: renderMarkdown(value || '*Пусто — начните писать...*') }} />
       ) : (
-        <textarea ref={textareaRef} className="readme-card__textarea custom-scrollbar" value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder="Markdown поддерживается..." rows={8} spellCheck={false} />
+        <Textarea ref={textareaRef} className="readme-card__textarea custom-scrollbar" value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder="Markdown поддерживается..." rows={8} spellCheck={false} noContainer />
       )}
 
       {!showPreview && (
