@@ -178,17 +178,21 @@ a {
   pointer-events: none;
 }
 
-.app-toast {
-  position: relative;
-  min-width: 300px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px);
-  animation: modal-card-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: auto;
-}
+  .app-toast {
+    position: relative;
+    min-width: 300px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(16px);
+    animation: modal-card-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+  }
+
+  .app-toast--closing {
+    animation: modal-card-out 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 
 .app-toast__content {
   display: flex;
