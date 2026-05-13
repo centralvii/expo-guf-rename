@@ -18,7 +18,7 @@ import {
 } from '../types';
 
 // --- UI-Kit Imports ---
-import { Badge, Button, Input, Island, Loader, Modal, TagChip, Textarea, Toolbar } from '../ui';
+import { Badge, Button, Input, Island, Loader, Modal, TagChip, Textarea, Toolbar, SegmentedControl } from '../ui';
 import type { BadgeVariant } from '../ui';
 
 const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
@@ -28,12 +28,6 @@ const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
   low: <ArrowDown size={12} />,
 };
 
-const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#3b82f6',
-  low: '#6b7280',
-};
 
 const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, BadgeVariant> = {
   critical: 'danger',
@@ -50,13 +44,6 @@ const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
   closed: <XCircle size={12} />,
 };
 
-const STATUS_COLORS: Record<TaskStatus, string> = {
-  open: '#6b7280',
-  in_progress: '#3b82f6',
-  review: '#a855f7',
-  done: '#22c55e',
-  closed: '#374151',
-};
 
 const STATUS_BADGE_VARIANTS: Record<TaskStatus, BadgeVariant> = {
   open: 'default',
@@ -214,7 +201,7 @@ export function TaskDetailPage() {
 
   const handleDiscardDraft = () => {
     clearRecoveredDraftState(task);
-    // ???????? ? ?????? ??????????????, ?????? ?????????? ?????? ? ?????????
+    // Discard draft and revert to current task state
   };
 
   const handleCopyMarkdown = async () => {
@@ -347,26 +334,30 @@ export function TaskDetailPage() {
               <Input label="Название" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} fullWidth />
               <Textarea label={"\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435"} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={2} fullWidth autoResize />
               <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
-                <div className="form-group">
-                  <label className="ui-label">Приоритет</label>
-                  <div className="select-group" style={{ marginTop: '8px' }}>
-                    {(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-                      <button key={p} type="button" className={`select-chip ${editPriority === p ? 'select-chip--active' : ''}`} style={{ '--chip-color': PRIORITY_COLORS[p] } as React.CSSProperties} onClick={() => setEditPriority(p)}>
-                        {PRIORITY_ICONS[p]} {TASK_PRIORITY_LABELS[p]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="ui-label">Статус</label>
-                  <div className="select-group" style={{ marginTop: '8px' }}>
-                    {(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map((s) => (
-                      <button key={s} type="button" className={`select-chip ${editStatus === s ? 'select-chip--active' : ''}`} style={{ '--chip-color': STATUS_COLORS[s] } as React.CSSProperties} onClick={() => setEditStatus(s)}>
-                        {STATUS_ICONS[s]} {TASK_STATUS_LABELS[s]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                 <div className="form-group">
+                   <label className="ui-label">Приоритет</label>
+                   <SegmentedControl
+                     size="sm"
+                     value={editPriority}
+                     onChange={setEditPriority}
+                     options={(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map(p => ({
+                       value: p,
+                       label: <>{PRIORITY_ICONS[p]} {TASK_PRIORITY_LABELS[p]}</>,
+                     }))}
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label className="ui-label">Статус</label>
+                   <SegmentedControl
+                     size="sm"
+                     value={editStatus}
+                     onChange={setEditStatus}
+                     options={(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map(s => ({
+                       value: s,
+                       label: <>{STATUS_ICONS[s]} {TASK_STATUS_LABELS[s]}</>,
+                     }))}
+                   />
+                 </div>
               </div>
               <div className="form-group">
                 <label className="ui-label">Теги</label>

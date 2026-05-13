@@ -20,6 +20,7 @@ import {
 } from '../ui';
 
 declare const __APP_GIT_COMMIT__: string;
+import { version as appVersion } from '../../package.json';
 
 const CONNECTION_OPTIONS: SelectOption<ConnectionMethod>[] = [
   {
@@ -151,6 +152,7 @@ export function SettingsPage() {
     setIsChecking(true);
     try {
       resetSupabaseClient();
+      resetFirebaseClient();
       invalidateConnection();
       const snap = await withTimeout(
         refreshConnection(true),
@@ -561,7 +563,7 @@ export function SettingsPage() {
             title="Система"
           >
             <SettingsRow label="Версия приложения">
-              <span className="settings-value settings-value--mono">1.1.3</span>
+              <span className="settings-value settings-value--mono">{appVersion}</span>
             </SettingsRow>
             <SettingsRow label="Git commit">
               <span className="settings-value settings-value--mono">{__APP_GIT_COMMIT__}</span>

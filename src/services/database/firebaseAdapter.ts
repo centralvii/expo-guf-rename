@@ -6,7 +6,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
-  query,
+  query, limit,
   orderBy,
   Timestamp,
 } from 'firebase/firestore';
@@ -42,9 +42,12 @@ export const FirebaseTaskAdapter: TaskRepositoryAdapter = {
     if (!isFirebaseConfigured()) {
       throw new Error('Firebase is not configured. Please check your Settings.');
     }
-    
-    // Try to access Firestore
-    getFirestoreDb();
+
+    // Perform lightweight read to verify Firestore access
+    const db = getFirestoreDb();
+    const tasksRef = collection(db, TASKS_COLLECTION);
+    const q = query(tasksRef, limit(1));
+    await getDocs(q);
     return true;
   },
 
