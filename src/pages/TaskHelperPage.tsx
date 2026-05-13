@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, type FormEvent } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus, Search, Calendar, ChevronRight, FileText, AlertTriangle,
@@ -7,13 +7,14 @@ import {
 } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
+import { TaskTagPicker } from '../components/TaskTagPicker';
 import type { TaskPriority, TaskStatus, TaskTag } from '../types';
 import {
-  TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TAG_COLOR_PRESETS
+  TASK_PRIORITY_LABELS, TASK_STATUS_LABELS
 } from '../types';
 
 // --- UI-Kit Imports ---
-import { Badge, Button, Drawer, IconButton, Input, Island, Loader, Textarea, Toolbar } from '../ui';
+import { Badge, Button, Drawer, IconButton, Input, Island, Loader, TagChip, Textarea, Toolbar } from '../ui';
 import type { BadgeVariant } from '../ui';
 
 /* ---- helpers ---- */
@@ -73,92 +74,6 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   done: '#22c55e',
   closed: '#374151',
 };
-
-/* ---- Tag picker subcomponent ---- */
-interface TagPickerProps {
-  selectedTags: TaskTag[];
-  onChange: (tags: TaskTag[]) => void;
-}
-
-function TagPicker({ selectedTags, onChange }: TagPickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState<string>(TAG_COLOR_PRESETS[0]);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  const handleAdd = () => {
-    if (!newTagName.trim()) return;
-    const newTag: TaskTag = {
-      id: crypto.randomUUID(),
-      name: newTagName.trim(),
-      color: newTagColor,
-    };
-    onChange([...selectedTags, newTag]);
-    setNewTagName('');
-    setNewTagColor(TAG_COLOR_PRESETS[0]);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="tag-picker" ref={ref}>
-      <div className="tag-picker__selected">
-        {selectedTags.map((tag) => (
-          <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>
-            {tag.name}
-            <IconButton
-              type="button"
-              onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))}
-              className="task-tag__remove"
-              icon={<X size={10} />}
-              label="Remove tag"
-            />
-          </span>
-        ))}
-        <button type="button" className="tag-picker__add-btn" onClick={() => setIsOpen(!isOpen)}>
-          <Tag size={12} /> Тег
-        </button>
-      </div>
-      {isOpen && (
-        <div className="tag-picker__dropdown">
-          <div className="tag-picker__dropdown-inner">
-            <Input
-              autoFocus
-              placeholder="Название тега..."
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
-              fullWidth
-            />
-            <div className="tag-picker__colors" style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
-              {TAG_COLOR_PRESETS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className={`tag-picker__color-dot ${newTagColor === color ? 'tag-picker__color-dot--active' : ''}`}
-                  style={{ background: color }}
-                  onClick={() => setNewTagColor(color)}
-                />
-              ))}
-            </div>
-            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newTagName.trim()} fullWidth>
-              Добавить
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /* ---- Create Drawer Implementation ---- */
 interface CreateDrawerProps {
@@ -264,7 +179,7 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
         <div className="form-group">
           <label className="ui-label">Теги</label>
           <div style={{ marginTop: '8px' }}>
-            <TagPicker selectedTags={tags} onChange={setTags} />
+            <TaskTagPicker selectedTags={tags} onChange={setTags} />
           </div>
         </div>
       </form>
@@ -482,6 +397,15 @@ export function TaskHelperPage() {
 
                     <h3 className="task-card__title">{task.title}</h3>
                     {task.description && <p className="task-card__desc">{task.description}</p>}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="task-card__tags">
+                        {task.tags.map((tag) => (
+                          <TagChip key={tag.id} color={tag.color} size="sm">
+                            {tag.name}
+                          </TagChip>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="task-card__meta">
                       <span className="meta-item"><Calendar size={12} /> {formatRelativeTime(task.updatedAt)}</span>

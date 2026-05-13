@@ -1,18 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { loadSettings } from './appSettings';
 
 let supabaseClient: SupabaseClient | null = null;
-
-function getSettings() {
-  const saved = localStorage.getItem('gd-helper-settings');
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
 
 export function resetSupabaseClient() {
   supabaseClient = null;
@@ -23,9 +12,9 @@ export function getSupabaseClient(): SupabaseClient {
     return supabaseClient;
   }
 
-  const settings = getSettings();
-  const supabaseUrl = settings?.supabaseUrl || import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = settings?.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const settings = loadSettings();
+  const supabaseUrl = settings.supabaseUrl || import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = settings.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(

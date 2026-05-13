@@ -1,21 +1,24 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus,
   Flame, ArrowUp, ArrowRight, ArrowDown, Circle, Clock, GitPullRequest,
-  CheckCircle2, XCircle, Tag, X, ChevronUp, ChevronDown
+  CheckCircle2, XCircle, ChevronUp, ChevronDown
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTasks } from '../hooks/useTasks';
 import { useToast } from '../hooks/useToast';
+import { TaskDiffModal } from '../components/TaskDiffModal';
+import { TaskTagPicker } from '../components/TaskTagPicker';
+import { diffTaskCollections } from '../lib/taskDiff';
 import type { TaskItem, TaskSection, TaskPriority, TaskStatus, TaskTag } from '../types';
 import {
-  TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TAG_COLOR_PRESETS
+  TASK_PRIORITY_LABELS, TASK_STATUS_LABELS
 } from '../types';
 
 // --- UI-Kit Imports ---
-import { Badge, Button, IconButton, Input, Island, Loader, Modal, Textarea, Toolbar } from '../ui';
+import { Badge, Button, Input, Island, Loader, Modal, TagChip, Textarea, Toolbar } from '../ui';
 import type { BadgeVariant } from '../ui';
 
 const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
@@ -79,86 +82,6 @@ function createMarkdownFilename(title: string): string {
   return `${normalizedTitle || 'task-helper-item'}.md`;
 }
 
-/* ---- Tag picker (inline) ---- */
-interface TagPickerProps {
-  selectedTags: TaskTag[];
-  onChange: (tags: TaskTag[]) => void;
-}
-
-function TagPicker({ selectedTags, onChange }: TagPickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState<string>(TAG_COLOR_PRESETS[0]);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  const handleAdd = () => {
-    if (!newTagName.trim()) return;
-    const newTag: TaskTag = { id: crypto.randomUUID(), name: newTagName.trim(), color: newTagColor };
-    onChange([...selectedTags, newTag]);
-    setNewTagName('');
-    setNewTagColor(TAG_COLOR_PRESETS[0]);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="tag-picker" ref={ref}>
-      <div className="tag-picker__selected">
-        {selectedTags.map((tag) => (
-          <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>
-            {tag.name}
-            <IconButton
-              type="button"
-              onClick={() => onChange(selectedTags.filter((t) => t.id !== tag.id))}
-              className="task-tag__remove"
-              icon={<X size={10} />}
-              label="Remove tag"
-            />
-          </span>
-        ))}
-        <button type="button" className="tag-picker__add-btn" onClick={() => setIsOpen(!isOpen)}>
-          <Tag size={12} /> Тег
-        </button>
-      </div>
-      {isOpen && (
-        <div className="tag-picker__dropdown">
-          <div className="tag-picker__dropdown-inner">
-            <Input
-              autoFocus
-              placeholder="Название тега..."
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
-              fullWidth
-            />
-            <div className="tag-picker__colors" style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
-              {TAG_COLOR_PRESETS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className={`tag-picker__color-dot ${newTagColor === color ? 'tag-picker__color-dot--active' : ''}`}
-                  style={{ background: color }}
-                  onClick={() => setNewTagColor(color)}
-                />
-              ))}
-            </div>
-            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newTagName.trim()} fullWidth>
-              Добавить
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 type EditDraft = {
   title: string;
   description: string;
@@ -182,6 +105,21 @@ function saveDraft(taskId: string, draft: EditDraft) {
 }
 function clearDraft(taskId: string) { localStorage.removeItem(getDraftKey(taskId)); }
 
+function createDraftFromTask(task: TaskItem): EditDraft {
+  return {
+    title: task.title,
+    description: task.description,
+    sections: task.sections,
+    priority: task.priority ?? 'medium',
+    status: task.status ?? 'open',
+    tags: task.tags ?? [],
+  };
+}
+
+function draftsEqual(left: EditDraft, right: EditDraft): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -192,7 +130,9 @@ export function TaskDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [hasDraftWarning, setHasDraftWarning] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDraftDiffModal, setShowDraftDiffModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
@@ -204,11 +144,15 @@ export function TaskDetailPage() {
   const skipNextDraftSave = useRef(false);
 
   useEffect(() => {
-    if (!isEditing || !taskId) return;
+    if (!isEditing || !taskId || !task) return;
     if (skipNextDraftSave.current) { skipNextDraftSave.current = false; return; }
     const draft: EditDraft = { title: editTitle, description: editDesc, sections: editSections, priority: editPriority, status: editStatus, tags: editTags };
+    if (draftsEqual(draft, createDraftFromTask(task))) {
+      clearDraft(taskId);
+      return;
+    }
     saveDraft(taskId, draft);
-  }, [isEditing, taskId, editTitle, editDesc, editSections, editPriority, editStatus, editTags]);
+  }, [isEditing, taskId, editTitle, editDesc, editSections, editPriority, editStatus, editTags, task]);
 
   if (!isLoaded) {
     return (
@@ -228,7 +172,7 @@ export function TaskDetailPage() {
   const handleStartEditing = () => {
     if (!taskId) return;
     const draft = loadDraft(taskId);
-    if (draft) {
+    if (draft && !draftsEqual(draft, createDraftFromTask(task))) {
       setEditTitle(draft.title);
       setEditDesc(draft.description);
       setEditSections(draft.sections);
@@ -244,22 +188,33 @@ export function TaskDetailPage() {
       setEditStatus(task.status ?? 'open');
       setEditTags(task.tags ?? []);
       setHasDraftWarning(false);
+
+      if (draft) {
+        clearDraft(taskId);
+      }
     }
     setIsEditing(true);
   };
 
-  const handleDiscardDraft = () => {
-    if (!taskId) return;
-    clearDraft(taskId);
+  const clearRecoveredDraftState = (nextTask: TaskItem) => {
+    if (taskId) {
+      clearDraft(taskId);
+    }
+
     skipNextDraftSave.current = true;
-    setEditTitle(task.title);
-    setEditDesc(task.description);
-    setEditSections(task.sections);
-    setEditPriority(task.priority ?? 'medium');
-    setEditStatus(task.status ?? 'open');
-    setEditTags(task.tags ?? []);
+    setShowDraftDiffModal(false);
     setHasDraftWarning(false);
-    // Остаемся в режиме редактирования, просто сбрасываем данные к оригиналу
+    setEditTitle(nextTask.title);
+    setEditDesc(nextTask.description);
+    setEditSections(nextTask.sections);
+    setEditPriority(nextTask.priority ?? 'medium');
+    setEditStatus(nextTask.status ?? 'open');
+    setEditTags(nextTask.tags ?? []);
+  };
+
+  const handleDiscardDraft = () => {
+    clearRecoveredDraftState(task);
+    // ???????? ? ?????? ??????????????, ?????? ?????????? ?????? ? ?????????
   };
 
   const handleCopyMarkdown = async () => {
@@ -279,14 +234,33 @@ export function TaskDetailPage() {
   };
 
   const handleSave = async () => {
-    if (!taskId) return;
+    if (!taskId || isSaving) return;
+    setIsSaving(true);
     try {
-      await updateTask(taskId, { title: editTitle, description: editDesc, sections: editSections, priority: editPriority, status: editStatus, tags: editTags });
-      clearDraft(taskId);
+      await updateTask(taskId, {
+        title: editTitle,
+        description: editDesc,
+        sections: editSections,
+        priority: editPriority,
+        status: editStatus,
+        tags: editTags,
+      });
+      clearRecoveredDraftState({
+        ...task,
+        title: editTitle,
+        description: editDesc,
+        sections: editSections,
+        priority: editPriority,
+        status: editStatus,
+        tags: editTags,
+      });
       setIsEditing(false);
-      setHasDraftWarning(false);
-      notify('Изменения сохранены');
-    } catch { notify('Ошибка сохранения', 'error'); }
+      notify('\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B');
+    } catch {
+      notify('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -303,6 +277,19 @@ export function TaskDetailPage() {
   const updateSection = (id: string, updates: Partial<TaskSection>) => {
     setEditSections(editSections.map((s) => (s.id === id ? { ...s, ...updates } : s)));
   };
+
+  const draftDiff = diffTaskCollections(
+    [task],
+    [{
+      ...task,
+      title: editTitle,
+      description: editDesc,
+      sections: editSections,
+      priority: editPriority,
+      status: editStatus,
+      tags: editTags,
+    }]
+  );
 
   return (
     <div className="tool-page anim-fade-in">
@@ -332,8 +319,8 @@ export function TaskDetailPage() {
             )}
             {isEditing && (
               <>
-                <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>Отмена</Button>
-                <Button variant="primary" size="sm" icon={<Save size={16} />} onClick={handleSave}>
+                <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving}>{"\u041E\u0442\u043C\u0435\u043D\u0430"}</Button>
+                <Button variant="primary" size="sm" icon={<Save size={16} />} onClick={handleSave} isLoading={isSaving}>
                   Сохранить
                 </Button>
               </>
@@ -346,6 +333,11 @@ export function TaskDetailPage() {
             <div className="draft-warning" style={{ marginBottom: '20px' }}>
               <AlertTriangle size={15} />
               <span>Восстановлены несохранённые изменения</span>
+              {draftDiff.hasChanges && (
+                <Button variant="ghost" size="sm" className="draft-warning__view" onClick={() => setShowDraftDiffModal(true)}>
+                  {'\u041f\u043e\u0441\u043c\u043e\u0442\u0440\u0435\u0442\u044c'}
+                </Button>
+              )}
               <Button variant="ghost" size="sm" className="draft-warning__discard" onClick={handleDiscardDraft}>Сбросить</Button>
             </div>
           )}
@@ -353,7 +345,7 @@ export function TaskDetailPage() {
           {isEditing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <Input label="Название" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} fullWidth />
-              <Textarea label="Описание" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={2} fullWidth />
+              <Textarea label={"\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435"} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={2} fullWidth autoResize />
               <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
                 <div className="form-group">
                   <label className="ui-label">Приоритет</label>
@@ -378,7 +370,7 @@ export function TaskDetailPage() {
               </div>
               <div className="form-group">
                 <label className="ui-label">Теги</label>
-                <div style={{ marginTop: '8px' }}><TagPicker selectedTags={editTags} onChange={setEditTags} /></div>
+                <div style={{ marginTop: '8px' }}><TaskTagPicker selectedTags={editTags} onChange={setEditTags} /></div>
               </div>
             </div>
           ) : (
@@ -392,7 +384,7 @@ export function TaskDetailPage() {
               {task.tags && task.tags.length > 0 && (
                 <div className="task-detail__tags">
                   {task.tags.map((tag) => (
-                    <span key={tag.id} className="task-tag" style={{ '--tag-color': tag.color } as React.CSSProperties}>{tag.name}</span>
+                    <TagChip key={tag.id} color={tag.color}>{tag.name}</TagChip>
                   ))}
                 </div>
               )}
@@ -446,7 +438,7 @@ export function TaskDetailPage() {
                       icon={<Trash2 size={16} />}
                     />
                   </div>
-                  <Textarea value={section.content} onChange={(e) => updateSection(section.id, { content: e.target.value })} rows={6} fullWidth />
+                  <Textarea value={section.content} onChange={(e) => updateSection(section.id, { content: e.target.value })} rows={6} fullWidth autoResize />
                 </Island>
               ))}
               <Button variant="secondary" onClick={() => setEditSections([...editSections, { id: crypto.randomUUID(), title: 'Новый раздел', content: '' }])} icon={<Plus size={16} />} fullWidth>
@@ -469,6 +461,16 @@ export function TaskDetailPage() {
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Удалить задачу?" variant="danger" footer={<><Button size="sm" onClick={() => setShowDeleteModal(false)}>Отмена</Button><Button size="sm" variant="danger" onClick={handleConfirmDelete} isLoading={isDeleting}>Удалить</Button></>}>
         <p>Задача <strong>{task.title}</strong> будет удалена навсегда.</p>
       </Modal>
+
+      <TaskDiffModal
+        isOpen={showDraftDiffModal}
+        onClose={() => setShowDraftDiffModal(false)}
+        diff={draftDiff}
+        onDiscard={() => {
+          handleDiscardDraft();
+          setShowDraftDiffModal(false);
+        }}
+      />
     </div>
   );
 }

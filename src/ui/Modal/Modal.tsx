@@ -11,6 +11,7 @@ interface ModalProps {
   footer?: ReactNode;
   variant?: 'primary' | 'danger';
   icon?: ReactNode;
+  size?: 'md' | 'lg';
 }
 
 export const Modal = memo(({ 
@@ -20,7 +21,8 @@ export const Modal = memo(({
   children, 
   footer, 
   variant = 'primary',
-  icon 
+  icon,
+  size = 'md',
 }: ModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -61,7 +63,7 @@ export const Modal = memo(({
       onClick={onClose}
     >
       <div 
-        className="modal-card" 
+        className={`modal-card modal-card--${size}`}
         onClick={(e) => e.stopPropagation()}
       >
         <IconButton className="modal-card__close" variant="ghost" icon={<X size={18} />} label="Закрыть" onClick={onClose} />

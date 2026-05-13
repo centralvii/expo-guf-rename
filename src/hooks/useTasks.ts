@@ -2,9 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import type { TaskItem, TaskPriority, TaskStatus, TaskTag } from '../types';
 import { createTask, deleteTaskById, listTasks, updateTaskById } from '../lib/taskRepository';
 
-export function useTasks() {
+interface UseTasksOptions {
+  autoLoad?: boolean;
+}
+
+export function useTasks({ autoLoad = true }: UseTasksOptions = {}) {
   const [tasks, setTasksState] = useState<TaskItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(() => !autoLoad);
   const [error, setError] = useState<string | null>(null);
 
   const loadTasks = useCallback(async () => {
@@ -13,6 +17,8 @@ export function useTasks() {
   }, []);
 
   useEffect(() => {
+    if (!autoLoad) return;
+
     let isMounted = true;
 
     listTasks()
@@ -41,7 +47,7 @@ export function useTasks() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [autoLoad]);
 
   const reloadTasks = useCallback(async () => {
     try {

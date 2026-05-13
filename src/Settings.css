@@ -5,7 +5,7 @@
 /* ---- Section (Island extension) ---- */
 .settings-section {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .settings-section > .ui-section-header,
@@ -60,10 +60,13 @@
 .settings-section__body {
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 /* ---- Row ---- */
 .settings-row {
+  position: relative;
+  z-index: 0;
   display: grid;
   grid-template-columns: 1fr minmax(200px, 320px);
   align-items: center;
@@ -101,10 +104,19 @@
 }
 
 .settings-row__control {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 0;
+}
+
+.settings-row:has(.ui-select--open) {
+  z-index: 30;
+}
+
+.settings-row:has(.ui-select--open) .settings-row__control {
+  z-index: 30;
 }
 
 .settings-row__control > .ui-input-wrapper,

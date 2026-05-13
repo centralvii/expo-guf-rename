@@ -31,6 +31,10 @@
   overflow: hidden;
 }
 
+.modal-card--lg {
+  width: min(100%, 920px);
+}
+
 .modal-overlay--closing .modal-card {
   animation: modal-card-out 200ms ease-in forwards;
 }

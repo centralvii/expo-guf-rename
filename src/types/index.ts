@@ -137,13 +137,26 @@ export const TAG_COLOR_PRESETS = [
 /**
  * Настройки подключения к базе данных
  */
-export type ConnectionMethod = 'supabase' | 'postgres';
+export type ConnectionMethod = 'supabase' | 'postgres' | 'neon' | 'firebase';
+export type NeonSslMode = 'require' | 'prefer' | 'disable';
 
 export interface AppSettings {
   connectionMethod: ConnectionMethod;
   supabaseUrl: string;
   supabaseAnonKey: string;
-  postgresUrl: string; // URL для локального API или прямого подключения (если используется прокси)
+  postgresUrl: string;
+  neonApiUrl: string;
+  neonProjectName: string;
+  neonDatabaseName: string;
+  neonSslMode: NeonSslMode;
+  // Firebase config (frontend-safe)
+  firebaseApiKey: string;
+  firebaseAuthDomain: string;
+  firebaseProjectId: string;
+  firebaseStorageBucket: string;
+  firebaseMessagingSenderId: string;
+  firebaseAppId: string;
+  firebaseMeasurementId: string;
 }
 
 /**

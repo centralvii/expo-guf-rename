@@ -1,11 +1,3 @@
-/**
- * Глобальный менеджер статуса подключения к БД.
- *
- * - Кэширует последнюю проверку на TTL, чтобы разные компоненты не дублировали запросы.
- * - Хранит осмысленный тип ошибки (config / network / cors / api).
- * - Позволяет подписываться на изменения статуса.
- */
-
 import { checkConnection } from './taskRepository';
 
 export type ConnectionState = 'unknown' | 'online' | 'offline';
@@ -18,7 +10,7 @@ export interface ConnectionSnapshot {
   checkedAt: number;
 }
 
-const CACHE_TTL = 15_000; // 15 сек
+const CACHE_TTL = 15_000;
 
 let current: ConnectionSnapshot = {
   state: 'unknown',
@@ -26,6 +18,8 @@ let current: ConnectionSnapshot = {
   errorMessage: null,
   checkedAt: 0,
 };
+
+let inFlightCheck: Promise<ConnectionSnapshot> | null = null;
 
 const listeners = new Set<(snap: ConnectionSnapshot) => void>();
 
@@ -37,14 +31,14 @@ function classifyError(err: unknown): { kind: ConnectionErrorKind; message: stri
   if (!err) return { kind: null, message: '' };
   const msg = err instanceof Error ? err.message : String(err);
 
-  if (/configuration is missing/i.test(msg)) {
+  if (/configuration is missing|proxy url is missing|api url is missing|configure a backend proxy|firebase is not configured/i.test(msg)) {
     return { kind: 'config', message: 'Настройки подключения не заполнены' };
   }
-  if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+  if (/failed to fetch|networkerror|load failed|http2|ping/i.test(msg)) {
     return { kind: 'network', message: 'Сетевая ошибка. Проверьте URL и доступность сервера' };
   }
   if (/cors/i.test(msg)) {
-    return { kind: 'cors', message: 'CORS заблокировал запрос. Проверьте настройки сервера' };
+    return { kind: 'cors', message: 'CORS блокирует запрос. Проверьте настройки сервера' };
   }
   return { kind: 'api', message: msg };
 }
@@ -55,43 +49,50 @@ export function getConnectionSnapshot(): ConnectionSnapshot {
 
 export function subscribeToConnection(listener: (snap: ConnectionSnapshot) => void): () => void {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
-/** Сбросить кэш — вызывается после смены настроек подключения */
 export function invalidateConnection() {
   current = { state: 'unknown', errorKind: null, errorMessage: null, checkedAt: 0 };
   notify();
 }
 
-/**
- * Получить статус подключения. Если проверка свежая — возвращает кэш.
- * force=true — принудительная проверка, игнорируя кэш.
- */
 export async function refreshConnection(force = false): Promise<ConnectionSnapshot> {
   const now = Date.now();
   if (!force && current.state !== 'unknown' && now - current.checkedAt < CACHE_TTL) {
     return current;
   }
 
-  try {
-    const ok = await checkConnection();
-    current = {
-      state: ok ? 'online' : 'offline',
-      errorKind: ok ? null : 'api',
-      errorMessage: ok ? null : 'Сервер вернул ошибку',
-      checkedAt: Date.now(),
-    };
-  } catch (err) {
-    const { kind, message } = classifyError(err);
-    current = {
-      state: 'offline',
-      errorKind: kind,
-      errorMessage: message,
-      checkedAt: Date.now(),
-    };
+  if (inFlightCheck) {
+    return inFlightCheck;
   }
 
-  notify();
-  return current;
+  inFlightCheck = (async () => {
+    try {
+      const ok = await checkConnection();
+      current = {
+        state: ok ? 'online' : 'offline',
+        errorKind: ok ? null : 'api',
+        errorMessage: ok ? null : 'Сервер вернул ошибку',
+        checkedAt: Date.now(),
+      };
+    } catch (err) {
+      const { kind, message } = classifyError(err);
+      current = {
+        state: 'offline',
+        errorKind: kind,
+        errorMessage: message,
+        checkedAt: Date.now(),
+      };
+    } finally {
+      inFlightCheck = null;
+    }
+
+    notify();
+    return current;
+  })();
+
+  return inFlightCheck;
 }

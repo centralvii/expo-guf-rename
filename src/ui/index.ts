@@ -21,6 +21,8 @@ export { Modal } from './Modal/Modal';
 export { Select } from './Select/Select';
 export type { SelectOption, SelectSize } from './Select/Select';
 export { Table } from './Table/Table';
+export { TagChip } from './TagChip/TagChip';
+export type { TagChipProps } from './TagChip/TagChip';
 export { Toolbar } from './Toolbar/Toolbar';
 export { ToolCard } from './ToolCard/ToolCard';
 export type { ToolCardProps } from './ToolCard/ToolCard';

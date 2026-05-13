@@ -66,6 +66,11 @@
   -ms-overflow-style: none; /* IE/Edge */
 }
 
+.ui-textarea--auto-resize {
+  resize: none;
+  overflow: hidden;
+}
+
 .ui-textarea::-webkit-scrollbar {
   display: none; /* Chrome/Safari/Brave */
 }
