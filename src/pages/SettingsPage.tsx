@@ -84,7 +84,13 @@ interface SettingsSectionProps {
 function SettingsSection({ icon, title, description, children }: SettingsSectionProps) {
   return (
     <Panel className="settings-section">
-      <SectionHeader icon={icon} title={title} description={description} />
+      <SectionHeader
+        surface
+        className="settings-section__header"
+        icon={icon}
+        title={title}
+        description={description}
+      />
       <div className="settings-section__body">
         {children}
       </div>

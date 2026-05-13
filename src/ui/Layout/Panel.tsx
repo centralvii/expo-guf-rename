@@ -29,6 +29,7 @@ export interface SectionHeaderProps extends Omit<HTMLAttributes<HTMLElement>, 't
   count?: ReactNode;
   icon?: ReactNode;
   actions?: ReactNode;
+  surface?: boolean;
 }
 
 export const SectionHeader = memo(({
@@ -38,10 +39,11 @@ export const SectionHeader = memo(({
   count,
   icon,
   actions,
+  surface = false,
   className = '',
   ...props
 }: SectionHeaderProps) => (
-  <header className={`ui-section-header ${className}`} {...props}>
+  <header className={`ui-section-header ${surface ? 'ui-section-header--surface' : ''} ${className}`} {...props}>
     <div className="ui-section-header__main">
       {eyebrow && <span className="ui-section-header__eyebrow">{eyebrow}</span>}
       <div className="ui-section-header__title-row">

@@ -27,7 +27,7 @@
   gap: 8px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   padding: 4px;
   flex-shrink: 0;
 }
@@ -52,7 +52,7 @@
   min-width: 160px;
   max-width: 220px;
   height: 32px;
-  border-radius: var(--radius-sm);
+  border-radius: 7px;
   background: transparent;
   cursor: pointer;
   transition: background var(--transition);
@@ -140,6 +140,7 @@
   gap: 8px;
   padding: 8px 10px;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .api-url-bar__method {
@@ -150,6 +151,17 @@
 .api-url-bar__method .ui-select__trigger {
   font-family: var(--font-mono);
   font-weight: 700;
+  min-width: 110px;
+  border-radius: 8px;
+}
+
+.api-url-bar__method .ui-select__dropdown {
+  min-width: 160px;
+}
+
+.api-url-bar > .ui-btn {
+  flex-shrink: 0;
+  border-radius: 8px;
 }
 
 .api-url-bar__input {
@@ -170,6 +182,7 @@
   flex: 1 1 0;
   min-height: 220px;
   overflow: hidden;
+  border-radius: 10px;
 }
 
 .api-panel-tabs {
@@ -179,6 +192,8 @@
   border-bottom: 1px solid var(--border);
   background: var(--bg-muted);
   flex-shrink: 0;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .api-panel-tab {
@@ -186,7 +201,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: 7px;
   background: transparent;
   border: none;
   color: var(--text-secondary);
@@ -194,6 +209,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition);
+  outline: none;
 }
 
 .api-panel-tab:hover {
@@ -204,7 +220,11 @@
 .api-panel-tab--active {
   background: var(--bg-card);
   color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-border);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
+}
+
+.api-panel-tab:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--accent-border), 0 0 0 3px var(--accent-soft);
 }
 
 .api-panel-tab__count {

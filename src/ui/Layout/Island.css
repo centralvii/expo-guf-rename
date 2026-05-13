@@ -8,30 +8,6 @@
   overflow: hidden;
 }
 
-/*
- * Preserve visual corner radius for "bleed" content when a page temporarily
- * overrides overflow on the island/panel to let popovers escape.
- */
-.ui-island > :first-child {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
-}
-
-.ui-island > :last-child {
-  border-bottom-left-radius: inherit;
-  border-bottom-right-radius: inherit;
-}
-
-.ui-island > :first-child > :first-child {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
-}
-
-.ui-island > :last-child > :last-child {
-  border-bottom-left-radius: inherit;
-  border-bottom-right-radius: inherit;
-}
-
 .ui-island--flex {
   flex: 1;
   display: flex;

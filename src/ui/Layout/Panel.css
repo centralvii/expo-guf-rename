@@ -9,6 +9,14 @@
   gap: 16px;
 }
 
+.ui-section-header--surface {
+  padding: 18px 20px;
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
 .ui-section-header__main {
   display: flex;
   flex-direction: column;
