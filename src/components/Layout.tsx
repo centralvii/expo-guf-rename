@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, FileSearch, Send } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { refreshConnection, subscribeToConnection, type ConnectionState } from '../lib/connectionStatus';
 
@@ -49,12 +49,6 @@ const TOOLS_NAV: NavItem[] = [
     icon: <FileArchive size={18} />,
   },
   {
-    id: 'pdf-viewer',
-    label: 'Просмотр PDF',
-    path: '/pdf-viewer',
-    icon: <FileSearch size={18} />,
-  },
-  {
     id: 'bpmn',
     label: 'Полигон BPMN',
     path: '/bpmn',
@@ -66,6 +60,9 @@ const SIDEBAR_STORAGE_KEY = 'gd-helper-sidebar-collapsed';
 
 export function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches) {
+      return true;
+    }
     const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
     return saved ? JSON.parse(saved) : false;
   });
@@ -123,9 +120,6 @@ export function Layout() {
         setIsCollapsed(saved ? JSON.parse(saved) : false);
       }
     };
-
-    // Initial check
-    if (mq.matches) setIsCollapsed(true);
 
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);

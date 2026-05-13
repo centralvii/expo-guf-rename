@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, ExternalLink, Shield, Zap, Database, Layers, Globe, Lock,
-  Sparkles, FileArchive, FileText, Workflow, FileSearch, Send,
+  Sparkles, FileArchive, FileText, Workflow, Send,
   BookOpen, Code2, Heart,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -78,7 +78,6 @@ interface ToolEntry {
 const TOOLS: ToolEntry[] = [
   { icon: <FileText size={16} />, title: 'Задачник', path: '/task-helper', color: '#7928ca' },
   { icon: <FileArchive size={16} />, title: 'Сборка GUF', path: '/guf-packer', color: '#0070f3' },
-  { icon: <FileSearch size={16} />, title: 'Просмотр PDF', path: '/pdf-viewer', color: '#ff0080' },
   { icon: <Workflow size={16} />, title: 'Полигон BPMN', path: '/bpmn', color: '#22c55e' },
   { icon: <Send size={16} />, title: 'Запросник', path: '/api-client', color: '#f59e0b' },
 ];
@@ -86,11 +85,11 @@ const TOOLS: ToolEntry[] = [
 const STACK = [
   'React 19', 'TypeScript', 'Vite', 'Supabase', 'PostgreSQL',
   'lucide-react', '@dnd-kit', 'jszip', 'react-markdown', 'bpmn.io',
-  'react-router', 'pdf.js', 'CSS3', 'Vercel',
+  'react-router', 'CSS3', 'Vercel',
 ];
 
 const STATS = [
-  { value: '5', label: 'Инструментов' },
+  { value: '4', label: 'Инструментов' },
   { value: '100%', label: 'Клиентских' },
   { value: '0', label: 'Трекеров' },
   { value: '∞', label: 'Возможностей' },

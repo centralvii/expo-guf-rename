@@ -44,6 +44,8 @@ export interface AppState {
   errorFileIds: Set<string>;
 }
 
+type LegacyFileRow = Partial<FileRow> & Record<string, unknown>;
+
 export function useAppState(): AppState {
   const [files, setFiles] = useState<FileRow[]>([]);
   const [template, setTemplateRaw] = useState<string>(DEFAULT_TEMPLATE);
@@ -65,12 +67,12 @@ export function useAppState(): AppState {
         const saved = await loadState();
         if (saved && !cancelled) {
           // Migrate old format: convert per-file fields to variables
-          const migratedFiles = saved.files.map((f: any) => {
+          const migratedFiles = saved.files.map((f: LegacyFileRow) => {
             if (f.variables) return f as FileRow;
             // Old format — migrate
             const vars: Record<string, string> = {};
             for (const key of ['prefix', 'module', 'code', 'docNumber', 'custom1', 'custom2']) {
-              if (f[key] !== undefined) vars[key] = f[key];
+              if (typeof f[key] === 'string') vars[key] = f[key];
             }
             return { ...f, variables: vars } as FileRow;
           });

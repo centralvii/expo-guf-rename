@@ -47,7 +47,7 @@ export const FileUploader = memo(({ onZipLoaded, onGufFilesAdded, isLoading, has
       if (zips.length === 1) {
         try {
           await onZipLoaded(zips[0]);
-        } catch (err) {
+        } catch {
           setError('Ошибка при чтении архива');
         }
         return;

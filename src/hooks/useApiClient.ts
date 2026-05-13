@@ -52,6 +52,14 @@ function saveState(state: PersistedState) {
   }
 }
 
+function getErrorName(error: unknown): string | undefined {
+  return error instanceof Error ? error.name : undefined;
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  return error instanceof Error ? error.message : undefined;
+}
+
 /** Преобразует список ключ-значение в Record, учитывая только enabled */
 function kvToRecord(list: ApiKeyValue[]): Record<string, string> {
   const result: Record<string, string> = {};
@@ -193,26 +201,30 @@ export interface UseApiClientReturn {
 }
 
 export function useApiClient(): UseApiClientReturn {
-  const [tabs, setTabs] = useState<ApiRequest[]>([]);
-  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
-  const [collection, setCollection] = useState<ApiRequest[]>([]);
-  const [history, setHistory] = useState<ApiHistoryEntry[]>([]);
+  const [initialState] = useState<{
+    tabs: ApiRequest[];
+    activeRequestId: string;
+    collection: ApiRequest[];
+    history: ApiHistoryEntry[];
+  }>(() => {
+    const saved = loadState();
+    const initialTab = createEmptyRequest();
+    return {
+      tabs: [initialTab],
+      activeRequestId: initialTab.id,
+      collection: saved.collection,
+      history: saved.history,
+    };
+  });
+
+  const [tabs, setTabs] = useState<ApiRequest[]>(initialState.tabs);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(initialState.activeRequestId);
+  const [collection, setCollection] = useState<ApiRequest[]>(initialState.collection);
+  const [history, setHistory] = useState<ApiHistoryEntry[]>(initialState.history);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-
-  // Восстановление состояния при монтировании
-  useEffect(() => {
-    const saved = loadState();
-    setCollection(saved.collection);
-    setHistory(saved.history);
-
-    // Всегда открываем один пустой таб для начала работы
-    const initialTab = createEmptyRequest();
-    setTabs([initialTab]);
-    setActiveRequestId(initialTab.id);
-  }, []);
 
   // Автосохранение коллекции и истории
   useEffect(() => {
@@ -386,13 +398,14 @@ export function useApiClient(): UseApiClientReturn {
         timestamp: Date.now(),
       };
       setHistory((prev) => [historyEntry, ...prev].slice(0, MAX_HISTORY));
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
+      if (getErrorName(err) === 'AbortError') {
         setError('Запрос отменён');
-      } else if (err?.message?.includes('Failed to fetch')) {
+      } else if (message?.includes('Failed to fetch')) {
         setError('Ошибка сети или CORS. Проверьте URL и доступность сервера.');
       } else {
-        setError(err?.message ?? 'Неизвестная ошибка');
+        setError(message ?? 'Неизвестная ошибка');
       }
     } finally {
       setIsLoading(false);

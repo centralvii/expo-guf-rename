@@ -248,7 +248,7 @@ export function SettingsPage() {
           >
             <SettingsRow
               label="Метод подключения"
-              hint="Где хранятся задачи и PDF документы"
+              hint="Где хранятся задачи"
             >
               <Select
                 value={settings.connectionMethod}

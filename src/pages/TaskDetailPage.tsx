@@ -22,6 +22,7 @@ import { Toolbar } from '../ui/Toolbar/Toolbar';
 import { Island } from '../ui/Layout/Island';
 import { Modal } from '../ui/Modal/Modal';
 import { Badge } from '../ui/Badge/Badge';
+import type { BadgeVariant } from '../ui/Badge/Badge';
 
 const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
   critical: <Flame size={12} />,
@@ -37,7 +38,7 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: '#6b7280',
 };
 
-const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, any> = {
+const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, BadgeVariant> = {
   critical: 'danger',
   high: 'warning',
   medium: 'info',
@@ -60,7 +61,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   closed: '#374151',
 };
 
-const STATUS_BADGE_VARIANTS: Record<TaskStatus, any> = {
+const STATUS_BADGE_VARIANTS: Record<TaskStatus, BadgeVariant> = {
   open: 'default',
   in_progress: 'accent',
   review: 'warning',
@@ -177,7 +178,9 @@ function loadDraft(taskId: string): EditDraft | null {
   } catch { return null; }
 }
 function saveDraft(taskId: string, draft: EditDraft) {
-  try { localStorage.setItem(getDraftKey(taskId), JSON.stringify(draft)); } catch { }
+  try { localStorage.setItem(getDraftKey(taskId), JSON.stringify(draft)); } catch {
+    // Draft persistence is best-effort.
+  }
 }
 function clearDraft(taskId: string) { localStorage.removeItem(getDraftKey(taskId)); }
 
@@ -263,7 +266,7 @@ export function TaskDetailPage() {
 
   const handleCopyMarkdown = async () => {
     try { await navigator.clipboard.writeText(markdown); notify('Markdown скопирован'); }
-    catch (e) { notify('Не удалось скопировать', 'error'); }
+    catch { notify('Не удалось скопировать', 'error'); }
   };
 
   const handleDownloadMarkdown = () => {
@@ -285,7 +288,7 @@ export function TaskDetailPage() {
       setIsEditing(false);
       setHasDraftWarning(false);
       notify('Изменения сохранены');
-    } catch (e) { notify('Ошибка сохранения', 'error'); }
+    } catch { notify('Ошибка сохранения', 'error'); }
   };
 
   const handleConfirmDelete = async () => {
@@ -296,7 +299,7 @@ export function TaskDetailPage() {
       notify('Задача удалена', 'error');
       setShowDeleteModal(false);
       navigate('/task-helper');
-    } catch (e) { notify('Ошибка удаления', 'error'); setIsDeleting(false); }
+    } catch { notify('Ошибка удаления', 'error'); setIsDeleting(false); }
   };
 
   const updateSection = (id: string, updates: Partial<TaskSection>) => {

@@ -46,7 +46,7 @@ function getSettings() {
   if (saved) {
     try {
       return JSON.parse(saved);
-    } catch (e) {
+    } catch {
       return null;
     }
   }

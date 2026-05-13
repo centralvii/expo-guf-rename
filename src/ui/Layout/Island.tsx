@@ -29,4 +29,4 @@ export const Island = Object.assign(
 );
 
 Island.displayName = 'Island';
-(Island.ScrollArea as any).displayName = 'Island.ScrollArea';
+Object.assign(Island.ScrollArea, { displayName: 'Island.ScrollArea' });

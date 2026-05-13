@@ -4,7 +4,6 @@
  * методы импорта/экспорта XML через ref.
  */
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-// @ts-ignore — bpmn-js не имеет полных TS-деклараций для Modeler
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/diagram-js.css';
@@ -21,6 +20,25 @@ export interface BpmnEditorHandle {
 interface BpmnEditorProps {
   initialXml?: string;
   onChange?: () => void;
+}
+
+interface BpmnCanvas {
+  zoom: (mode: string) => void;
+}
+
+interface BpmnElement {
+  type: string;
+}
+
+interface BpmnModelerInstance {
+  saveXML: (options: { format: boolean }) => Promise<{ xml?: string }>;
+  importXML: (xml: string) => Promise<unknown>;
+  saveSVG: () => Promise<{ svg: string }>;
+  get(service: 'canvas'): BpmnCanvas;
+  get(service: 'elementRegistry'): { getAll: () => BpmnElement[] };
+  get(service: 'selection'): { select: (elements: BpmnElement[]) => void };
+  on: (event: string, callback: () => void) => void;
+  destroy: () => void;
 }
 
 export const EMPTY_DIAGRAM = `<?xml version="1.0" encoding="UTF-8"?>
@@ -91,7 +109,7 @@ function addDotGrid(container: HTMLDivElement) {
 export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
   ({ initialXml, onChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const modelerRef = useRef<any>(null);
+    const modelerRef = useRef<BpmnModelerInstance | null>(null);
 
     useImperativeHandle(ref, () => ({
       getXml: async () => {
@@ -185,14 +203,14 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
       const modeler = new BpmnModeler({
         container: containerRef.current,
         // Keyboard binding is now handled differently or automatically in newer versions
-      });
+      }) as unknown as BpmnModelerInstance;
       modelerRef.current = modeler;
 
       const loadInitial = async () => {
         try {
           const xml = initialXml || EMPTY_DIAGRAM;
           await modeler.importXML(xml);
-          (modeler.get('canvas') as any).zoom('fit-viewport');
+          modeler.get('canvas').zoom('fit-viewport');
           if (containerRef.current) addDotGrid(containerRef.current);
         } catch (err) {
           console.error('Error importing BPMN XML:', err);
@@ -214,10 +232,10 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
           ) return;
 
           e.preventDefault();
-          const elementRegistry = (modeler as any).get('elementRegistry');
-          const selection = (modeler as any).get('selection');
+          const elementRegistry = modeler.get('elementRegistry');
+          const selection = modeler.get('selection');
           const allElements = elementRegistry.getAll().filter(
-            (el: any) => el.type !== 'bpmn:Process' && el.type !== '__implicitroot'
+            (el) => el.type !== 'bpmn:Process' && el.type !== '__implicitroot'
           );
           selection.select(allElements);
         }

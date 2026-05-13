@@ -26,6 +26,6 @@ export const Toolbar = Object.assign(
 );
 
 Toolbar.displayName = 'Toolbar';
-(Toolbar.Left as any).displayName = 'Toolbar.Left';
-(Toolbar.Right as any).displayName = 'Toolbar.Right';
-(Toolbar.Divider as any).displayName = 'Toolbar.Divider';
+Object.assign(Toolbar.Left, { displayName: 'Toolbar.Left' });
+Object.assign(Toolbar.Right, { displayName: 'Toolbar.Right' });
+Object.assign(Toolbar.Divider, { displayName: 'Toolbar.Divider' });

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   FileArchive, FileText, ArrowRight, Clock,
   Flame, ArrowUp, ArrowDown, Circle, CheckCircle2, XCircle,
-  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles, FileSearch, Workflow, Send
+  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles, Workflow, Send
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '../types';
@@ -33,16 +33,6 @@ const TOOLS: ToolCardProps[] = [
     badge: 'Готово',
     badgeVariant: 'success',
     accentColor: '#0070f3',
-  },
-  {
-    id: 'pdf-viewer',
-    title: 'Просмотр PDF',
-    description: 'Инструмент для загрузки PDF и создания заметок с привязкой к тексту.',
-    icon: <FileSearch size={22} />,
-    path: '/pdf-viewer',
-    badge: 'Готово',
-    badgeVariant: 'success',
-    accentColor: '#ff0080',
   },
   {
     id: 'bpmn',

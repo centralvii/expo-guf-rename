@@ -20,11 +20,7 @@ interface PageTitleProps {
  *   </Toolbar.Left>
  * </Toolbar>
  *
- * <Toolbar>
- *   <Toolbar.Left>
- *     <PageTitle isDirty={hasChanges}>Документ.pdf</PageTitle>
- *   </Toolbar.Left>
- * </Toolbar>
+ * <PageTitle isDirty={hasChanges}>Настройки</PageTitle>
  */
 export const PageTitle = memo(function PageTitle({
   children,

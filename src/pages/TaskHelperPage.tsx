@@ -21,6 +21,7 @@ import { Toolbar } from '../ui/Toolbar/Toolbar';
 import { Island } from '../ui/Layout/Island';
 import { Drawer } from '../ui/Layout/Drawer';
 import { Badge } from '../ui/Badge/Badge';
+import type { BadgeVariant } from '../ui/Badge/Badge';
 
 /* ---- helpers ---- */
 function formatRelativeTime(timestamp: number): string {
@@ -49,7 +50,7 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: '#6b7280',
 };
 
-const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, any> = {
+const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, BadgeVariant> = {
   critical: 'danger',
   high: 'warning',
   medium: 'info',
@@ -64,7 +65,7 @@ const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
   closed: <XCircle size={12} />,
 };
 
-const STATUS_BADGE_VARIANTS: Record<TaskStatus, any> = {
+const STATUS_BADGE_VARIANTS: Record<TaskStatus, BadgeVariant> = {
   open: 'default',
   in_progress: 'accent',
   review: 'warning',

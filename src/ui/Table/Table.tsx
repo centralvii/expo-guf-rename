@@ -38,8 +38,8 @@ export const Table = Object.assign(
 );
 
 Table.displayName = 'Table';
-(Table.Head as any).displayName = 'Table.Head';
-(Table.Body as any).displayName = 'Table.Body';
-(Table.Row as any).displayName = 'Table.Row';
-(Table.HeaderCell as any).displayName = 'Table.HeaderCell';
-(Table.Cell as any).displayName = 'Table.Cell';
+Object.assign(Table.Head, { displayName: 'Table.Head' });
+Object.assign(Table.Body, { displayName: 'Table.Body' });
+Object.assign(Table.Row, { displayName: 'Table.Row' });
+Object.assign(Table.HeaderCell, { displayName: 'Table.HeaderCell' });
+Object.assign(Table.Cell, { displayName: 'Table.Cell' });
