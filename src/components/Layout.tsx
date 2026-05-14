@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send, Database } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { refreshConnection, subscribeToConnection, type ConnectionState } from '../lib/connectionStatus';
 import { IconButton } from '../ui';
@@ -54,6 +54,12 @@ const TOOLS_NAV: NavItem[] = [
     label: 'Полигон BPMN',
     path: '/bpmn',
     icon: <Workflow size={18} />,
+  },
+  {
+    id: 'sql-inspector',
+    label: 'SQL Inspector',
+    path: '/sql-inspector',
+    icon: <Database size={18} />,
   },
 ];
 

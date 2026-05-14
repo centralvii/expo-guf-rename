@@ -1,0 +1,299 @@
+/* =========================================
+   SQL Inspector — local SQL formatter & validator
+   ========================================= */
+
+/* ---------- Grid ---------- */
+
+.sql-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.sql-grid--secondary {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+
+/* ---------- Editor ---------- */
+
+.sql-editor,
+.sql-output,
+.sql-validation,
+.sql-rollback,
+.sql-report,
+.sql-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sql-editor__textarea-wrap textarea,
+.sql-editor__textarea-wrap {
+  min-height: 280px;
+}
+
+.sql-editor textarea {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ---------- Code blocks ---------- */
+
+.sql-code-block {
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  white-space: pre;
+  overflow: auto;
+  max-height: 360px;
+  min-height: 160px;
+  line-height: 1.55;
+}
+
+.sql-code-block code {
+  font-family: inherit;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.sql-code-block--md {
+  white-space: pre-wrap;
+  max-height: 420px;
+}
+
+/* ---------- Validation metrics ---------- */
+
+.sql-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.sql-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sql-metric__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.sql-metric__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sql-metric__count {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sql-metric__breakdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- Issue list ---------- */
+
+.sql-issue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sql-issue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border-left-width: 3px;
+}
+
+.sql-issue--error {
+  border-left-color: var(--danger);
+}
+
+.sql-issue--warning {
+  border-left-color: var(--warning);
+}
+
+.sql-issue--info {
+  border-left-color: var(--accent);
+}
+
+.sql-issue__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sql-issue__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.sql-issue--error .sql-issue__icon {
+  color: var(--danger);
+}
+
+.sql-issue--warning .sql-issue__icon {
+  color: var(--warning);
+}
+
+.sql-issue--info .sql-issue__icon {
+  color: var(--accent);
+}
+
+.sql-issue__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sql-issue__message {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.sql-issue__suggestion {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.sql-issue__suggestion-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+/* ---------- Validation OK ---------- */
+
+.sql-validation__ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ---------- History ---------- */
+
+.sql-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sql-history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background var(--transition), border-color var(--transition);
+  font: inherit;
+}
+
+.sql-history-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.sql-history-item__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sql-history-item__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sql-history-item__date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.sql-history-item__title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1100px) {
+  .sql-grid,
+  .sql-grid--secondary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .sql-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sql-history-item__date {
+    margin-left: 0;
+  }
+}

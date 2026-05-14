@@ -63,6 +63,7 @@
   --theme-tool-guf: #0070f3;
   --theme-tool-bpmn: #22c55e;
   --theme-tool-api: #f59e0b;
+  --theme-tool-sql: #06b6d4;
   --theme-priority-critical: #ef4444;
   --theme-priority-high: #f97316;
   --theme-priority-medium: #3b82f6;
@@ -168,6 +169,7 @@
   --theme-tool-guf: #3d3a39;
   --theme-tool-bpmn: #2f8b57;
   --theme-tool-api: #ef6f2e;
+  --theme-tool-sql: #1f6feb;
   --theme-priority-critical: #b23a31;
   --theme-priority-high: #ef6f2e;
   --theme-priority-medium: #3d3a39;
@@ -401,6 +403,7 @@
   --theme-tool-guf: #ffffff;
   --theme-tool-bpmn: #ffffff;
   --theme-tool-api: #ffffff;
+  --theme-tool-sql: #ffffff;
 
   --theme-priority-critical: #ffffff;
   --theme-priority-high: #ffffff;

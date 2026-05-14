@@ -8,6 +8,7 @@ import {
   Workflow,
   Send,
   Settings as SettingsIcon,
+  Database,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -66,6 +67,13 @@ const MODULES: ModuleEntry[] = [
     description: 'Просмотр BPMN-диаграмм и анализ процессов.',
     path: '/bpmn',
     icon: <Workflow size={14} />,
+  },
+  {
+    id: 'sql-inspector',
+    title: 'SQL Inspector',
+    description: 'Форматирование SQL, проверка рисков, rollback-шаблоны и markdown-отчёты.',
+    path: '/sql-inspector',
+    icon: <Database size={14} />,
   },
   {
     id: 'settings',

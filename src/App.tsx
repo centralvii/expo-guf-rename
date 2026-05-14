@@ -9,6 +9,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AboutPage } from './pages/AboutPage';
 import { BpmnPage } from './pages/BpmnPage';
 import { ApiClientPage } from './pages/ApiClientPage';
+import { SqlInspectorPage } from './pages/SqlInspectorPage';
 import { useAppTheme } from './hooks/useAppTheme';
 import './styles/themes.css';
 import './App.css';
@@ -34,6 +35,7 @@ function App() {
             <Route path="task-helper/:taskId" element={<TaskDetailPage />} />
             <Route path="bpmn" element={<BpmnPage />} />
             <Route path="api-client" element={<ApiClientPage />} />
+            <Route path="sql-inspector" element={<SqlInspectorPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
