@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileDiff, History, RotateCcw } from 'lucide-react';
+import { summarizeTaskChangesDetailed } from '../lib/taskHistory';
 import { diffTaskCollections } from '../lib/taskDiff';
 import type { TaskHistoryEntry } from '../types';
 import { Badge, Button, Drawer, EmptyState, Loader, Modal } from '../ui';
 import { TaskDiffModal } from './TaskDiffModal';
+import './TaskHistoryDrawer.css';
 
 interface TaskHistoryDrawerProps {
   isOpen: boolean;
@@ -113,6 +115,9 @@ export function TaskHistoryDrawer({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {entries.map((entry) => {
                 const badge = getTypeBadge(entry.type);
+                const smartSummary = summarizeTaskChangesDetailed(entry.before, entry.after);
+                const details = smartSummary.details.slice(0, 4);
+                const hiddenDetailsCount = smartSummary.details.length - details.length;
 
                 return (
                   <div
@@ -129,7 +134,9 @@ export function TaskHistoryDrawer({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{entry.summary ?? 'Изменение задачи'}</span>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                          {entry.summary ?? smartSummary.title}
+                        </span>
                         <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{formatHistoryDate(entry.createdAt)}</span>
                       </div>
                       <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -137,6 +144,17 @@ export function TaskHistoryDrawer({
 
                     {entry.metadata?.templateName && (
                       <Badge variant="default">{entry.metadata.templateName}</Badge>
+                    )}
+
+                    {details.length > 0 && (
+                      <ul className="task-history-entry__details">
+                        {details.map((detail) => (
+                          <li key={detail}>{detail}</li>
+                        ))}
+                        {hiddenDetailsCount > 0 && (
+                          <li>{`+ ещё ${hiddenDetailsCount}`}</li>
+                        )}
+                      </ul>
                     )}
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

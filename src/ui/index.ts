@@ -23,6 +23,8 @@ export type { SelectOption, SelectSize } from './Select/Select';
 export { Table } from './Table/Table';
 export { TagChip } from './TagChip/TagChip';
 export type { TagChipProps } from './TagChip/TagChip';
+export { ThemePreviewCard, THEME_PREVIEWS } from './ThemePreviewCard/ThemePreviewCard';
+export type { ThemePreviewCardProps } from './ThemePreviewCard/ThemePreviewCard';
 export { Toolbar } from './Toolbar/Toolbar';
 export { ToolCard } from './ToolCard/ToolCard';
 export type { ToolCardProps } from './ToolCard/ToolCard';

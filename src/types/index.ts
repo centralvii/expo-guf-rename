@@ -175,7 +175,7 @@ export const TAG_COLOR_PRESETS = [
  */
 export type ConnectionMethod = 'supabase' | 'postgres' | 'neon' | 'firebase';
 export type NeonSslMode = 'require' | 'prefer' | 'disable';
-export type AppTheme = 'default' | 'nothing';
+export type AppTheme = 'default' | 'nothing' | '099';
 
 export interface AppSettings {
   theme: AppTheme;

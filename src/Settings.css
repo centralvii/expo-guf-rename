@@ -117,7 +117,8 @@
 
 .settings-row__control > .ui-input-wrapper,
 .settings-row__control > .ui-input-container,
-.settings-row__control > .ui-select {
+.settings-row__control > .ui-select,
+.settings-row__control > .theme-preview-grid {
   width: 100%;
 }
 
@@ -132,6 +133,19 @@
 .settings-row__control .settings-value,
 .settings-row__control .settings-value--mono {
   width: auto;
+}
+
+.settings-row--stacked {
+  grid-template-columns: 1fr;
+  align-items: flex-start;
+}
+
+.settings-row--stacked .settings-row__control {
+  justify-content: stretch;
+}
+
+.theme-preview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /* ---- Inline value ---- */
@@ -222,5 +236,9 @@
 
   .settings-row__control {
     justify-content: flex-start;
+  }
+
+  .theme-preview-grid {
+    grid-template-columns: 1fr;
   }
 }

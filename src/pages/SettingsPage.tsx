@@ -16,7 +16,7 @@ import type { AppTheme, ConnectionMethod, NeonSslMode } from '../types';
 
 import {
   Badge, Button, InlineError, Input, Modal, PageTitle, Panel,
-  SectionHeader, Select, Toolbar, type SelectOption,
+  SectionHeader, Select, ThemePreviewCard, THEME_PREVIEWS, Toolbar, type SelectOption,
 } from '../ui';
 
 declare const __APP_GIT_COMMIT__: string;
@@ -65,6 +65,11 @@ const THEME_OPTIONS: SelectOption<AppTheme>[] = [
     value: 'nothing',
     label: 'Nothing',
     description: 'Light technical blueprint theme',
+  },
+  {
+    value: '099',
+    label: '099',
+    description: 'Dark terminal workbench theme',
   },
 ];
 
@@ -185,7 +190,7 @@ export function SettingsPage() {
 
   const handleThemeChange = (theme: AppTheme) => {
     updateSettingsRaw({ theme });
-    notify(`Тема изменена на ${theme === 'nothing' ? 'Nothing' : 'Default'}`, 'success');
+    notify(`Тема изменена на ${THEME_PREVIEWS[theme].label}`, 'success');
   };
 
   const handleTestConnection = async () => {
@@ -555,9 +560,29 @@ export function SettingsPage() {
             title="Внешний вид"
             description="Выберите активную тему интерфейса"
           >
+            <div className="settings-row settings-row--stacked">
+              <div className="settings-row__info">
+                <span className="settings-row__label">Тема приложения</span>
+                <span className="settings-row__hint">Выберите тему кликом по превью. Изменения применяются сразу.</span>
+              </div>
+              <div className="settings-row__control">
+                <div className="theme-preview-grid">
+                  {THEME_OPTIONS.map((option) => (
+                    <ThemePreviewCard
+                      key={option.value}
+                      value={option.value}
+                      label={option.label}
+                      description={option.description ?? ''}
+                      selected={settings.theme === option.value}
+                      onSelect={handleThemeChange}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
             <SettingsRow
               label="Тема приложения"
-              hint="Применяется сразу и сохраняется локально"
+              hint="Список тем для точного выбора и keyboard-навигации"
             >
               <Select
                 value={settings.theme}

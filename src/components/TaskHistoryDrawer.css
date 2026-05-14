@@ -1,0 +1,11 @@
+.task-history-entry__details {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+  line-height: 1.5;
+}
+
+.task-history-entry__details li::marker {
+  color: var(--text-muted);
+}
