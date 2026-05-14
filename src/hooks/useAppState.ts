@@ -38,6 +38,7 @@ export interface AppState {
   updateFileCleanName: (fileId: string, cleanName: string) => void;
   setReadmeContent: (content: string) => void;
   reorderFiles: (fromIndex: number, toIndex: number) => void;
+  removeFile: (fileId: string) => void;
   exportZip: () => Promise<void>;
   clearFiles: () => void;
   hasErrors: boolean;
@@ -289,6 +290,17 @@ export function useAppState(): AppState {
     [template, startNumber, variables, recalc]
   );
 
+  // Удаление одного файла
+  const removeFile = useCallback(
+    (fileId: string) => {
+      setFiles((prev) => {
+        const filtered = prev.filter((f) => f.id !== fileId);
+        return recalc(filtered, template, startNumber, variables);
+      });
+    },
+    [template, startNumber, variables, recalc]
+  );
+
   // Экспорт ZIP
   const exportZip = useCallback(async () => {
     setIsExporting(true);
@@ -338,6 +350,7 @@ export function useAppState(): AppState {
     updateFileCleanName,
     setReadmeContent,
     reorderFiles,
+    removeFile,
     exportZip,
     clearFiles,
     hasErrors,

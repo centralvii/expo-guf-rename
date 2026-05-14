@@ -177,7 +177,7 @@
 
 .file-list-header {
   display: grid;
-  grid-template-columns: 24px 36px 1fr 1fr;
+  grid-template-columns: 24px 36px 1fr 1fr 32px;
   gap: 16px;
   padding: 12px 20px;
   background: var(--bg-muted);
@@ -197,7 +197,7 @@
 
 .file-item {
   display: grid;
-  grid-template-columns: 24px 36px 1fr 1fr;
+  grid-template-columns: 24px 36px 1fr 1fr 32px;
   align-items: center;
   gap: 16px;
   padding: 10px 20px;
@@ -253,6 +253,24 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+
+.file-item__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition), color var(--transition);
+}
+
+.file-item__delete:hover {
+  color: var(--danger);
+}
+
+.file-item:hover .file-item__delete,
+.file-item--error .file-item__delete {
+  opacity: 1;
 }
 
 .inline-edit-display {

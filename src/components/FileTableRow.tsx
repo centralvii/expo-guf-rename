@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Check, X } from 'lucide-react';
+import { GripVertical, Pencil, Check, X, Trash2 } from 'lucide-react';
 import type { FileRow } from '../types';
 
 // --- UI-Kit Imports ---
@@ -11,9 +11,10 @@ interface FileTableRowProps {
   row: FileRow;
   hasError: boolean;
   onCleanNameChange?: (fileId: string, cleanName: string) => void;
+  onRemove?: (fileId: string) => void;
 }
 
-export const FileTableRow = memo(({ row, hasError, onCleanNameChange }: FileTableRowProps) => {
+export const FileTableRow = memo(({ row, hasError, onCleanNameChange, onRemove }: FileTableRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(row.cleanName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -116,6 +117,18 @@ export const FileTableRow = memo(({ row, hasError, onCleanNameChange }: FileTabl
       <div className="file-item__new-name" title={row.newName}>
         {row.newName}
       </div>
+
+      {onRemove && (
+        <IconButton
+          className="file-item__delete"
+          variant="ghost"
+          size="sm"
+          icon={<Trash2 size={14} />}
+          label="Удалить файл"
+          onClick={() => onRemove(row.id)}
+          title="Удалить файл"
+        />
+      )}
     </div>
   );
 });

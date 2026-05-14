@@ -45,6 +45,11 @@ export const GufPackerPage = () => {
     notify('Список файлов очищен', 'error');
   };
 
+  const handleRemoveFile = (fileId: string) => {
+    state.removeFile(fileId);
+    notify('Файл удалён', 'error');
+  };
+
   const handleExportZip = async () => {
     try {
       await state.exportZip();
@@ -104,6 +109,7 @@ export const GufPackerPage = () => {
               onReorder={state.reorderFiles}
               onCleanNameChange={state.updateFileCleanName}
               onAddFiles={handleAddFiles}
+              onRemoveFile={handleRemoveFile}
             />
 
             <ReadmeEditor

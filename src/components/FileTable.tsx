@@ -26,6 +26,7 @@ interface FileTableProps {
   onReorder: (fromIndex: number, toIndex: number) => void;
   onCleanNameChange?: (fileId: string, cleanName: string) => void;
   onAddFiles?: (files: File[]) => void;
+  onRemoveFile?: (fileId: string) => void;
 }
 
 export const FileTable = memo(({
@@ -34,6 +35,7 @@ export const FileTable = memo(({
   onReorder,
   onCleanNameChange,
   onAddFiles,
+  onRemoveFile,
 }: FileTableProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -115,6 +117,7 @@ export const FileTable = memo(({
             <div className="file-list-header__center">№</div>
             <div>Оригинальное название (описание)</div>
             <div>Итоговое название файла</div>
+            <div /> {/* delete */}
           </div>
           <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
             {files.map((row) => (
@@ -123,6 +126,7 @@ export const FileTable = memo(({
                 row={row}
                 hasError={errorFileIds.has(row.id)}
                 onCleanNameChange={onCleanNameChange}
+                onRemove={onRemoveFile}
               />
             ))}
           </SortableContext>
