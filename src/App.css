@@ -1,65 +1,8 @@
 /* =========================================
-   GD Helper — Vercel-inspired Design System
+   GD Helper - Vercel-inspired Design System
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-/* ---- CSS Variables — Dark Vercel palette ---- */
-:root {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, Consolas, monospace;
-
-  /* Background scale */
-  --bg-body: #0a0a0a;
-  --bg-card: #111111;
-  --bg-card-hover: #1a1a1a;
-  --bg-muted: #171717;
-  --bg-input: #1a1a1a;
-  --bg-hover: #222222;
-  --bg-elevated: #1c1c1c;
-
-  /* Borders */
-  --border: #2a2a2a;
-  --border-hover: #404040;
-  --border-focus: #ededed;
-
-  /* Text */
-  --text-primary: #ededed;
-  --text-secondary: #a1a1a1;
-  --text-muted: #666666;
-  --text-inverse: #0a0a0a;
-
-  /* Accent — Vercel blue */
-  --accent: #0070f3;
-  --accent-hover: #0060df;
-  --accent-soft: rgba(0, 112, 243, 0.10);
-  --accent-border: rgba(0, 112, 243, 0.30);
-
-  /* Status */
-  --success: #0cce6b;
-  --success-soft: rgba(12, 206, 107, 0.10);
-  --warning: #f5a623;
-  --danger: #ee5555;
-  --danger-soft: rgba(238, 85, 85, 0.08);
-  --danger-border: rgba(238, 85, 85, 0.25);
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-drag: 0 12px 32px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 40px rgba(0, 112, 243, 0.08);
-
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
-
-  /* Transition */
-  --transition: 150ms ease;
-  --transition-slow: 300ms ease;
-}
 
 /* ---- Global Reset ---- */
 *,
@@ -105,13 +48,13 @@ a {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
   transition: background 0.2s;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* --- Animations --- */
@@ -178,21 +121,21 @@ a {
   pointer-events: none;
 }
 
-  .app-toast {
-    position: relative;
-    min-width: 300px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(16px);
-    animation: modal-card-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: auto;
-  }
+.app-toast {
+  position: relative;
+  min-width: 300px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(16px);
+  animation: modal-card-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
 
-  .app-toast--closing {
-    animation: modal-card-out 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
+.app-toast--closing {
+  animation: modal-card-out 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
 .app-toast__content {
   display: flex;

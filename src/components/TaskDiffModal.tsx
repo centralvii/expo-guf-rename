@@ -15,6 +15,7 @@ interface TaskDiffModalProps {
   onClose: () => void;
   diff: TaskCollectionDiff;
   onDiscard?: () => void;
+  title?: string;
 }
 
 function getTaskKindBadge(kind: TaskDiffEntry['kind']) {
@@ -85,6 +86,7 @@ export const TaskDiffModal = memo(function TaskDiffModal({
   onClose,
   diff,
   onDiscard,
+  title = 'Восстановленные изменения',
 }: TaskDiffModalProps) {
   const footer = (
     <>
@@ -103,13 +105,13 @@ export const TaskDiffModal = memo(function TaskDiffModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Восстановленные изменения"
+      title={title}
       icon={<FileDiff size={24} />}
       size="lg"
       footer={footer}
     >
       {!diff.hasChanges ? (
-        <p className="task-diff-empty">Нет отличий между сохранённой задачей и восстановленным черновиком.</p>
+        <p className="task-diff-empty">Нет отличий между сохранённой задачей и выбранной версией.</p>
       ) : (
         <div className="task-diff-list">
           {diff.tasks.map((task) => {

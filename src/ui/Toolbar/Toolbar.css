@@ -5,7 +5,7 @@
   gap: 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-header);
   padding: 0 20px;
   height: 64px;
   flex-shrink: 0;

@@ -1,9 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TaskItem, TaskPriority, TaskStatus, TaskTag } from '../types';
-import { createTask, deleteTaskById, listTasks, updateTaskById } from '../lib/taskRepository';
+import type {
+  TaskHistoryEntry,
+  TaskHistoryEntryMetadata,
+  TaskItem,
+  TaskPriority,
+  TaskSection,
+  TaskStatus,
+  TaskTag,
+} from '../types';
+import {
+  createTask,
+  createTaskHistoryEntry,
+  deleteTaskById,
+  listTaskHistory,
+  listTasks,
+  restoreTaskVersion,
+  updateTaskById,
+} from '../lib/taskRepository';
 
 interface UseTasksOptions {
   autoLoad?: boolean;
+}
+
+interface AddTaskOptions {
+  priority?: TaskPriority;
+  status?: TaskStatus;
+  tags?: TaskTag[];
+  sections?: TaskSection[];
+  historyMetadata?: TaskHistoryEntryMetadata;
 }
 
 export function useTasks({ autoLoad = true }: UseTasksOptions = {}) {
@@ -65,7 +89,7 @@ export function useTasks({ autoLoad = true }: UseTasksOptions = {}) {
   const addTask = useCallback(async (
     title: string,
     description: string,
-    options?: { priority?: TaskPriority; status?: TaskStatus; tags?: TaskTag[] }
+    options?: AddTaskOptions
   ) => {
     const createdTask = await createTask({
       id: crypto.randomUUID(),
@@ -74,13 +98,14 @@ export function useTasks({ autoLoad = true }: UseTasksOptions = {}) {
       priority: options?.priority ?? 'medium',
       status: options?.status ?? 'open',
       tags: options?.tags ?? [],
-      sections: [
+      sections: options?.sections ?? [
         {
           id: crypto.randomUUID(),
           title: 'Описание',
           content: '',
         },
       ],
+      historyMetadata: options?.historyMetadata,
     });
 
     setTasksState((currentTasks) => [createdTask, ...currentTasks]);
@@ -94,6 +119,7 @@ export function useTasks({ autoLoad = true }: UseTasksOptions = {}) {
       currentTasks.map((task) => (task.id === taskId ? updatedTask : task))
     );
     setError(null);
+    return updatedTask;
   }, []);
 
   const deleteTask = useCallback(async (taskId: string) => {
@@ -106,5 +132,41 @@ export function useTasks({ autoLoad = true }: UseTasksOptions = {}) {
     return tasks.find((task) => task.id === taskId);
   }, [tasks]);
 
-  return { tasks, isLoaded, error, addTask, updateTask, deleteTask, getTask, reloadTasks };
+  const getTaskHistory = useCallback(async (taskId: string) => {
+    return listTaskHistory(taskId);
+  }, []);
+
+  const recordTaskHistory = useCallback(async (entry: TaskHistoryEntry) => {
+    return createTaskHistoryEntry(entry);
+  }, []);
+
+  const restoreTask = useCallback(async (
+    taskId: string,
+    snapshot: TaskItem,
+    options?: {
+      summary?: string;
+      metadata?: TaskHistoryEntryMetadata;
+    }
+  ) => {
+    const restoredTask = await restoreTaskVersion(taskId, snapshot, options);
+    setTasksState((currentTasks) =>
+      currentTasks.map((task) => (task.id === taskId ? restoredTask : task))
+    );
+    setError(null);
+    return restoredTask;
+  }, []);
+
+  return {
+    tasks,
+    isLoaded,
+    error,
+    addTask,
+    updateTask,
+    deleteTask,
+    getTask,
+    reloadTasks,
+    getTaskHistory,
+    recordTaskHistory,
+    restoreTask,
+  };
 }

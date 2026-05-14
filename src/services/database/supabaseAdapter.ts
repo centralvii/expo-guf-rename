@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../../lib/supabase';
+import type { TaskHistoryEntry, TaskHistoryEntryMetadata } from '../../types';
 import type { TaskRepositoryAdapter, TaskItemDb } from './types';
 
 type TaskRow = {
@@ -14,7 +15,19 @@ type TaskRow = {
 };
 
 const TASKS_TABLE = 'task_helper_tasks';
+const HISTORY_TABLE = 'task_helper_history';
 let listTasksInFlight: Promise<TaskItemDb[]> | null = null;
+
+type HistoryRow = {
+  id: string;
+  task_id: string;
+  created_at: string;
+  type: TaskHistoryEntry['type'];
+  before: TaskRow | null;
+  after: TaskRow | null;
+  summary: string | null;
+  metadata: TaskHistoryEntryMetadata | null;
+};
 
 function mapTaskRow(row: TaskRow): TaskItemDb {
   return {
@@ -27,6 +40,37 @@ function mapTaskRow(row: TaskRow): TaskItemDb {
     tags: Array.isArray(row.tags) ? row.tags : [],
     createdAt: Date.parse(row.created_at),
     updatedAt: Date.parse(row.updated_at),
+  };
+}
+
+function toTaskRowSnapshot(task: TaskItemDb | null) {
+  if (!task) {
+    return null;
+  }
+
+  return {
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    sections: task.sections,
+    priority: task.priority,
+    status: task.status,
+    tags: task.tags,
+    created_at: new Date(task.createdAt).toISOString(),
+    updated_at: new Date(task.updatedAt).toISOString(),
+  };
+}
+
+function mapHistoryRow(row: HistoryRow): TaskHistoryEntry {
+  return {
+    id: row.id,
+    taskId: row.task_id,
+    createdAt: Date.parse(row.created_at),
+    type: row.type,
+    before: row.before ? mapTaskRow(row.before) : null,
+    after: row.after ? mapTaskRow(row.after) : null,
+    summary: row.summary ?? undefined,
+    metadata: row.metadata ?? undefined,
   };
 }
 
@@ -121,5 +165,38 @@ export const SupabaseTaskAdapter: TaskRepositoryAdapter = {
     const supabase = getSupabaseClient();
     const { error } = await supabase.from(TASKS_TABLE).delete().eq('id', taskId);
     if (error) throw error;
+  },
+
+  async listTaskHistory(taskId) {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from(HISTORY_TABLE)
+      .select('id, task_id, created_at, type, before, after, summary, metadata')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []).map((row) => mapHistoryRow(row as HistoryRow));
+  },
+
+  async createTaskHistoryEntry(entry) {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from(HISTORY_TABLE)
+      .insert({
+        id: entry.id,
+        task_id: entry.taskId,
+        created_at: new Date(entry.createdAt).toISOString(),
+        type: entry.type,
+        before: toTaskRowSnapshot(entry.before),
+        after: toTaskRowSnapshot(entry.after),
+        summary: entry.summary ?? null,
+        metadata: entry.metadata ?? null,
+      })
+      .select('id, task_id, created_at, type, before, after, summary, metadata')
+      .single();
+
+    if (error) throw error;
+    return mapHistoryRow(data as HistoryRow);
   },
 };

@@ -10,9 +10,10 @@ import remarkGfm from 'remark-gfm';
 import { useTasks } from '../hooks/useTasks';
 import { useToast } from '../hooks/useToast';
 import { TaskDiffModal } from '../components/TaskDiffModal';
+import { TaskHistoryDrawer } from '../components/TaskHistoryDrawer';
 import { TaskTagPicker } from '../components/TaskTagPicker';
 import { diffTaskCollections } from '../lib/taskDiff';
-import type { TaskItem, TaskSection, TaskPriority, TaskStatus, TaskTag } from '../types';
+import type { TaskHistoryEntry, TaskItem, TaskSection, TaskPriority, TaskStatus, TaskTag } from '../types';
 import {
   TASK_PRIORITY_LABELS, TASK_STATUS_LABELS
 } from '../types';
@@ -111,15 +112,18 @@ export function TaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const { notify } = useToast();
-  const { isLoaded, error, getTask, updateTask, deleteTask } = useTasks();
+  const { isLoaded, error, getTask, updateTask, deleteTask, getTaskHistory, restoreTask } = useTasks();
 
   const task = taskId ? getTask(taskId) : undefined;
   const [isEditing, setIsEditing] = useState(false);
   const [hasDraftWarning, setHasDraftWarning] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDraftDiffModal, setShowDraftDiffModal] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<TaskHistoryEntry[]>([]);
 
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
@@ -224,7 +228,7 @@ export function TaskDetailPage() {
     if (!taskId || isSaving) return;
     setIsSaving(true);
     try {
-      await updateTask(taskId, {
+      const updatedTask = await updateTask(taskId, {
         title: editTitle,
         description: editDesc,
         sections: editSections,
@@ -232,15 +236,7 @@ export function TaskDetailPage() {
         status: editStatus,
         tags: editTags,
       });
-      clearRecoveredDraftState({
-        ...task,
-        title: editTitle,
-        description: editDesc,
-        sections: editSections,
-        priority: editPriority,
-        status: editStatus,
-        tags: editTags,
-      });
+      clearRecoveredDraftState(updatedTask);
       setIsEditing(false);
       notify('\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B');
     } catch {
@@ -263,6 +259,49 @@ export function TaskDetailPage() {
 
   const updateSection = (id: string, updates: Partial<TaskSection>) => {
     setEditSections(editSections.map((s) => (s.id === id ? { ...s, ...updates } : s)));
+  };
+
+  const loadHistory = async () => {
+    if (!taskId) {
+      return;
+    }
+
+    setIsHistoryLoading(true);
+    try {
+      const entries = await getTaskHistory(taskId);
+      setHistoryEntries(entries);
+    } catch (historyError) {
+      console.error('[task-history] Failed to load history', historyError);
+      notify('Не удалось загрузить историю задачи', 'error');
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
+  const handleOpenHistory = async () => {
+    setShowHistoryDrawer(true);
+    await loadHistory();
+  };
+
+  const handleRestoreHistoryEntry = async (entry: TaskHistoryEntry) => {
+    if (!taskId || !entry.after) {
+      return;
+    }
+
+    try {
+      const restoredTask = await restoreTask(taskId, entry.after, {
+        summary: `Восстановлена версия от ${new Date(entry.createdAt).toLocaleString('ru-RU')}`,
+        metadata: entry.metadata,
+      });
+      clearRecoveredDraftState(restoredTask);
+      setIsEditing(false);
+      setShowHistoryDrawer(false);
+      notify('Версия задачи восстановлена', 'success');
+      await loadHistory();
+    } catch (restoreError) {
+      console.error('[task-history] Failed to restore task version', restoreError);
+      notify('Не удалось восстановить версию', 'error');
+    }
   };
 
   const draftDiff = diffTaskCollections(
@@ -297,6 +336,9 @@ export function TaskDetailPage() {
               <>
                 <Button variant="secondary" size="sm" icon={<Copy size={16} />} onClick={handleCopyMarkdown} title="Копировать Markdown" />
                 <Button variant="secondary" size="sm" icon={<Download size={16} />} onClick={handleDownloadMarkdown} title="Скачать Markdown" />
+                <Button variant="secondary" size="sm" onClick={handleOpenHistory}>
+                  История
+                </Button>
                 <Toolbar.Divider />
                 <Button variant="secondary" size="sm" icon={<Edit2 size={16} />} onClick={handleStartEditing}>
                   Редактировать
@@ -461,6 +503,15 @@ export function TaskDetailPage() {
           handleDiscardDraft();
           setShowDraftDiffModal(false);
         }}
+      />
+
+      <TaskHistoryDrawer
+        isOpen={showHistoryDrawer}
+        onClose={() => setShowHistoryDrawer(false)}
+        entries={historyEntries}
+        isLoading={isHistoryLoading}
+        taskTitle={task.title}
+        onRestore={handleRestoreHistoryEntry}
       />
     </div>
   );

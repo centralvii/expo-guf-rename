@@ -34,13 +34,13 @@
 
 .ui-island ::-webkit-scrollbar-thumb,
 .ui-island::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 
 .ui-island ::-webkit-scrollbar-thumb:hover,
 .ui-island::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 .ui-island ::-webkit-scrollbar-corner,
@@ -52,7 +52,7 @@
 .ui-island,
 .ui-island * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--scrollbar-thumb-firefox) transparent;
 }
 
 /* =========================================
@@ -60,8 +60,9 @@
    ========================================= */
 
 .ui-page-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--text-subheading);
+  font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-title);
   color: var(--text-primary);
   margin: 0;
   padding-left: 4px;

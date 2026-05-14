@@ -1,23 +1,36 @@
-import { useState, useMemo, type FormEvent } from 'react';
+import { useState, useMemo, useEffect, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus, Search, Calendar, ChevronRight, FileText, AlertTriangle,
   X, Tag, Flame, ArrowUp, ArrowRight, ArrowDown, Circle,
-  Clock, CheckCircle2, GitPullRequest, XCircle, Filter, SlidersHorizontal
+  Clock, CheckCircle2, GitPullRequest, XCircle, Filter, SlidersHorizontal,
 } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
 import { TaskTagPicker } from '../components/TaskTagPicker';
-import type { TaskPriority, TaskStatus, TaskTag } from '../types';
+import { createTaskPayloadFromTemplate, getEmptyTaskTemplate, listTaskTemplates } from '../lib/taskTemplates';
+import type { TaskPriority, TaskSection, TaskStatus, TaskTag, TaskTemplate } from '../types';
 import {
-  TASK_PRIORITY_LABELS, TASK_STATUS_LABELS
+  TASK_PRIORITY_LABELS,
+  TASK_STATUS_LABELS,
 } from '../types';
-
-// --- UI-Kit Imports ---
-import { Badge, Button, Drawer, IconButton, Input, Island, Loader, TagChip, Textarea, Toolbar } from '../ui';
+import {
+  Badge,
+  Button,
+  Drawer,
+  IconButton,
+  Input,
+  Island,
+  Loader,
+  SegmentedControl,
+  Select,
+  TagChip,
+  Textarea,
+  Toolbar,
+  type SelectOption,
+} from '../ui';
 import type { BadgeVariant } from '../ui';
 
-/* ---- helpers ---- */
 function formatRelativeTime(timestamp: number): string {
   const diff = Date.now() - timestamp;
   const min = Math.floor(diff / 60_000);
@@ -35,13 +48,6 @@ const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
   high: <ArrowUp size={12} />,
   medium: <ArrowRight size={12} />,
   low: <ArrowDown size={12} />,
-};
-
-const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#3b82f6',
-  low: '#6b7280',
 };
 
 const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, BadgeVariant> = {
@@ -67,40 +73,77 @@ const STATUS_BADGE_VARIANTS: Record<TaskStatus, BadgeVariant> = {
   closed: 'default',
 };
 
-const STATUS_COLORS: Record<TaskStatus, string> = {
-  open: '#6b7280',
-  in_progress: '#3b82f6',
-  review: '#a855f7',
-  done: '#22c55e',
-  closed: '#374151',
-};
-
-/* ---- Create Drawer Implementation ---- */
 interface CreateDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (title: string, desc: string, priority: TaskPriority, status: TaskStatus, tags: TaskTag[]) => Promise<void>;
+  onCreate: (
+    title: string,
+    desc: string,
+    priority: TaskPriority,
+    status: TaskStatus,
+    tags: TaskTag[],
+    sections: TaskSection[],
+    template: TaskTemplate
+  ) => Promise<void>;
 }
 
 function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
+  const templates = useMemo(() => listTaskTemplates(), []);
+  const emptyTemplate = useMemo(() => getEmptyTaskTemplate(), []);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(emptyTemplate.id);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>('open');
   const [tags, setTags] = useState<TaskTag[]>([]);
+  const [sections, setSections] = useState<TaskSection[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const templateOptions = useMemo<SelectOption<string>[]>(
+    () => templates.map((template) => ({
+      value: template.id,
+      label: template.name,
+      description: template.description,
+    })),
+    [templates]
+  );
+
+  const selectedTemplate = useMemo(
+    () => templates.find((template) => template.id === selectedTemplateId) ?? emptyTemplate,
+    [selectedTemplateId, templates, emptyTemplate]
+  );
+
+  const applyTemplate = (template: TaskTemplate) => {
+    const payload = createTaskPayloadFromTemplate(template, { id: crypto.randomUUID() });
+    setTitle(payload.title);
+    setDesc(payload.description);
+    setPriority(payload.priority);
+    setStatus(payload.status);
+    setTags(payload.tags);
+    setSections(payload.sections);
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    applyTemplate(selectedTemplate);
+  }, [isOpen, selectedTemplate]);
+
+  const resetForm = () => {
+    setSelectedTemplateId(emptyTemplate.id);
+    applyTemplate(emptyTemplate);
+  };
+
+  const handleSubmit = async (e?: FormEvent) => {
+    e?.preventDefault();
     if (!title.trim() || isSubmitting) return;
+
     setIsSubmitting(true);
     try {
-      await onCreate(title.trim(), desc.trim(), priority, status, tags);
-      setTitle('');
-      setDesc('');
-      setPriority('medium');
-      setStatus('open');
-      setTags([]);
+      await onCreate(title.trim(), desc.trim(), priority, status, tags, sections, selectedTemplate);
+      resetForm();
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -108,21 +151,29 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
   };
 
   return (
-    <Drawer 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Drawer
+      isOpen={isOpen}
+      onClose={onClose}
       title="Новая задача"
-      footer={
+      footer={(
         <>
           <Button size="sm" onClick={onClose} disabled={isSubmitting}>Отмена</Button>
-          <Button variant="primary" size="sm" onClick={handleSubmit} isLoading={isSubmitting} disabled={!title.trim()}>
+          <Button variant="primary" size="sm" onClick={() => void handleSubmit()} isLoading={isSubmitting} disabled={!title.trim()}>
             Создать задачу
           </Button>
         </>
-      }
+      )}
     >
       <form className="task-drawer__form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <Input 
+        <Select
+          label="Шаблон"
+          value={selectedTemplateId}
+          onChange={setSelectedTemplateId}
+          options={templateOptions}
+          fullWidth
+        />
+
+        <Input
           label="Название"
           required
           value={title}
@@ -132,7 +183,7 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
           autoFocus
         />
 
-        <Textarea 
+        <Textarea
           label="Описание"
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
@@ -142,38 +193,30 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
 
         <div className="form-group">
           <label className="ui-label">Приоритет</label>
-          <div className="select-group" style={{ marginTop: '8px' }}>
-            {(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={`select-chip ${priority === p ? 'select-chip--active' : ''}`}
-                style={{ '--chip-color': PRIORITY_COLORS[p] } as React.CSSProperties}
-                onClick={() => setPriority(p)}
-              >
-                {PRIORITY_ICONS[p]}
-                {TASK_PRIORITY_LABELS[p]}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            size="sm"
+            value={priority}
+            onChange={setPriority}
+            options={(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map((currentPriority) => ({
+              value: currentPriority,
+              label: <>{PRIORITY_ICONS[currentPriority]} {TASK_PRIORITY_LABELS[currentPriority]}</>,
+            }))}
+            style={{ marginTop: '8px' }}
+          />
         </div>
 
         <div className="form-group">
           <label className="ui-label">Статус</label>
-          <div className="select-group" style={{ marginTop: '8px' }}>
-            {(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                className={`select-chip ${status === s ? 'select-chip--active' : ''}`}
-                style={{ '--chip-color': STATUS_COLORS[s] } as React.CSSProperties}
-                onClick={() => setStatus(s)}
-              >
-                {STATUS_ICONS[s]}
-                {TASK_STATUS_LABELS[s]}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            size="sm"
+            value={status}
+            onChange={setStatus}
+            options={(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map((currentStatus) => ({
+              value: currentStatus,
+              label: <>{STATUS_ICONS[currentStatus]} {TASK_STATUS_LABELS[currentStatus]}</>,
+            }))}
+            style={{ marginTop: '8px' }}
+          />
         </div>
 
         <div className="form-group">
@@ -182,6 +225,17 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
             <TaskTagPicker selectedTags={tags} onChange={setTags} />
           </div>
         </div>
+
+        {sections.length > 0 && (
+          <div className="form-group">
+            <label className="ui-label">Разделы шаблона</label>
+            <div className="task-card__tags" style={{ marginTop: '8px' }}>
+              {sections.map((section) => (
+                <TagChip key={section.id} size="sm">{section.title}</TagChip>
+              ))}
+            </div>
+          </div>
+        )}
       </form>
     </Drawer>
   );
@@ -200,8 +254,10 @@ export function TaskHelperPage() {
   const allTags = useMemo(() => {
     const tagMap = new Map<string, TaskTag>();
     tasks.forEach((task) => {
-      task.tags?.forEach((tag) => {
-        if (!tagMap.has(tag.name)) tagMap.set(tag.name, tag);
+      task.tags?.forEach((taskTag) => {
+        if (!tagMap.has(taskTag.name)) {
+          tagMap.set(taskTag.name, taskTag);
+        }
       });
     });
     return Array.from(tagMap.values());
@@ -210,14 +266,16 @@ export function TaskHelperPage() {
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((task) => {
-        const q = searchQuery.toLowerCase();
-        if (q && !task.title.toLowerCase().includes(q) && !task.description.toLowerCase().includes(q)) return false;
+        const query = searchQuery.toLowerCase();
+        if (query && !task.title.toLowerCase().includes(query) && !task.description.toLowerCase().includes(query)) {
+          return false;
+        }
         if (filterStatus !== 'all' && task.status !== filterStatus) return false;
         if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
-        if (filterTag !== 'all' && !task.tags?.some((t) => t.name === filterTag)) return false;
+        if (filterTag !== 'all' && !task.tags?.some((taskTag) => taskTag.name === filterTag)) return false;
         return true;
       })
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+      .sort((left, right) => right.updatedAt - left.updatedAt);
   }, [tasks, searchQuery, filterStatus, filterPriority, filterTag]);
 
   const hasActiveFilters = filterStatus !== 'all' || filterPriority !== 'all' || filterTag !== 'all';
@@ -227,10 +285,21 @@ export function TaskHelperPage() {
     desc: string,
     priority: TaskPriority,
     status: TaskStatus,
-    tags: TaskTag[]
+    tags: TaskTag[],
+    sections: TaskSection[],
+    template: TaskTemplate
   ) => {
     try {
-      await addTask(title, desc, { priority, status, tags });
+      await addTask(title, desc, {
+        priority,
+        status,
+        tags,
+        sections,
+        historyMetadata: {
+          templateId: template.id,
+          templateName: template.name,
+        },
+      });
       notify('Задача создана');
     } catch (createError) {
       notify('Не удалось создать задачу', 'error');
@@ -253,11 +322,11 @@ export function TaskHelperPage() {
     return (
       <div className="tool-page anim-fade-in">
         <div className="tool-page__content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', textAlign: 'center' }}>
-          <Island flex={false} style={{ padding: '32px', maxWidth: '400px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <AlertTriangle size={48} color="#ef4444" style={{ marginBottom: '16px' }} />
+          <Island flex={false} style={{ padding: '32px', maxWidth: '400px', border: '1px solid var(--danger-border)' }}>
+            <AlertTriangle size={48} color="var(--danger)" style={{ marginBottom: '16px' }} />
             <h3 style={{ marginBottom: '8px' }}>Ошибка подключения</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>{error}</p>
-            <Button variant="primary" size="sm" onClick={() => window.location.href = '/settings'}>
+            <Button variant="primary" size="sm" onClick={() => { window.location.href = '/settings'; }}>
               Перейти в настройки
             </Button>
           </Island>
@@ -270,7 +339,6 @@ export function TaskHelperPage() {
     <>
       <div className="tool-page anim-fade-in">
         <div className="tool-page__content tool-page__content--auto">
-          
           <Toolbar>
             <Toolbar.Left style={{ flex: 1 }}>
               <div style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
@@ -288,7 +356,7 @@ export function TaskHelperPage() {
                     className="search-clear"
                     onClick={() => setSearchQuery('')}
                     icon={<X size={14} />}
-                    label="Clear search"
+                    label="Очистить поиск"
                   />
                 )}
               </div>
@@ -310,7 +378,6 @@ export function TaskHelperPage() {
             </Toolbar.Right>
           </Toolbar>
 
-          {/* Filter bar */}
           {showFilters && (
             <Island flex={false} className="task-filters anim-fade-in" style={{ padding: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -318,9 +385,9 @@ export function TaskHelperPage() {
                   <span className="task-filters__label"><Filter size={12} /> Статус</span>
                   <div className="task-filters__chips">
                     <button className={`filter-chip ${filterStatus === 'all' ? 'filter-chip--active' : ''}`} onClick={() => setFilterStatus('all')}>Все</button>
-                    {(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map((s) => (
-                      <button key={s} className={`filter-chip ${filterStatus === s ? 'filter-chip--active' : ''}`} onClick={() => setFilterStatus(s)}>
-                        {STATUS_ICONS[s]} {TASK_STATUS_LABELS[s]}
+                    {(['open', 'in_progress', 'review', 'done', 'closed'] as TaskStatus[]).map((currentStatus) => (
+                      <button key={currentStatus} className={`filter-chip ${filterStatus === currentStatus ? 'filter-chip--active' : ''}`} onClick={() => setFilterStatus(currentStatus)}>
+                        {STATUS_ICONS[currentStatus]} {TASK_STATUS_LABELS[currentStatus]}
                       </button>
                     ))}
                   </div>
@@ -330,9 +397,9 @@ export function TaskHelperPage() {
                   <span className="task-filters__label"><Flame size={12} /> Приоритет</span>
                   <div className="task-filters__chips">
                     <button className={`filter-chip ${filterPriority === 'all' ? 'filter-chip--active' : ''}`} onClick={() => setFilterPriority('all')}>Все</button>
-                    {(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map((p) => (
-                      <button key={p} className={`filter-chip ${filterPriority === p ? 'filter-chip--active' : ''}`} onClick={() => setFilterPriority(p)}>
-                        {PRIORITY_ICONS[p]} {TASK_PRIORITY_LABELS[p]}
+                    {(['critical', 'high', 'medium', 'low'] as TaskPriority[]).map((currentPriority) => (
+                      <button key={currentPriority} className={`filter-chip ${filterPriority === currentPriority ? 'filter-chip--active' : ''}`} onClick={() => setFilterPriority(currentPriority)}>
+                        {PRIORITY_ICONS[currentPriority]} {TASK_PRIORITY_LABELS[currentPriority]}
                       </button>
                     ))}
                   </div>
@@ -348,14 +415,14 @@ export function TaskHelperPage() {
                       >
                         Все
                       </button>
-                      {allTags.map((tag) => (
+                      {allTags.map((taskTag) => (
                         <button
-                          key={tag.name}
-                          className={`filter-chip ${filterTag === tag.name ? 'filter-chip--active' : ''}`}
-                          style={{ '--chip-color': tag.color } as React.CSSProperties}
-                          onClick={() => setFilterTag(tag.name)}
+                          key={taskTag.name}
+                          className={`filter-chip ${filterTag === taskTag.name ? 'filter-chip--active' : ''}`}
+                          style={{ '--chip-color': taskTag.color } as React.CSSProperties}
+                          onClick={() => setFilterTag(taskTag.name)}
                         >
-                          {tag.name}
+                          {taskTag.name}
                         </button>
                       ))}
                     </div>
@@ -363,7 +430,16 @@ export function TaskHelperPage() {
                 )}
 
                 {hasActiveFilters && (
-                  <Button variant="ghost" size="sm" icon={<X size={12} />} onClick={() => { setFilterStatus('all'); setFilterPriority('all'); setFilterTag('all'); }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon={<X size={12} />}
+                    onClick={() => {
+                      setFilterStatus('all');
+                      setFilterPriority('all');
+                      setFilterTag('all');
+                    }}
+                  >
                     Сбросить фильтры
                   </Button>
                 )}
@@ -373,7 +449,7 @@ export function TaskHelperPage() {
 
           <div className="task-stats" style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
             <span className="task-stats__item">Всего: <strong>{tasks.length}</strong></span>
-            <span className="task-stats__item" style={{ marginLeft: '16px' }}>В работе: <strong>{tasks.filter((t) => t.status === 'in_progress').length}</strong></span>
+            <span className="task-stats__item" style={{ marginLeft: '16px' }}>В работе: <strong>{tasks.filter((task) => task.status === 'in_progress').length}</strong></span>
           </div>
 
           <div className="task-list custom-scrollbar">
@@ -399,9 +475,9 @@ export function TaskHelperPage() {
                     {task.description && <p className="task-card__desc">{task.description}</p>}
                     {task.tags && task.tags.length > 0 && (
                       <div className="task-card__tags">
-                        {task.tags.map((tag) => (
-                          <TagChip key={tag.id} color={tag.color} size="sm">
-                            {tag.name}
+                        {task.tags.map((taskTag) => (
+                          <TagChip key={taskTag.id} color={taskTag.color} size="sm">
+                            {taskTag.name}
                           </TagChip>
                         ))}
                       </div>

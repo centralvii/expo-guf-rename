@@ -26,13 +26,13 @@ const REQUEST_TABS: { value: RequestTab; label: string }[] = [
 ];
 
 const METHOD_COLORS: Record<HttpMethod, string> = {
-  GET: '#22c55e',
-  POST: '#f59e0b',
-  PUT: '#3b82f6',
-  PATCH: '#a855f7',
-  DELETE: '#ef4444',
-  HEAD: '#6b7280',
-  OPTIONS: '#06b6d4',
+  GET: 'var(--theme-method-get)',
+  POST: 'var(--theme-method-post)',
+  PUT: 'var(--theme-method-put)',
+  PATCH: 'var(--theme-method-patch)',
+  DELETE: 'var(--theme-method-delete)',
+  HEAD: 'var(--theme-method-head)',
+  OPTIONS: 'var(--theme-method-options)',
 };
 
 const METHOD_OPTIONS: SelectOption<HttpMethod>[] = HTTP_METHODS.map((m) => ({

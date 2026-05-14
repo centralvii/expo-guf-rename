@@ -1,5 +1,5 @@
 /* =========================================
-   ToolCard — unified card for Dashboard & About
+   ToolCard - unified card for Dashboard & About
    ========================================= */
 
 .ui-tool-card {
@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 24px;
+  padding: 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -16,7 +16,7 @@
   transition: transform var(--transition-slow), border-color var(--transition),
     background var(--transition), box-shadow var(--transition-slow);
   cursor: pointer;
-  min-height: 200px; /* Минимальная высота для консистентности */
+  min-height: 200px;
 }
 
 .ui-tool-card:focus-visible {
@@ -25,7 +25,6 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-/* Gradient accent line at top — uses --tool-color if provided */
 .ui-tool-card::before {
   content: '';
   position: absolute;
@@ -43,7 +42,6 @@
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Radial spotlight on hover */
 .ui-tool-card__glow {
   position: absolute;
   top: -80px;
@@ -66,7 +64,7 @@
   background: var(--bg-card-hover);
   transform: translateY(-4px);
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.3),
+    var(--shadow-panel-hover),
     0 0 1px color-mix(in srgb, var(--tool-color, var(--accent)) 30%, transparent);
 }
 
@@ -77,8 +75,6 @@
 .ui-tool-card:hover .ui-tool-card__glow {
   opacity: 1;
 }
-
-/* ---------- Header ---------- */
 
 .ui-tool-card__header {
   display: flex;
@@ -108,23 +104,19 @@
   box-shadow: 0 0 16px color-mix(in srgb, var(--tool-color, var(--accent)) 12%, transparent);
 }
 
-/* ---------- Content ---------- */
-
 .ui-tool-card__title {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-heading);
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking-title);
 }
 
 .ui-tool-card__desc {
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   color: var(--text-secondary);
   line-height: 1.65;
-  flex: 1; /* Занимает оставшееся пространство */
+  flex: 1;
 }
-
-/* ---------- Features (optional) ---------- */
 
 .ui-tool-card__features {
   list-style: none;
@@ -133,14 +125,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  /* Убираем flex: 1 отсюда, так как теперь description растягивается */
 }
 
 .ui-tool-card__features li {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: var(--text-body-sm);
   color: var(--text-secondary);
 }
 
@@ -150,19 +141,17 @@
   opacity: 0.75;
 }
 
-/* ---------- Footer ---------- */
-
 .ui-tool-card__footer {
   padding-top: 6px;
-  margin-top: auto; /* Прижимает footer к низу карточки */
+  margin-top: auto;
 }
 
 .ui-tool-card__link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-ui);
   color: var(--tool-color, var(--accent));
   transition: gap var(--transition-slow);
 }
@@ -170,8 +159,6 @@
 .ui-tool-card:hover .ui-tool-card__link {
   gap: 10px;
 }
-
-/* ---------- Disabled state ---------- */
 
 .ui-tool-card--disabled {
   cursor: default;
@@ -205,15 +192,11 @@
   color: var(--text-muted);
 }
 
-/* ---------- Responsive ---------- */
-
 @media (max-width: 640px) {
   .ui-tool-card {
     padding: 20px;
   }
 }
-
-/* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .ui-tool-card {

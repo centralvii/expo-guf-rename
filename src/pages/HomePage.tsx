@@ -21,7 +21,7 @@ const TOOLS: ToolCardProps[] = [
     path: '/task-helper',
     badge: 'Готово',
     badgeVariant: 'success',
-    accentColor: '#7928ca',
+    accentColor: 'var(--theme-tool-task)',
   },
   {
     id: 'guf-packer',
@@ -31,7 +31,7 @@ const TOOLS: ToolCardProps[] = [
     path: '/guf-packer',
     badge: 'Готово',
     badgeVariant: 'success',
-    accentColor: '#0070f3',
+    accentColor: 'var(--theme-tool-guf)',
   },
   {
     id: 'bpmn',
@@ -41,7 +41,7 @@ const TOOLS: ToolCardProps[] = [
     path: '/bpmn',
     badge: 'Готово',
     badgeVariant: 'success',
-    accentColor: '#22c55e',
+    accentColor: 'var(--theme-tool-bpmn)',
   },
   {
     id: 'api-client',
@@ -51,17 +51,17 @@ const TOOLS: ToolCardProps[] = [
     path: '/api-client',
     badge: 'Готово',
     badgeVariant: 'success',
-    accentColor: '#f59e0b',
+    accentColor: 'var(--theme-tool-api)',
   },
 ];
 
 /* ---- Constants ---- */
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#3b82f6',
-  low: '#6b7280',
+  critical: 'var(--theme-priority-critical)',
+  high: 'var(--theme-priority-high)',
+  medium: 'var(--theme-priority-medium)',
+  low: 'var(--theme-priority-low)',
 };
 
 const PRIORITY_ICONS: Record<TaskPriority, ReactNode> = {
@@ -80,11 +80,11 @@ const STATUS_ICONS: Record<TaskStatus, ReactNode> = {
 };
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
-  open: '#6b7280',
-  in_progress: '#3b82f6',
-  review: '#a855f7',
-  done: '#22c55e',
-  closed: '#374151',
+  open: 'var(--theme-status-open)',
+  in_progress: 'var(--theme-status-in-progress)',
+  review: 'var(--theme-status-review)',
+  done: 'var(--theme-status-done)',
+  closed: 'var(--theme-status-closed)',
 };
 
 /* ---- Helpers ---- */

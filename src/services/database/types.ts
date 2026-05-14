@@ -1,4 +1,6 @@
 import type {
+  TaskHistoryEntry,
+  TaskHistoryEntryMetadata,
   TaskPriority,
   TaskStatus,
   TaskTag,
@@ -13,6 +15,7 @@ export interface TaskInsert {
   priority: TaskPriority;
   status: TaskStatus;
   tags: TaskTag[];
+  historyMetadata?: TaskHistoryEntryMetadata;
 }
 
 export type TaskUpdate = Partial<
@@ -36,5 +39,7 @@ export interface TaskRepositoryAdapter {
   createTask(task: TaskInsert): Promise<TaskItemDb>;
   updateTaskById(taskId: string, updates: TaskUpdate): Promise<TaskItemDb>;
   deleteTaskById(taskId: string): Promise<void>;
+  listTaskHistory(taskId: string): Promise<TaskHistoryEntry[]>;
+  createTaskHistoryEntry(entry: TaskHistoryEntry): Promise<TaskHistoryEntry>;
   checkConnection(): Promise<boolean>;
 }

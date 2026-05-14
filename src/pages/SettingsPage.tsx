@@ -12,7 +12,7 @@ import {
 } from '../lib/connectionStatus';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
-import type { ConnectionMethod, NeonSslMode } from '../types';
+import type { AppTheme, ConnectionMethod, NeonSslMode } from '../types';
 
 import {
   Badge, Button, InlineError, Input, Modal, PageTitle, Panel,
@@ -53,6 +53,19 @@ const NEON_SSL_OPTIONS: SelectOption<NeonSslMode>[] = [
   { value: 'require', label: 'require' },
   { value: 'prefer', label: 'prefer' },
   { value: 'disable', label: 'disable' },
+];
+
+const THEME_OPTIONS: SelectOption<AppTheme>[] = [
+  {
+    value: 'default',
+    label: 'Default',
+    description: 'Current dark theme',
+  },
+  {
+    value: 'nothing',
+    label: 'Nothing',
+    description: 'Light technical blueprint theme',
+  },
 ];
 
 const CONNECTION_TEST_TIMEOUT_MS = 8_000;
@@ -137,15 +150,42 @@ export function SettingsPage() {
     return unsubscribe;
   }, []);
 
+  const connectionKeys: (keyof typeof settings)[] = [
+    'connectionMethod',
+    'supabaseUrl',
+    'supabaseAnonKey',
+    'postgresUrl',
+    'neonApiUrl',
+    'neonProjectName',
+    'neonDatabaseName',
+    'neonSslMode',
+    'firebaseApiKey',
+    'firebaseAuthDomain',
+    'firebaseProjectId',
+    'firebaseStorageBucket',
+    'firebaseMessagingSenderId',
+    'firebaseAppId',
+    'firebaseMeasurementId',
+  ];
+
   const updateSettings = (updates: Partial<typeof settings>) => {
     updateSettingsRaw(updates);
-    resetSupabaseClient();
-    resetFirebaseClient();
-    invalidateConnection();
+    const shouldRefreshConnection = connectionKeys.some((key) => key in updates);
+
+    if (shouldRefreshConnection) {
+      resetSupabaseClient();
+      resetFirebaseClient();
+      invalidateConnection();
+    }
 
     if (updates.connectionMethod) {
       notify(`Метод подключения изменён на ${updates.connectionMethod}`);
     }
+  };
+
+  const handleThemeChange = (theme: AppTheme) => {
+    updateSettingsRaw({ theme });
+    notify(`Тема изменена на ${theme === 'nothing' ? 'Nothing' : 'Default'}`, 'success');
   };
 
   const handleTestConnection = async () => {
@@ -508,6 +548,24 @@ export function SettingsPage() {
                 </div>
               </>
             )}
+          </SettingsSection>
+
+          <SettingsSection
+            icon={<Info size={18} />}
+            title="Внешний вид"
+            description="Выберите активную тему интерфейса"
+          >
+            <SettingsRow
+              label="Тема приложения"
+              hint="Применяется сразу и сохраняется локально"
+            >
+              <Select
+                value={settings.theme}
+                onChange={handleThemeChange}
+                options={THEME_OPTIONS}
+                size="sm"
+              />
+            </SettingsRow>
           </SettingsSection>
 
           <SettingsSection

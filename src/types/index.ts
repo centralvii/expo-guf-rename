@@ -108,6 +108,42 @@ export interface TaskItem {
   sections: TaskSection[];
 }
 
+export interface TaskTemplateSection {
+  title: string;
+  content: string;
+}
+
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  titleTemplate: string;
+  descriptionTemplate: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  tags: TaskTag[];
+  sections: TaskTemplateSection[];
+  isSystem?: boolean;
+}
+
+export type TaskHistoryEntryType = 'created' | 'updated' | 'restored';
+
+export interface TaskHistoryEntryMetadata {
+  templateId?: string;
+  templateName?: string;
+}
+
+export interface TaskHistoryEntry {
+  id: string;
+  taskId: string;
+  createdAt: number;
+  type: TaskHistoryEntryType;
+  before: TaskItem | null;
+  after: TaskItem | null;
+  summary?: string;
+  metadata?: TaskHistoryEntryMetadata;
+}
+
 export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
   critical: 'Критический',
   high: 'Высокий',
@@ -139,8 +175,10 @@ export const TAG_COLOR_PRESETS = [
  */
 export type ConnectionMethod = 'supabase' | 'postgres' | 'neon' | 'firebase';
 export type NeonSslMode = 'require' | 'prefer' | 'disable';
+export type AppTheme = 'default' | 'nothing';
 
 export interface AppSettings {
+  theme: AppTheme;
   connectionMethod: ConnectionMethod;
   supabaseUrl: string;
   supabaseAnonKey: string;

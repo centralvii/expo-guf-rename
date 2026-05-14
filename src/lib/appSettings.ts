@@ -1,8 +1,10 @@
 import type { AppSettings } from '../types';
 
 export const SETTINGS_KEY = 'gd-helper-settings';
+export const SETTINGS_EVENT = 'gd-helper-settings-change';
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  theme: 'default',
   connectionMethod: 'supabase',
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
@@ -37,4 +39,5 @@ export function loadSettings(): AppSettings {
 
 export function saveSettings(settings: AppSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  window.dispatchEvent(new CustomEvent<AppSettings>(SETTINGS_EVENT, { detail: settings }));
 }

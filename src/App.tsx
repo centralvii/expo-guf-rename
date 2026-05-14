@@ -9,6 +9,8 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AboutPage } from './pages/AboutPage';
 import { BpmnPage } from './pages/BpmnPage';
 import { ApiClientPage } from './pages/ApiClientPage';
+import { useAppTheme } from './hooks/useAppTheme';
+import './styles/themes.css';
 import './App.css';
 import './Dashboard.css';
 import './TaskHelper.css';
@@ -18,6 +20,8 @@ import './ApiClient.css';
 import './Settings.css';
 
 function App() {
+  useAppTheme();
+
   return (
     <ToastProvider>
       <BrowserRouter>

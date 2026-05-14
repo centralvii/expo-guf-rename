@@ -15,10 +15,11 @@
 }
 
 .ui-select__label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--text-caption);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-regular);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-mono);
   color: var(--text-muted);
 }
 
@@ -30,12 +31,13 @@
   gap: 10px;
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-buttons);
   color: var(--select-color, var(--text-primary));
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-ui);
+  letter-spacing: var(--tracking-tight);
   outline: none;
   transition: all var(--transition);
   min-width: 0;
@@ -49,19 +51,19 @@
 .ui-select--sm .ui-select__trigger {
   height: 28px;
   padding: 0 10px;
-  font-size: 12px;
+  font-size: var(--text-caption);
 }
 
 .ui-select--md .ui-select__trigger {
   height: 32px;
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--text-body-sm);
 }
 
 .ui-select--lg .ui-select__trigger {
   height: 40px;
   padding: 0 14px;
-  font-size: 14px;
+  font-size: var(--text-body);
 }
 
 .ui-select__trigger:hover {
@@ -98,7 +100,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 600;
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .ui-select__chevron {
@@ -155,8 +157,9 @@
   border-radius: var(--radius-sm);
   color: var(--select-color, var(--text-secondary));
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-ui);
+  letter-spacing: var(--tracking-tight);
   cursor: pointer;
   transition: background var(--transition);
   text-align: left;
@@ -186,16 +189,16 @@
 }
 
 .ui-select__option-label {
-  font-weight: 600;
+  font-weight: var(--font-weight-ui-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .ui-select__option-desc {
-  font-size: 11px;
+  font-size: var(--text-caption);
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
 }
 
 .ui-select__option-check {

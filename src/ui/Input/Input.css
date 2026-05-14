@@ -9,11 +9,12 @@
 }
 
 .ui-label {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--text-caption);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-regular);
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-mono);
 }
 
 .ui-input-wrapper {
@@ -28,10 +29,12 @@
   padding: 0 14px;
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-buttons);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-ui);
+  letter-spacing: var(--tracking-tight);
   transition: all var(--transition);
   outline: none;
 }
@@ -84,7 +87,7 @@
 }
 
 .ui-input-error-text {
-  font-size: 12px;
+  font-size: var(--text-caption);
   color: var(--danger);
-  font-weight: 500;
+  font-weight: var(--font-weight-ui);
 }

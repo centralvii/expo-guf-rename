@@ -28,10 +28,19 @@ function createHttpTaskAdapter(options: {
     },
 
     async createTask(task) {
+      const payload = {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        sections: task.sections,
+        priority: task.priority,
+        status: task.status,
+        tags: task.tags,
+      };
       const response = await fetch(`${getBaseUrlOrThrow()}/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(task),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('Failed to create task');
       return await response.json();
@@ -52,6 +61,22 @@ function createHttpTaskAdapter(options: {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete task');
+    },
+
+    async listTaskHistory(taskId) {
+      const response = await fetch(`${getBaseUrlOrThrow()}/tasks/${taskId}/history`);
+      if (!response.ok) throw new Error('Failed to fetch task history');
+      return await response.json();
+    },
+
+    async createTaskHistoryEntry(entry) {
+      const response = await fetch(`${getBaseUrlOrThrow()}/task-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
+      });
+      if (!response.ok) throw new Error('Failed to create task history entry');
+      return await response.json();
     },
   };
 }
