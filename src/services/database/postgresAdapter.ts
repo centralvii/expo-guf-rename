@@ -85,8 +85,3 @@ export const PostgresTaskAdapter = createHttpTaskAdapter({
   getBaseUrl: (settings) => settings.postgresUrl,
   missingConfigMessage: 'PostgreSQL proxy URL is missing. Configure it in Settings.',
 });
-
-export const NeonTaskAdapter = createHttpTaskAdapter({
-  getBaseUrl: (settings) => settings.neonApiUrl,
-  missingConfigMessage: 'Neon API URL is missing. Configure a backend proxy in Settings.',
-});

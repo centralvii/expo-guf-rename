@@ -1,17 +1,21 @@
 import { loadSettings } from '../../lib/appSettings';
+import type { ConnectionMethod } from '../../types';
 import { SupabaseTaskAdapter } from './supabaseAdapter';
-import { PostgresTaskAdapter, NeonTaskAdapter } from './postgresAdapter';
+import { PostgresTaskAdapter } from './postgresAdapter';
 import { FirebaseTaskAdapter } from './firebaseAdapter';
 import type { TaskRepositoryAdapter } from './types';
 
 export type { TaskRepositoryAdapter, TaskInsert, TaskUpdate, TaskItemDb } from './types';
 
-const adapters: Record<string, TaskRepositoryAdapter> = {
+const adapters: Record<ConnectionMethod, TaskRepositoryAdapter> = {
   supabase: SupabaseTaskAdapter,
   postgres: PostgresTaskAdapter,
-  neon: NeonTaskAdapter,
   firebase: FirebaseTaskAdapter,
 };
+
+export function getTaskRepositoryAdapterForProvider(provider: ConnectionMethod): TaskRepositoryAdapter {
+  return adapters[provider];
+}
 
 export function getTaskRepositoryAdapter(): TaskRepositoryAdapter {
   const settings = loadSettings();
@@ -25,4 +29,4 @@ export function getTaskRepositoryAdapter(): TaskRepositoryAdapter {
   return adapter;
 }
 
-export { SupabaseTaskAdapter, PostgresTaskAdapter, NeonTaskAdapter, FirebaseTaskAdapter };
+export { SupabaseTaskAdapter, PostgresTaskAdapter, FirebaseTaskAdapter };

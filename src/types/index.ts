@@ -173,8 +173,7 @@ export const TAG_COLOR_PRESETS = [
 /**
  * Настройки подключения к базе данных
  */
-export type ConnectionMethod = 'supabase' | 'postgres' | 'neon' | 'firebase';
-export type NeonSslMode = 'require' | 'prefer' | 'disable';
+export type ConnectionMethod = 'supabase' | 'postgres' | 'firebase';
 export type AppTheme = 'default' | 'nothing' | '099';
 
 export interface AppSettings {
@@ -183,10 +182,6 @@ export interface AppSettings {
   supabaseUrl: string;
   supabaseAnonKey: string;
   postgresUrl: string;
-  neonApiUrl: string;
-  neonProjectName: string;
-  neonDatabaseName: string;
-  neonSslMode: NeonSslMode;
   // Firebase config (frontend-safe)
   firebaseApiKey: string;
   firebaseAuthDomain: string;
@@ -228,10 +223,38 @@ export interface ApiAuthConfig {
   apiKeyIn?: 'header' | 'query';
 }
 
+export interface ApiEnvironmentVariable {
+  id: string;
+  key: string;
+  value: string;
+  enabled: boolean;
+  secret?: boolean;
+}
+
+export interface ApiEnvironment {
+  id: string;
+  name: string;
+  variables: ApiEnvironmentVariable[];
+  isActive?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ApiCollection {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** Описание одного запроса (вкладка / сохранённый коллекционный запрос) */
 export interface ApiRequest {
   id: string;
   name: string;
+  collectionId?: string;
+  linkedTaskId?: string;
+  environmentId?: string;
   method: HttpMethod;
   url: string;
   params: ApiKeyValue[];
@@ -262,11 +285,16 @@ export interface ApiResponse {
 /** Запись в истории запросов */
 export interface ApiHistoryEntry {
   id: string;
+  requestId?: string;
+  linkedTaskId?: string;
+  environmentId?: string;
   method: HttpMethod;
   url: string;
+  resolvedUrl?: string;
   status: number;
   durationMs: number;
   timestamp: number;
+  errorMessage?: string;
 }
 
 export const DEFAULT_API_REQUEST: Omit<ApiRequest, 'id' | 'createdAt' | 'updatedAt'> = {

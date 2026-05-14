@@ -1,20 +1,81 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
+  ApiCollection,
+  ApiEnvironment,
+  ApiEnvironmentVariable,
+  ApiHistoryEntry,
+  ApiKeyValue,
   ApiRequest,
   ApiResponse,
-  ApiKeyValue,
-  ApiHistoryEntry,
   HttpMethod,
 } from '../types';
 import { DEFAULT_API_REQUEST } from '../types';
+import { findUnresolvedVariables, resolveApiVariables } from '../lib/apiVariables';
 
 const STORAGE_KEY = 'gd-helper-api-client';
 const MAX_HISTORY = 50;
 
 interface PersistedState {
   collection: ApiRequest[];
+  collections: ApiCollection[];
   history: ApiHistoryEntry[];
+  environments: ApiEnvironment[];
   activeRequestId: string | null;
+  activeEnvironmentId: string | null;
+}
+
+function createEnvironmentVariable(
+  key: string,
+  value = '',
+  options?: { secret?: boolean }
+): ApiEnvironmentVariable {
+  return {
+    id: crypto.randomUUID(),
+    key,
+    value,
+    enabled: true,
+    secret: options?.secret,
+  };
+}
+
+function createDefaultEnvironments(): ApiEnvironment[] {
+  const now = Date.now();
+  const createEnvironment = (
+    id: string,
+    name: string,
+    isActive = false
+  ): ApiEnvironment => ({
+    id,
+    name,
+    isActive,
+    createdAt: now,
+    updatedAt: now,
+    variables: [
+      createEnvironmentVariable('baseUrl'),
+      createEnvironmentVariable('token', '', { secret: true }),
+      createEnvironmentVariable('taskId'),
+      createEnvironmentVariable('cardId'),
+    ],
+  });
+
+  return [
+    createEnvironment('local', 'local', true),
+    createEnvironment('dev', 'dev'),
+    createEnvironment('test', 'test'),
+    createEnvironment('prod', 'prod'),
+  ];
+}
+
+function createDefaultCollections(): ApiCollection[] {
+  return [
+    {
+      id: 'default',
+      name: 'Default',
+      description: 'Default request collection',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+  ];
 }
 
 function createEmptyRequest(): ApiRequest {
@@ -22,8 +83,36 @@ function createEmptyRequest(): ApiRequest {
   return {
     ...DEFAULT_API_REQUEST,
     id: crypto.randomUUID(),
+    environmentId: 'local',
     createdAt: now,
     updatedAt: now,
+  };
+}
+
+function normalizeEnvironments(environments?: ApiEnvironment[], activeEnvironmentId?: string | null) {
+  const defaults = createDefaultEnvironments();
+
+  if (!environments || environments.length === 0) {
+    return {
+      environments: defaults,
+      activeEnvironmentId: 'local',
+    };
+  }
+
+  const nextEnvironments = environments.map((environment) => ({
+    ...environment,
+    variables: environment.variables ?? [],
+  }));
+  const fallbackActiveId = activeEnvironmentId && nextEnvironments.some((environment) => environment.id === activeEnvironmentId)
+    ? activeEnvironmentId
+    : nextEnvironments.find((environment) => environment.isActive)?.id ?? nextEnvironments[0]?.id ?? 'local';
+
+  return {
+    environments: nextEnvironments.map((environment) => ({
+      ...environment,
+      isActive: environment.id === fallbackActiveId,
+    })),
+    activeEnvironmentId: fallbackActiveId,
   };
 }
 
@@ -31,24 +120,47 @@ function loadState(): PersistedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { collection: [], history: [], activeRequestId: null };
+      return {
+        collection: [],
+        collections: createDefaultCollections(),
+        history: [],
+        environments: createDefaultEnvironments(),
+        activeRequestId: null,
+        activeEnvironmentId: 'local',
+      };
     }
-    const parsed = JSON.parse(raw) as PersistedState;
+
+    const parsed = JSON.parse(raw) as Partial<PersistedState>;
+    const normalizedEnvironments = normalizeEnvironments(
+      parsed.environments,
+      parsed.activeEnvironmentId ?? null
+    );
+
     return {
       collection: parsed.collection ?? [],
+      collections: parsed.collections?.length ? parsed.collections : createDefaultCollections(),
       history: parsed.history ?? [],
+      environments: normalizedEnvironments.environments,
       activeRequestId: parsed.activeRequestId ?? null,
+      activeEnvironmentId: normalizedEnvironments.activeEnvironmentId,
     };
   } catch {
-    return { collection: [], history: [], activeRequestId: null };
+    return {
+      collection: [],
+      collections: createDefaultCollections(),
+      history: [],
+      environments: createDefaultEnvironments(),
+      activeRequestId: null,
+      activeEnvironmentId: 'local',
+    };
   }
 }
 
 function saveState(state: PersistedState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (err) {
-    console.warn('[api-client] failed to persist state', err);
+  } catch (error) {
+    console.warn('[api-client] failed to persist state', error);
   }
 }
 
@@ -60,39 +172,36 @@ function getErrorMessage(error: unknown): string | undefined {
   return error instanceof Error ? error.message : undefined;
 }
 
-/** Преобразует список ключ-значение в Record, учитывая только enabled */
 function kvToRecord(list: ApiKeyValue[]): Record<string, string> {
-  const result: Record<string, string> = {};
-  for (const item of list) {
+  return list.reduce<Record<string, string>>((result, item) => {
     if (item.enabled && item.key.trim()) {
       result[item.key] = item.value;
     }
-  }
-  return result;
+    return result;
+  }, {});
 }
 
-/** Строит URL с query-параметрами */
 function buildUrl(baseUrl: string, params: ApiKeyValue[]): string {
-  const enabled = params.filter((p) => p.enabled && p.key.trim());
-  if (enabled.length === 0) return baseUrl;
+  const enabled = params.filter((param) => param.enabled && param.key.trim());
+  if (enabled.length === 0) {
+    return baseUrl;
+  }
 
   try {
     const url = new URL(baseUrl);
-    for (const p of enabled) {
-      url.searchParams.set(p.key, p.value);
-    }
+    enabled.forEach((param) => {
+      url.searchParams.set(param.key, param.value);
+    });
     return url.toString();
   } catch {
-    // Если URL некорректный — склеиваем вручную
-    const qs = enabled
-      .map((p) => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
+    const queryString = enabled
+      .map((param) => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value)}`)
       .join('&');
     const separator = baseUrl.includes('?') ? '&' : '?';
-    return `${baseUrl}${separator}${qs}`;
+    return `${baseUrl}${separator}${queryString}`;
   }
 }
 
-/** Применяет auth к headers и URL */
 function applyAuth(
   request: ApiRequest,
   headers: Record<string, string>,
@@ -103,44 +212,44 @@ function applyAuth(
   switch (auth.type) {
     case 'bearer':
       if (auth.bearerToken) {
-        headers['Authorization'] = `Bearer ${auth.bearerToken}`;
+        headers.Authorization = `Bearer ${auth.bearerToken}`;
       }
       break;
     case 'basic':
       if (auth.basicUsername || auth.basicPassword) {
         const encoded = btoa(`${auth.basicUsername ?? ''}:${auth.basicPassword ?? ''}`);
-        headers['Authorization'] = `Basic ${encoded}`;
+        headers.Authorization = `Basic ${encoded}`;
       }
       break;
     case 'api-key':
       if (auth.apiKeyName && auth.apiKeyValue) {
         if (auth.apiKeyIn === 'query') {
           try {
-            const u = new URL(url);
-            u.searchParams.set(auth.apiKeyName, auth.apiKeyValue);
-            url = u.toString();
+            const nextUrl = new URL(url);
+            nextUrl.searchParams.set(auth.apiKeyName, auth.apiKeyValue);
+            url = nextUrl.toString();
           } catch {
-            const sep = url.includes('?') ? '&' : '?';
-            url = `${url}${sep}${encodeURIComponent(auth.apiKeyName)}=${encodeURIComponent(auth.apiKeyValue)}`;
+            const separator = url.includes('?') ? '&' : '?';
+            url = `${url}${separator}${encodeURIComponent(auth.apiKeyName)}=${encodeURIComponent(auth.apiKeyValue)}`;
           }
         } else {
           headers[auth.apiKeyName] = auth.apiKeyValue;
         }
       }
       break;
+    default:
+      break;
   }
 
   return { headers, url };
 }
 
-/** Формирует body и ставит корректный Content-Type */
 function buildBody(
   request: ApiRequest,
   headers: Record<string, string>
 ): { body: BodyInit | null; headers: Record<string, string> } {
   const { method, bodyType, bodyContent } = request;
 
-  // GET/HEAD не поддерживают тело
   if (method === 'GET' || method === 'HEAD' || bodyType === 'none') {
     return { body: null, headers };
   }
@@ -169,69 +278,130 @@ function buildBody(
   return { body: null, headers };
 }
 
+function resolveRequestWithEnvironment(request: ApiRequest, environment: ApiEnvironment | null) {
+  const resolveText = (text: string) => resolveApiVariables({ text, environment, task: null });
+
+  return {
+    ...request,
+    url: resolveText(request.url),
+    params: request.params.map((param) => ({
+      ...param,
+      key: resolveText(param.key),
+      value: resolveText(param.value),
+    })),
+    headers: request.headers.map((header) => ({
+      ...header,
+      key: resolveText(header.key),
+      value: resolveText(header.value),
+    })),
+    auth: {
+      ...request.auth,
+      bearerToken: request.auth.bearerToken ? resolveText(request.auth.bearerToken) : request.auth.bearerToken,
+      basicUsername: request.auth.basicUsername ? resolveText(request.auth.basicUsername) : request.auth.basicUsername,
+      basicPassword: request.auth.basicPassword ? resolveText(request.auth.basicPassword) : request.auth.basicPassword,
+      apiKeyName: request.auth.apiKeyName ? resolveText(request.auth.apiKeyName) : request.auth.apiKeyName,
+      apiKeyValue: request.auth.apiKeyValue ? resolveText(request.auth.apiKeyValue) : request.auth.apiKeyValue,
+    },
+    bodyContent: resolveText(request.bodyContent),
+  };
+}
+
 export interface UseApiClientReturn {
-  // State
   tabs: ApiRequest[];
   activeRequestId: string | null;
   activeRequest: ApiRequest | null;
   collection: ApiRequest[];
+  collections: ApiCollection[];
   history: ApiHistoryEntry[];
+  environments: ApiEnvironment[];
+  activeEnvironment: ApiEnvironment | null;
+  unresolvedVariables: string[];
   response: ApiResponse | null;
   isLoading: boolean;
   error: string | null;
-
-  // Tabs / requests
   createNewTab: () => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateActiveRequest: (updates: Partial<ApiRequest>) => void;
-
-  // Collection
   saveToCollection: () => void;
   loadFromCollection: (id: string) => void;
   removeFromCollection: (id: string) => void;
-
-  // Execution
   sendRequest: () => Promise<void>;
   cancelRequest: () => void;
-
-  // History
   clearHistory: () => void;
   loadFromHistory: (id: string) => void;
+  setActiveEnvironment: (id: string) => void;
+  upsertEnvironment: (environment: ApiEnvironment) => void;
+  deleteEnvironment: (id: string) => void;
 }
 
 export function useApiClient(): UseApiClientReturn {
-  const [initialState] = useState<{
-    tabs: ApiRequest[];
-    activeRequestId: string;
-    collection: ApiRequest[];
-    history: ApiHistoryEntry[];
-  }>(() => {
+  const [initialState] = useState(() => {
     const saved = loadState();
     const initialTab = createEmptyRequest();
+
     return {
       tabs: [initialTab],
       activeRequestId: initialTab.id,
       collection: saved.collection,
+      collections: saved.collections,
       history: saved.history,
+      environments: saved.environments,
+      activeEnvironmentId: saved.activeEnvironmentId,
     };
   });
 
   const [tabs, setTabs] = useState<ApiRequest[]>(initialState.tabs);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(initialState.activeRequestId);
   const [collection, setCollection] = useState<ApiRequest[]>(initialState.collection);
+  const [collections] = useState<ApiCollection[]>(initialState.collections);
   const [history, setHistory] = useState<ApiHistoryEntry[]>(initialState.history);
+  const [environments, setEnvironments] = useState<ApiEnvironment[]>(initialState.environments);
+  const [activeEnvironmentId, setActiveEnvironmentId] = useState<string | null>(initialState.activeEnvironmentId);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Автосохранение коллекции и истории
   useEffect(() => {
-    saveState({ collection, history, activeRequestId });
-  }, [collection, history, activeRequestId]);
+    saveState({
+      collection,
+      collections,
+      history,
+      environments,
+      activeRequestId,
+      activeEnvironmentId,
+    });
+  }, [collection, collections, history, environments, activeRequestId, activeEnvironmentId]);
 
-  const activeRequest = tabs.find((t) => t.id === activeRequestId) ?? null;
+  const activeRequest = tabs.find((tab) => tab.id === activeRequestId) ?? null;
+  const activeEnvironment = environments.find((environment) => environment.id === activeEnvironmentId) ?? null;
+
+  const unresolvedVariables = useMemo(() => {
+    if (!activeRequest) {
+      return [];
+    }
+
+    const fields = [
+      activeRequest.url,
+      activeRequest.bodyContent,
+      ...activeRequest.params.flatMap((param) => [param.key, param.value]),
+      ...activeRequest.headers.flatMap((header) => [header.key, header.value]),
+      activeRequest.auth.bearerToken ?? '',
+      activeRequest.auth.basicUsername ?? '',
+      activeRequest.auth.basicPassword ?? '',
+      activeRequest.auth.apiKeyName ?? '',
+      activeRequest.auth.apiKeyValue ?? '',
+    ];
+
+    const resolvedFields = fields.map((field) => resolveApiVariables({
+      text: field,
+      environment: activeEnvironment,
+      task: null,
+    }));
+
+    return Array.from(new Set(resolvedFields.flatMap((field) => findUnresolvedVariables(field))));
+  }, [activeEnvironment, activeRequest]);
 
   const createNewTab = useCallback(() => {
     const newTab = createEmptyRequest();
@@ -243,18 +413,20 @@ export function useApiClient(): UseApiClientReturn {
 
   const closeTab = useCallback((id: string) => {
     setTabs((prev) => {
-      const next = prev.filter((t) => t.id !== id);
+      const next = prev.filter((tab) => tab.id !== id);
+
       if (next.length === 0) {
         const fresh = createEmptyRequest();
         setActiveRequestId(fresh.id);
         return [fresh];
       }
-      // Если закрыли активную — переключаемся на соседнюю
+
       if (id === activeRequestId) {
-        const idx = prev.findIndex((t) => t.id === id);
-        const newActive = next[Math.min(idx, next.length - 1)];
-        setActiveRequestId(newActive.id);
+        const closedIndex = prev.findIndex((tab) => tab.id === id);
+        const nextActive = next[Math.min(closedIndex, next.length - 1)];
+        setActiveRequestId(nextActive.id);
       }
+
       return next;
     });
     setResponse(null);
@@ -268,44 +440,55 @@ export function useApiClient(): UseApiClientReturn {
 
   const updateActiveRequest = useCallback((updates: Partial<ApiRequest>) => {
     setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeRequestId
-          ? { ...t, ...updates, updatedAt: Date.now() }
-          : t
-      )
+      prev.map((tab) => (
+        tab.id === activeRequestId
+          ? { ...tab, ...updates, updatedAt: Date.now() }
+          : tab
+      ))
     );
   }, [activeRequestId]);
 
   const saveToCollection = useCallback(() => {
-    if (!activeRequest) return;
+    if (!activeRequest) {
+      return;
+    }
+
     setCollection((prev) => {
-      const exists = prev.findIndex((r) => r.id === activeRequest.id);
-      if (exists >= 0) {
+      const existingIndex = prev.findIndex((request) => request.id === activeRequest.id);
+      if (existingIndex >= 0) {
         const next = [...prev];
-        next[exists] = { ...activeRequest, updatedAt: Date.now() };
+        next[existingIndex] = { ...activeRequest, updatedAt: Date.now() };
         return next;
       }
+
       return [{ ...activeRequest, updatedAt: Date.now() }, ...prev];
     });
   }, [activeRequest]);
 
   const loadFromCollection = useCallback((id: string) => {
-    const req = collection.find((r) => r.id === id);
-    if (!req) return;
-    // Копируем в таб с тем же id (чтобы можно было сохранять дальше)
-    const existingTab = tabs.find((t) => t.id === id);
+    const request = collection.find((item) => item.id === id);
+    if (!request) {
+      return;
+    }
+
+    const existingTab = tabs.find((tab) => tab.id === id);
     if (existingTab) {
       setActiveRequestId(id);
     } else {
-      setTabs((prev) => [...prev, { ...req }]);
+      setTabs((prev) => [...prev, { ...request }]);
       setActiveRequestId(id);
     }
+
+    if (request.environmentId) {
+      setActiveEnvironmentId(request.environmentId);
+    }
+
     setResponse(null);
     setError(null);
   }, [collection, tabs]);
 
   const removeFromCollection = useCallback((id: string) => {
-    setCollection((prev) => prev.filter((r) => r.id !== id));
+    setCollection((prev) => prev.filter((request) => request.id !== id));
   }, []);
 
   const clearHistory = useCallback(() => {
@@ -313,21 +496,77 @@ export function useApiClient(): UseApiClientReturn {
   }, []);
 
   const loadFromHistory = useCallback((id: string) => {
-    const entry = history.find((h) => h.id === id);
-    if (!entry) return;
+    const entry = history.find((item) => item.id === id);
+    if (!entry) {
+      return;
+    }
+
     const newTab: ApiRequest = {
       ...createEmptyRequest(),
       name: `${entry.method} ${entry.url}`,
       method: entry.method,
       url: entry.url,
+      linkedTaskId: entry.linkedTaskId,
+      environmentId: entry.environmentId ?? activeEnvironmentId ?? 'local',
     };
+
     setTabs((prev) => [...prev, newTab]);
     setActiveRequestId(newTab.id);
+    if (newTab.environmentId) {
+      setActiveEnvironmentId(newTab.environmentId);
+    }
     setResponse(null);
-  }, [history]);
+  }, [activeEnvironmentId, history]);
+
+  const setActiveEnvironment = useCallback((id: string) => {
+    setActiveEnvironmentId(id);
+    setEnvironments((prev) => prev.map((environment) => ({
+      ...environment,
+      isActive: environment.id === id,
+    })));
+    updateActiveRequest({ environmentId: id });
+  }, [updateActiveRequest]);
+
+  const upsertEnvironment = useCallback((environment: ApiEnvironment) => {
+    setEnvironments((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === environment.id);
+      const nextEnvironment = {
+        ...environment,
+        updatedAt: Date.now(),
+      };
+
+      if (existingIndex >= 0) {
+        const next = [...prev];
+        next[existingIndex] = nextEnvironment;
+        return next;
+      }
+
+      return [...prev, nextEnvironment];
+    });
+  }, []);
+
+  const deleteEnvironment = useCallback((id: string) => {
+    setEnvironments((prev) => {
+      const next = prev.filter((environment) => environment.id !== id);
+      if (next.length === 0) {
+        return createDefaultEnvironments();
+      }
+      return next;
+    });
+
+    setActiveEnvironmentId((prev) => {
+      if (prev !== id) {
+        return prev;
+      }
+      return 'local';
+    });
+  }, []);
 
   const sendRequest = useCallback(async () => {
-    if (!activeRequest) return;
+    if (!activeRequest) {
+      return;
+    }
+
     if (!activeRequest.url.trim()) {
       setError('URL не указан');
       return;
@@ -341,46 +580,47 @@ export function useApiClient(): UseApiClientReturn {
     abortRef.current = controller;
 
     const startTime = performance.now();
+    const resolvedRequest = resolveRequestWithEnvironment(
+      {
+        ...activeRequest,
+        environmentId: activeRequest.environmentId ?? activeEnvironment?.id ?? undefined,
+      },
+      activeEnvironment
+    );
 
     try {
-      // Формируем URL с параметрами
-      let url = buildUrl(activeRequest.url, activeRequest.params);
+      let url = buildUrl(resolvedRequest.url, resolvedRequest.params);
+      let headers = kvToRecord(resolvedRequest.headers);
 
-      // Формируем headers
-      let headers = kvToRecord(activeRequest.headers);
+      const authedRequest = applyAuth(resolvedRequest, headers, url);
+      headers = authedRequest.headers;
+      url = authedRequest.url;
 
-      // Применяем auth
-      const authed = applyAuth(activeRequest, headers, url);
-      headers = authed.headers;
-      url = authed.url;
+      const builtRequest = buildBody(resolvedRequest, headers);
+      headers = builtRequest.headers;
 
-      // Формируем body
-      const built = buildBody(activeRequest, headers);
-      headers = built.headers;
-
-      const res = await fetch(url, {
-        method: activeRequest.method,
+      const result = await fetch(url, {
+        method: resolvedRequest.method,
         headers,
-        body: built.body,
+        body: builtRequest.body,
         signal: controller.signal,
       });
 
-      const responseBody = await res.text();
+      const responseBody = await result.text();
       const durationMs = Math.round(performance.now() - startTime);
 
-      // Собираем headers ответа
       const responseHeaders: Record<string, string> = {};
-      res.headers.forEach((value, key) => {
+      result.headers.forEach((value, key) => {
         responseHeaders[key] = value;
       });
 
       const apiResponse: ApiResponse = {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
+        status: result.status,
+        statusText: result.statusText,
+        ok: result.ok,
         headers: responseHeaders,
         body: responseBody,
-        contentType: res.headers.get('content-type') ?? '',
+        contentType: result.headers.get('content-type') ?? '',
         durationMs,
         sizeBytes: new Blob([responseBody]).size,
         timestamp: Date.now(),
@@ -388,30 +628,52 @@ export function useApiClient(): UseApiClientReturn {
 
       setResponse(apiResponse);
 
-      // Добавляем в историю
       const historyEntry: ApiHistoryEntry = {
         id: crypto.randomUUID(),
+        requestId: activeRequest.id,
+        linkedTaskId: activeRequest.linkedTaskId,
+        environmentId: activeEnvironment?.id ?? activeRequest.environmentId,
         method: activeRequest.method,
         url: activeRequest.url,
-        status: res.status,
+        resolvedUrl: url,
+        status: result.status,
         durationMs,
         timestamp: Date.now(),
       };
+
       setHistory((prev) => [historyEntry, ...prev].slice(0, MAX_HISTORY));
-    } catch (err: unknown) {
-      const message = getErrorMessage(err);
-      if (getErrorName(err) === 'AbortError') {
-        setError('Запрос отменён');
+    } catch (error) {
+      const message = getErrorMessage(error);
+      let nextErrorMessage = message ?? 'Unknown error';
+
+      if (getErrorName(error) === 'AbortError') {
+        nextErrorMessage = 'Запрос отменён';
       } else if (message?.includes('Failed to fetch')) {
-        setError('Ошибка сети или CORS. Проверьте URL и доступность сервера.');
-      } else {
-        setError(message ?? 'Неизвестная ошибка');
+        nextErrorMessage = 'Ошибка сети или CORS. Проверьте URL и доступность сервера.';
       }
+
+      setError(nextErrorMessage);
+
+      const durationMs = Math.round(performance.now() - startTime);
+      const historyEntry: ApiHistoryEntry = {
+        id: crypto.randomUUID(),
+        requestId: activeRequest.id,
+        linkedTaskId: activeRequest.linkedTaskId,
+        environmentId: activeEnvironment?.id ?? activeRequest.environmentId,
+        method: activeRequest.method,
+        url: activeRequest.url,
+        resolvedUrl: resolvedRequest.url,
+        status: 0,
+        durationMs,
+        timestamp: Date.now(),
+        errorMessage: nextErrorMessage,
+      };
+      setHistory((prev) => [historyEntry, ...prev].slice(0, MAX_HISTORY));
     } finally {
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [activeRequest]);
+  }, [activeEnvironment, activeRequest]);
 
   const cancelRequest = useCallback(() => {
     abortRef.current?.abort();
@@ -422,7 +684,11 @@ export function useApiClient(): UseApiClientReturn {
     activeRequestId,
     activeRequest,
     collection,
+    collections,
     history,
+    environments,
+    activeEnvironment,
+    unresolvedVariables,
     response,
     isLoading,
     error,
@@ -437,6 +703,9 @@ export function useApiClient(): UseApiClientReturn {
     cancelRequest,
     clearHistory,
     loadFromHistory,
+    setActiveEnvironment,
+    upsertEnvironment,
+    deleteEnvironment,
   };
 }
 

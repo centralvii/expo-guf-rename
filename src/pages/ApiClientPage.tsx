@@ -5,7 +5,7 @@ import { useToast } from '../hooks/useToast';
 import { HTTP_METHODS, type HttpMethod } from '../types';
 
 import {
-  Button, IconButton, Input, Island, PageTitle, Select, Toolbar,
+  Button, IconButton, InlineError, Input, Island, PageTitle, Select, Toolbar,
   type SelectOption,
 } from '../ui';
 
@@ -52,6 +52,9 @@ export function ApiClientPage() {
     activeRequest,
     collection,
     history,
+    environments,
+    activeEnvironment,
+    unresolvedVariables,
     response,
     isLoading,
     error,
@@ -66,7 +69,21 @@ export function ApiClientPage() {
     cancelRequest,
     clearHistory,
     loadFromHistory,
+    setActiveEnvironment,
   } = state;
+
+  const environmentOptions: SelectOption<string>[] = useMemo(
+    () => environments.map((environment) => ({
+      value: environment.id,
+      label: environment.name,
+      description: environment.variables
+        .filter((variable) => variable.enabled && variable.key.trim())
+        .map((variable) => variable.key)
+        .slice(0, 3)
+        .join(', '),
+    })),
+    [environments]
+  );
 
   const isBodyDisabled = useMemo(
     () => activeRequest?.method === 'GET' || activeRequest?.method === 'HEAD',
@@ -176,6 +193,14 @@ export function ApiClientPage() {
             {/* URL bar */}
             <Island flex={false} className="api-url-bar">
               <Select
+                value={activeEnvironment?.id ?? ''}
+                onChange={setActiveEnvironment}
+                options={environmentOptions}
+                size="sm"
+                className="api-url-bar__environment"
+              />
+
+              <Select
                 value={activeRequest.method}
                 onChange={(method) => updateActiveRequest({ method })}
                 options={METHOD_OPTIONS}
@@ -217,6 +242,14 @@ export function ApiClientPage() {
                 </Button>
               )}
             </Island>
+
+            {unresolvedVariables.length > 0 && (
+              <InlineError
+                className="api-unresolved-warning"
+                title="Есть unresolved variables"
+                message={`Не найдены переменные: ${unresolvedVariables.map((variable) => `{{${variable}}}`).join(', ')}`}
+              />
+            )}
 
             {/* Request panel */}
             <Island flex={false} className="api-request-panel">

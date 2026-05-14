@@ -1,4 +1,4 @@
-import type { AppSettings } from '../types';
+import type { AppSettings, ConnectionMethod } from '../types';
 
 export const SETTINGS_KEY = 'gd-helper-settings';
 export const SETTINGS_EVENT = 'gd-helper-settings-change';
@@ -9,10 +9,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   postgresUrl: import.meta.env.VITE_POSTGRES_PROXY_URL || 'http://localhost:5432',
-  neonApiUrl: import.meta.env.VITE_NEON_PROXY_URL || 'http://localhost:3001/api/db',
-  neonProjectName: import.meta.env.VITE_NEON_PROJECT_NAME || '',
-  neonDatabaseName: import.meta.env.VITE_NEON_DATABASE_NAME || '',
-  neonSslMode: 'require',
   // Firebase config (frontend-safe)
   firebaseApiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   firebaseAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
@@ -23,6 +19,22 @@ export const DEFAULT_SETTINGS: AppSettings = {
   firebaseMeasurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
 };
 
+function normalizeConnectionMethod(method: unknown): ConnectionMethod {
+  if (method === 'supabase' || method === 'firebase' || method === 'postgres') {
+    return method;
+  }
+
+  if (DEFAULT_SETTINGS.supabaseUrl && DEFAULT_SETTINGS.supabaseAnonKey) {
+    return 'supabase';
+  }
+
+  if (DEFAULT_SETTINGS.firebaseApiKey && DEFAULT_SETTINGS.firebaseProjectId && DEFAULT_SETTINGS.firebaseAppId) {
+    return 'firebase';
+  }
+
+  return 'supabase';
+}
+
 export function loadSettings(): AppSettings {
   const saved = localStorage.getItem(SETTINGS_KEY);
   if (!saved) {
@@ -30,7 +42,13 @@ export function loadSettings(): AppSettings {
   }
 
   try {
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    const parsed = JSON.parse(saved) as Partial<AppSettings> & { connectionMethod?: unknown };
+
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      connectionMethod: normalizeConnectionMethod(parsed.connectionMethod),
+    };
   } catch (error) {
     console.error('Failed to parse settings', error);
     return DEFAULT_SETTINGS;

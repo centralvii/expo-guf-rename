@@ -1,9 +1,9 @@
 // Re-export from the new service layer
 export {
   getTaskRepositoryAdapter,
+  getTaskRepositoryAdapterForProvider,
   SupabaseTaskAdapter,
   PostgresTaskAdapter,
-  NeonTaskAdapter,
   FirebaseTaskAdapter,
 } from '../../services/database';
 

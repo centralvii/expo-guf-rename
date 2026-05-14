@@ -1,26 +1,61 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
-  Info, Database, Server, Wifi, WifiOff, CircleCheck, CircleX,
-  Trash2, Download, Upload, Link2, Key, ShieldCheck, Flame,
+  CircleCheck,
+  CircleX,
+  Database,
+  Download,
+  Flame,
+  Info,
+  Key,
+  Link2,
+  Server,
+  ShieldCheck,
+  Trash2,
+  Upload,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+import { version as appVersion } from '../../package.json';
 import { useSettings } from '../hooks/useSettings';
-import { resetSupabaseClient } from '../lib/supabase';
-import { resetFirebaseClient } from '../services/firebase/client';
+import { useTasks } from '../hooks/useTasks';
+import { useToast } from '../hooks/useToast';
 import {
-  refreshConnection, subscribeToConnection, invalidateConnection,
+  invalidateConnection,
+  refreshConnection,
+  subscribeToConnection,
   type ConnectionSnapshot,
 } from '../lib/connectionStatus';
-import { useToast } from '../hooks/useToast';
-import { useTasks } from '../hooks/useTasks';
-import type { AppTheme, ConnectionMethod, NeonSslMode } from '../types';
-
 import {
-  Badge, Button, InlineError, Input, Modal, PageTitle, Panel,
-  SectionHeader, Select, ThemePreviewCard, THEME_PREVIEWS, Toolbar, type SelectOption,
+  buildMigrationPlan,
+  runMigrationPlan,
+  type MigrationConflictStrategy,
+  type MigrationEntityType,
+  type MigrationPlan,
+  type MigrationProgress,
+  type MigrationProvider,
+} from '../lib/providerMigration';
+import { resetSupabaseClient } from '../lib/supabase';
+import { resetFirebaseClient } from '../services/firebase/client';
+import type { AppTheme, ConnectionMethod } from '../types';
+import {
+  Badge,
+  Button,
+  Checkbox,
+  InlineError,
+  Input,
+  Modal,
+  PageTitle,
+  Panel,
+  SectionHeader,
+  Select,
+  Table,
+  ThemePreviewCard,
+  THEME_PREVIEWS,
+  Toolbar,
+  type SelectOption,
 } from '../ui';
 
 declare const __APP_GIT_COMMIT__: string;
-import { version as appVersion } from '../../package.json';
 
 const CONNECTION_OPTIONS: SelectOption<ConnectionMethod>[] = [
   {
@@ -41,18 +76,6 @@ const CONNECTION_OPTIONS: SelectOption<ConnectionMethod>[] = [
     icon: <Database size={14} />,
     description: 'Local or remote PostgreSQL through API/proxy',
   },
-  {
-    value: 'neon',
-    label: 'Neon DB',
-    icon: <Database size={14} />,
-    description: 'Neon PostgreSQL through backend/API proxy',
-  },
-];
-
-const NEON_SSL_OPTIONS: SelectOption<NeonSslMode>[] = [
-  { value: 'require', label: 'require' },
-  { value: 'prefer', label: 'prefer' },
-  { value: 'disable', label: 'disable' },
 ];
 
 const THEME_OPTIONS: SelectOption<AppTheme>[] = [
@@ -73,13 +96,34 @@ const THEME_OPTIONS: SelectOption<AppTheme>[] = [
   },
 ];
 
+const MIGRATION_PROVIDER_OPTIONS: SelectOption<MigrationProvider>[] = [
+  { value: 'supabase', label: 'Supabase' },
+  { value: 'firebase', label: 'Firebase' },
+];
+
+const MIGRATION_CONFLICT_OPTIONS: SelectOption<MigrationConflictStrategy>[] = [
+  {
+    value: 'skip_existing',
+    label: 'Skip existing',
+    description: 'Do not overwrite different records in target',
+  },
+  {
+    value: 'overwrite',
+    label: 'Overwrite',
+    description: 'Update different records when adapter semantics allow it',
+  },
+];
+
+const MIGRATION_ENTITY_LABELS: Record<MigrationEntityType, string> = {
+  tasks: 'Tasks',
+  taskHistory: 'Task history',
+};
+
 const CONNECTION_TEST_TIMEOUT_MS = 8_000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => {
-      reject(new Error(message));
-    }, timeoutMs);
+    const timer = window.setTimeout(() => reject(new Error(message)), timeoutMs);
 
     promise
       .then((value) => {
@@ -110,9 +154,7 @@ function SettingsSection({ icon, title, description, children }: SettingsSection
         title={title}
         description={description}
       />
-      <div className="settings-section__body">
-        {children}
-      </div>
+      <div className="settings-section__body">{children}</div>
     </Panel>
   );
 }
@@ -148,6 +190,19 @@ export function SettingsPage() {
   });
   const [isChecking, setIsChecking] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
+  const [migrationSource, setMigrationSource] = useState<MigrationProvider>('supabase');
+  const [migrationTarget, setMigrationTarget] = useState<MigrationProvider>('firebase');
+  const [migrationEntities, setMigrationEntities] = useState<MigrationEntityType[]>(['tasks', 'taskHistory']);
+  const [migrationStrategy, setMigrationStrategy] = useState<MigrationConflictStrategy>('skip_existing');
+  const [migrationPlan, setMigrationPlan] = useState<MigrationPlan | null>(null);
+  const [migrationProgress, setMigrationProgress] = useState<MigrationProgress>({
+    state: 'idle',
+    total: 0,
+    completed: 0,
+    errors: [],
+  });
+  const [migrationError, setMigrationError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToConnection(setSnapshot);
@@ -160,10 +215,6 @@ export function SettingsPage() {
     'supabaseUrl',
     'supabaseAnonKey',
     'postgresUrl',
-    'neonApiUrl',
-    'neonProjectName',
-    'neonDatabaseName',
-    'neonSslMode',
     'firebaseApiKey',
     'firebaseAuthDomain',
     'firebaseProjectId',
@@ -188,9 +239,114 @@ export function SettingsPage() {
     }
   };
 
+  const resetMigrationState = () => {
+    setMigrationPlan(null);
+    setMigrationError(null);
+    setMigrationProgress({
+      state: 'idle',
+      total: 0,
+      completed: 0,
+      errors: [],
+    });
+  };
+
   const handleThemeChange = (theme: AppTheme) => {
     updateSettingsRaw({ theme });
     notify(`Тема изменена на ${THEME_PREVIEWS[theme].label}`, 'success');
+  };
+
+  const handleToggleMigrationEntity = (entityType: MigrationEntityType, checked: boolean) => {
+    resetMigrationState();
+    setMigrationEntities((prev) =>
+      checked
+        ? Array.from(new Set([...prev, entityType]))
+        : prev.filter((entity) => entity !== entityType)
+    );
+  };
+
+  const handleCheckMigration = async () => {
+    if (migrationSource === migrationTarget) {
+      setMigrationError('Source и target provider должны отличаться.');
+      return;
+    }
+
+    if (migrationEntities.length === 0) {
+      setMigrationError('Выберите хотя бы одну сущность для миграции.');
+      return;
+    }
+
+    setMigrationError(null);
+    setMigrationPlan(null);
+    setMigrationProgress({
+      state: 'checking',
+      total: 0,
+      completed: 0,
+      errors: [],
+    });
+
+    try {
+      const plan = await buildMigrationPlan({
+        source: migrationSource,
+        target: migrationTarget,
+        conflictStrategy: migrationStrategy,
+        entities: migrationEntities,
+      });
+
+      setMigrationPlan(plan);
+      setMigrationProgress({
+        state: 'ready',
+        total: plan.entities.reduce((sum, entity) => sum + entity.toCreate + entity.toUpdate, 0),
+        completed: 0,
+        errors: [],
+      });
+      notify('Dry-run миграции готов', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Не удалось построить migration plan';
+      setMigrationError(message);
+      setMigrationProgress({
+        state: 'failed',
+        total: 0,
+        completed: 0,
+        errors: [{ entityType: 'tasks', message }],
+      });
+      notify(message, 'error');
+    }
+  };
+
+  const handleRunMigration = async () => {
+    if (!migrationPlan) {
+      setMigrationError('Сначала выполните dry-run миграции.');
+      return;
+    }
+
+    setShowMigrationModal(false);
+    setMigrationError(null);
+    setMigrationProgress((prev) => ({
+      ...prev,
+      state: 'running',
+      completed: 0,
+      errors: [],
+    }));
+
+    const result = await runMigrationPlan({
+      plan: migrationPlan,
+      onProgress: (progress) => setMigrationProgress(progress),
+    });
+
+    setMigrationProgress(result);
+
+    if (result.state === 'done') {
+      notify('Миграция завершена', result.errors.length > 0 ? 'info' : 'success');
+    } else {
+      const message = result.errors[0]?.message ?? 'Миграция завершилась с ошибкой';
+      setMigrationError(message);
+      notify(message, 'error');
+    }
+  };
+
+  const handleSwitchToMigrationTarget = () => {
+    updateSettings({ connectionMethod: migrationTarget });
+    notify(`Активный provider переключен на ${migrationTarget}`, 'success');
   };
 
   const handleTestConnection = async () => {
@@ -199,6 +355,7 @@ export function SettingsPage() {
       resetSupabaseClient();
       resetFirebaseClient();
       invalidateConnection();
+
       const snap = await withTimeout(
         refreshConnection(true),
         CONNECTION_TEST_TIMEOUT_MS,
@@ -224,10 +381,13 @@ export function SettingsPage() {
 
   const handleClearLocalData = () => {
     const prefixes = ['gd-helper-', 'bpmn_polygon_diagrams'];
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const key = localStorage.key(i);
+
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
       if (key && prefixes.some((prefix) => key.startsWith(prefix) || key === prefix)) {
-        if (key === 'gd-helper-settings') continue;
+        if (key === 'gd-helper-settings') {
+          continue;
+        }
         localStorage.removeItem(key);
       }
     }
@@ -254,7 +414,9 @@ export function SettingsPage() {
     input.accept = '.json,application/json';
     input.onchange = async () => {
       const file = input.files?.[0];
-      if (!file) return;
+      if (!file) {
+        return;
+      }
 
       try {
         const text = await file.text();
@@ -272,14 +434,18 @@ export function SettingsPage() {
     if (snapshot.state === 'unknown') {
       return { variant: 'default' as const, label: 'Проверка...', icon: <Wifi size={12} /> };
     }
+
     if (snapshot.state === 'online') {
       return { variant: 'success' as const, label: 'Онлайн', icon: <CircleCheck size={12} /> };
     }
+
     return { variant: 'danger' as const, label: 'Оффлайн', icon: <CircleX size={12} /> };
   })();
 
   const errorHint = (() => {
-    if (snapshot.state !== 'offline' || !snapshot.errorKind) return null;
+    if (snapshot.state !== 'offline' || !snapshot.errorKind) {
+      return null;
+    }
 
     switch (snapshot.errorKind) {
       case 'config':
@@ -289,7 +455,7 @@ export function SettingsPage() {
         if (settings.connectionMethod === 'postgres') {
           return 'Заполните URL API/proxy для PostgreSQL.';
         }
-        return 'Заполните URL backend/API proxy для Neon. Секретный connection string не должен попадать в браузер.';
+        return 'Заполните Firebase config или выберите другой provider.';
       case 'network':
         return 'Сервис подключения недоступен. Проверьте URL и доступность backend/proxy.';
       case 'cors':
@@ -300,6 +466,15 @@ export function SettingsPage() {
         return null;
     }
   })();
+
+  const canCheckMigration = migrationEntities.length > 0
+    && migrationSource !== migrationTarget
+    && migrationProgress.state !== 'checking'
+    && migrationProgress.state !== 'running';
+
+  const canRunMigration = migrationPlan !== null
+    && migrationProgress.state !== 'checking'
+    && migrationProgress.state !== 'running';
 
   return (
     <>
@@ -355,7 +530,7 @@ export function SettingsPage() {
                 <SettingsRow label="Supabase URL">
                   <Input
                     value={settings.supabaseUrl}
-                    onChange={(e) => updateSettings({ supabaseUrl: e.target.value })}
+                    onChange={(event) => updateSettings({ supabaseUrl: event.target.value })}
                     placeholder="https://xyz.supabase.co"
                     noContainer
                     fullWidth
@@ -366,7 +541,7 @@ export function SettingsPage() {
                   <Input
                     type="password"
                     value={settings.supabaseAnonKey}
-                    onChange={(e) => updateSettings({ supabaseAnonKey: e.target.value })}
+                    onChange={(event) => updateSettings({ supabaseAnonKey: event.target.value })}
                     placeholder="eyJhbG..."
                     noContainer
                     fullWidth
@@ -384,7 +559,7 @@ export function SettingsPage() {
                 >
                   <Input
                     value={settings.postgresUrl}
-                    onChange={(e) => updateSettings({ postgresUrl: e.target.value })}
+                    onChange={(event) => updateSettings({ postgresUrl: event.target.value })}
                     placeholder="http://localhost:5432"
                     noContainer
                     fullWidth
@@ -393,155 +568,75 @@ export function SettingsPage() {
                 </SettingsRow>
                 <div className="settings-info">
                   <Info size={14} />
-                  <span>Для browser-only режима нужен backend или proxy со стабильным `/tasks` API.</span>
-                </div>
-              </>
-            )}
-
-            {settings.connectionMethod === 'neon' && (
-              <>
-                <SettingsRow
-                  label="Neon API URL"
-                  hint="Безопасный backend endpoint или alias. Не connection string."
-                >
-                  <Input
-                    value={settings.neonApiUrl}
-                    onChange={(e) => updateSettings({ neonApiUrl: e.target.value })}
-                    placeholder="http://localhost:3001/api/db"
-                    noContainer
-                    fullWidth
-                    icon={<Link2 size={14} />}
-                  />
-                </SettingsRow>
-                <SettingsRow
-                  label="Neon project"
-                  hint="Опционально, для миграции и отображения"
-                >
-                  <Input
-                    value={settings.neonProjectName}
-                    onChange={(e) => updateSettings({ neonProjectName: e.target.value })}
-                    placeholder="gd-helper-prod"
-                    noContainer
-                    fullWidth
-                    icon={<Database size={14} />}
-                  />
-                </SettingsRow>
-                <SettingsRow
-                  label="Neon database"
-                  hint="Имя базы PostgreSQL, если нужно различать окружения"
-                >
-                  <Input
-                    value={settings.neonDatabaseName}
-                    onChange={(e) => updateSettings({ neonDatabaseName: e.target.value })}
-                    placeholder="gd_helper"
-                    noContainer
-                    fullWidth
-                    icon={<Database size={14} />}
-                  />
-                </SettingsRow>
-                <SettingsRow
-                  label="SSL mode"
-                  hint="Справочное значение для backend proxy"
-                >
-                  <Select
-                    value={settings.neonSslMode}
-                    onChange={(value) => updateSettings({ neonSslMode: value })}
-                    options={NEON_SSL_OPTIONS}
-                    size="sm"
-                  />
-                </SettingsRow>
-                <div className="settings-info">
-                  <Info size={14} />
-                  <span>Секреты Neon хранятся только на сервере. Браузер использует только API/proxy URL.</span>
+                  <span>Для browser-only режима нужен backend или proxy со стабильным /tasks API.</span>
                 </div>
               </>
             )}
 
             {settings.connectionMethod === 'firebase' && (
               <>
-                <SettingsRow
-                  label="API Key"
-                  hint="Firebase Web API Key (не секретный)"
-                >
+                <SettingsRow label="API Key" hint="Firebase Web API Key (не секретный)">
                   <Input
                     value={settings.firebaseApiKey}
-                    onChange={(e) => updateSettings({ firebaseApiKey: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseApiKey: event.target.value })}
                     placeholder="AIzaSy..."
                     noContainer
                     fullWidth
                     icon={<Key size={14} />}
                   />
                 </SettingsRow>
-                <SettingsRow
-                  label="Auth Domain"
-                  hint="например, your-project.firebaseapp.com"
-                >
+                <SettingsRow label="Auth Domain" hint="Например, your-project.firebaseapp.com">
                   <Input
                     value={settings.firebaseAuthDomain}
-                    onChange={(e) => updateSettings({ firebaseAuthDomain: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseAuthDomain: event.target.value })}
                     placeholder="your-project.firebaseapp.com"
                     noContainer
                     fullWidth
                     icon={<Link2 size={14} />}
                   />
                 </SettingsRow>
-                <SettingsRow
-                  label="Project ID"
-                  hint="Идентификатор Firebase проекта"
-                >
+                <SettingsRow label="Project ID" hint="Идентификатор Firebase проекта">
                   <Input
                     value={settings.firebaseProjectId}
-                    onChange={(e) => updateSettings({ firebaseProjectId: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseProjectId: event.target.value })}
                     placeholder="your-project-id"
                     noContainer
                     fullWidth
                     icon={<Database size={14} />}
                   />
                 </SettingsRow>
-                <SettingsRow
-                  label="Storage Bucket"
-                  hint="Опционально, для хранения файлов"
-                >
+                <SettingsRow label="Storage Bucket" hint="Опционально, для хранения файлов">
                   <Input
                     value={settings.firebaseStorageBucket}
-                    onChange={(e) => updateSettings({ firebaseStorageBucket: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseStorageBucket: event.target.value })}
                     placeholder="your-project.appspot.com"
                     noContainer
                     fullWidth
                     icon={<Database size={14} />}
                   />
                 </SettingsRow>
-                <SettingsRow
-                  label="Messaging Sender ID"
-                  hint="Опционально, для push-уведомлений"
-                >
+                <SettingsRow label="Messaging Sender ID" hint="Опционально, для push-уведомлений">
                   <Input
                     value={settings.firebaseMessagingSenderId}
-                    onChange={(e) => updateSettings({ firebaseMessagingSenderId: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseMessagingSenderId: event.target.value })}
                     placeholder="123456789"
                     noContainer
                     fullWidth
                   />
                 </SettingsRow>
-                <SettingsRow
-                  label="App ID"
-                  hint="Firebase App ID"
-                >
+                <SettingsRow label="App ID" hint="Firebase App ID">
                   <Input
                     value={settings.firebaseAppId}
-                    onChange={(e) => updateSettings({ firebaseAppId: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseAppId: event.target.value })}
                     placeholder="1:123456789:web:abc123"
                     noContainer
                     fullWidth
                   />
                 </SettingsRow>
-                <SettingsRow
-                  label="Measurement ID"
-                  hint="Опционально, для Google Analytics"
-                >
+                <SettingsRow label="Measurement ID" hint="Опционально, для Google Analytics">
                   <Input
                     value={settings.firebaseMeasurementId}
-                    onChange={(e) => updateSettings({ firebaseMeasurementId: e.target.value })}
+                    onChange={(event) => updateSettings({ firebaseMeasurementId: event.target.value })}
                     placeholder="G-XXXXXXXXXX"
                     noContainer
                     fullWidth
@@ -598,10 +693,7 @@ export function SettingsPage() {
             title="Данные"
             description="Управление локальными данными и настройками"
           >
-            <SettingsRow
-              label="Экспорт настроек"
-              hint="Сохранить текущую конфигурацию в JSON файл"
-            >
+            <SettingsRow label="Экспорт настроек" hint="Сохранить текущую конфигурацию в JSON файл">
               <Button
                 variant="secondary"
                 size="sm"
@@ -612,10 +704,7 @@ export function SettingsPage() {
               </Button>
             </SettingsRow>
 
-            <SettingsRow
-              label="Импорт настроек"
-              hint="Восстановить конфигурацию из JSON файла"
-            >
+            <SettingsRow label="Импорт настроек" hint="Восстановить конфигурацию из JSON файла">
               <Button
                 variant="secondary"
                 size="sm"
@@ -628,7 +717,7 @@ export function SettingsPage() {
 
             <SettingsRow
               label="Очистка локальных данных"
-              hint="Удалит сохранённые диаграммы, запросы и локальные сессии. Настройки подключения сохранятся."
+              hint="Удалит сохранённые BPMN-диаграммы, API-запросы и локальные сессии. Настройки подключения сохранятся."
             >
               <Button
                 variant="danger"
@@ -642,9 +731,232 @@ export function SettingsPage() {
           </SettingsSection>
 
           <SettingsSection
-            icon={<ShieldCheck size={18} />}
-            title="Система"
+            icon={<Database size={18} />}
+            title="Миграция данных"
+            description="Dry-run и перенос данных Task Helper между актуальными provider-ами без автоматического switch active provider"
           >
+            <SettingsRow label="Source provider" hint="Откуда читать задачи и историю задач">
+              <Select
+                value={migrationSource}
+                onChange={(value) => {
+                  setMigrationSource(value);
+                  resetMigrationState();
+                }}
+                options={MIGRATION_PROVIDER_OPTIONS}
+                size="sm"
+              />
+            </SettingsRow>
+
+            <SettingsRow
+              label="Target provider"
+              hint="Куда записывать данные. Active provider автоматически не переключается"
+            >
+              <Select
+                value={migrationTarget}
+                onChange={(value) => {
+                  setMigrationTarget(value);
+                  resetMigrationState();
+                }}
+                options={MIGRATION_PROVIDER_OPTIONS}
+                size="sm"
+              />
+            </SettingsRow>
+
+            <div className="settings-row settings-row--stacked">
+              <div className="settings-row__info">
+                <span className="settings-row__label">Сущности для миграции</span>
+                <span className="settings-row__hint">На первом этапе мигрируются только tasks и task history.</span>
+              </div>
+              <div className="settings-row__control">
+                <div className="settings-checklist">
+                  <Checkbox
+                    checked={migrationEntities.includes('tasks')}
+                    onChange={(event) => handleToggleMigrationEntity('tasks', event.target.checked)}
+                    label="Tasks"
+                  />
+                  <Checkbox
+                    checked={migrationEntities.includes('taskHistory')}
+                    onChange={(event) => handleToggleMigrationEntity('taskHistory', event.target.checked)}
+                    label="Task history"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <SettingsRow
+              label="Conflict strategy"
+              hint="Что делать, если запись уже существует в target"
+            >
+              <Select
+                value={migrationStrategy}
+                onChange={(value) => {
+                  setMigrationStrategy(value);
+                  resetMigrationState();
+                }}
+                options={MIGRATION_CONFLICT_OPTIONS}
+                size="sm"
+              />
+            </SettingsRow>
+
+            {migrationError && (
+              <div className="settings-row settings-row--stacked">
+                <InlineError
+                  title="Миграция сейчас недоступна"
+                  message={migrationError}
+                />
+              </div>
+            )}
+
+            <div className="settings-row settings-row--stacked">
+              <div className="settings-row__info">
+                <span className="settings-row__label">Dry-run</span>
+                <span className="settings-row__hint">Ничего не записывает, только строит план миграции и показывает конфликты.</span>
+              </div>
+              <div className="settings-row__control">
+                <div className="settings-actions">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleCheckMigration}
+                    isLoading={migrationProgress.state === 'checking'}
+                    disabled={!canCheckMigration}
+                  >
+                    Проверить миграцию
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowMigrationModal(true)}
+                    disabled={!canRunMigration}
+                  >
+                    Запустить миграцию
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {migrationPlan && (
+              <div className="settings-row settings-row--stacked">
+                <div className="settings-row__info">
+                  <span className="settings-row__label">Migration plan</span>
+                  <span className="settings-row__hint">
+                    {migrationPlan.source} {'->'} {migrationPlan.target} / strategy: {migrationPlan.conflictStrategy}
+                  </span>
+                </div>
+                <div className="settings-row__control">
+                  <div className="settings-migration-plan">
+                    <Table>
+                      <Table.Head>
+                        <Table.Row>
+                          <Table.HeaderCell>Entity</Table.HeaderCell>
+                          <Table.HeaderCell>Source</Table.HeaderCell>
+                          <Table.HeaderCell>Target</Table.HeaderCell>
+                          <Table.HeaderCell>To create</Table.HeaderCell>
+                          <Table.HeaderCell>To update</Table.HeaderCell>
+                          <Table.HeaderCell>To skip</Table.HeaderCell>
+                          <Table.HeaderCell>Conflicts</Table.HeaderCell>
+                        </Table.Row>
+                      </Table.Head>
+                      <Table.Body>
+                        {migrationPlan.entities.map((entity) => (
+                          <Table.Row key={entity.type}>
+                            <Table.Cell>{MIGRATION_ENTITY_LABELS[entity.type]}</Table.Cell>
+                            <Table.Cell>{entity.sourceCount}</Table.Cell>
+                            <Table.Cell>{entity.targetCount}</Table.Cell>
+                            <Table.Cell>{entity.toCreate}</Table.Cell>
+                            <Table.Cell>{entity.toUpdate}</Table.Cell>
+                            <Table.Cell>{entity.toSkip}</Table.Cell>
+                            <Table.Cell>
+                              <Badge variant={entity.conflicts.length > 0 ? 'warning' : 'default'}>
+                                {entity.conflicts.length}
+                              </Badge>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table>
+
+                    {migrationPlan.entities.some((entity) => entity.conflicts.length > 0) && (
+                      <div className="settings-conflicts">
+                        {migrationPlan.entities.map((entity) => (
+                          entity.conflicts.length > 0 ? (
+                            <div key={`${entity.type}-conflicts`} className="settings-conflicts__group">
+                              <strong>{MIGRATION_ENTITY_LABELS[entity.type]}</strong>
+                              <ul className="settings-conflicts__list">
+                                {entity.conflicts.slice(0, 8).map((conflict) => (
+                                  <li key={conflict.entityId}>
+                                    <span className="settings-value--mono">{conflict.entityId}</span>
+                                    <span>{conflict.message}</span>
+                                  </li>
+                                ))}
+                                {entity.conflicts.length > 8 && (
+                                  <li>И ещё {entity.conflicts.length - 8}</li>
+                                )}
+                              </ul>
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {migrationProgress.state !== 'idle' && migrationProgress.state !== 'checking' && (
+              <div className="settings-row settings-row--stacked">
+                <div className="settings-row__info">
+                  <span className="settings-row__label">Прогресс</span>
+                  <span className="settings-row__hint">
+                    {migrationProgress.currentEntity
+                      ? `Текущая сущность: ${MIGRATION_ENTITY_LABELS[migrationProgress.currentEntity]}`
+                      : 'Ожидание следующего шага'}
+                  </span>
+                </div>
+                <div className="settings-row__control">
+                  <div className="settings-progress">
+                    <div className="settings-progress__meta">
+                      <Badge
+                        variant={
+                          migrationProgress.state === 'done'
+                            ? 'success'
+                            : migrationProgress.state === 'failed'
+                              ? 'danger'
+                              : 'default'
+                        }
+                      >
+                        {migrationProgress.state}
+                      </Badge>
+                      <span>{migrationProgress.completed} / {migrationProgress.total}</span>
+                    </div>
+
+                    {migrationProgress.errors.length > 0 && (
+                      <ul className="settings-progress__errors">
+                        {migrationProgress.errors.slice(0, 8).map((error, index) => (
+                          <li key={`${error.entityType}-${error.entityId ?? 'common'}-${index}`}>
+                            <span className="settings-value--mono">{error.entityType}</span>
+                            <span>{error.message}</span>
+                          </li>
+                        ))}
+                        {migrationProgress.errors.length > 8 && (
+                          <li>И ещё {migrationProgress.errors.length - 8} ошибок</li>
+                        )}
+                      </ul>
+                    )}
+
+                    {migrationProgress.state === 'done' && migrationTarget !== settings.connectionMethod && (
+                      <div className="settings-actions">
+                        <Button size="sm" variant="secondary" onClick={handleSwitchToMigrationTarget}>
+                          Переключиться на target provider
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </SettingsSection>
+
+          <SettingsSection icon={<ShieldCheck size={18} />} title="Система">
             <SettingsRow label="Версия приложения">
               <span className="settings-value settings-value--mono">{appVersion}</span>
             </SettingsRow>
@@ -668,14 +980,43 @@ export function SettingsPage() {
         variant="danger"
         footer={(
           <>
-            <Button size="sm" onClick={() => setShowResetModal(false)}>Отмена</Button>
-            <Button size="sm" variant="danger" onClick={handleClearLocalData}>Очистить</Button>
+            <Button size="sm" variant="secondary" onClick={() => setShowResetModal(false)}>
+              Отмена
+            </Button>
+            <Button size="sm" variant="danger" onClick={handleClearLocalData}>
+              Очистить
+            </Button>
           </>
         )}
       >
         <p>
           Будут удалены все сохранённые BPMN-диаграммы, API-запросы, локальные сессии и история.
           Настройки подключения сохранятся. Действие необратимо.
+        </p>
+      </Modal>
+
+      <Modal
+        isOpen={showMigrationModal}
+        onClose={() => setShowMigrationModal(false)}
+        title="Запустить миграцию данных?"
+        footer={(
+          <>
+            <Button size="sm" variant="secondary" onClick={() => setShowMigrationModal(false)}>
+              Отмена
+            </Button>
+            <Button size="sm" onClick={handleRunMigration}>
+              Запустить миграцию
+            </Button>
+          </>
+        )}
+      >
+        <p>
+          Будут перенесены только выбранные сущности Task Helper из <strong>{migrationSource}</strong> в{' '}
+          <strong>{migrationTarget}</strong>. Source-данные не удаляются, active provider не переключается автоматически.
+        </p>
+        <p>
+          Если strategy = <strong>overwrite</strong>, будут обновляться только поддерживаемые записи.
+          Task history без upsert/delete semantics останется в safe-режиме.
         </p>
       </Modal>
     </>

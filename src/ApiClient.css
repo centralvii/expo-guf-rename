@@ -148,6 +148,16 @@
   min-width: 110px;
 }
 
+.api-url-bar__environment {
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.api-url-bar__environment .ui-select__trigger {
+  min-width: 120px;
+  border-radius: 8px;
+}
+
 .api-url-bar__method .ui-select__trigger {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -173,6 +183,10 @@
   height: 32px;
   font-family: var(--font-mono);
   font-size: 13px;
+}
+
+.api-unresolved-warning {
+  margin-top: -4px;
 }
 
 /* ---- Request Panel ---- */

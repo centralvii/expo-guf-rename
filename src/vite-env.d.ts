@@ -4,9 +4,6 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_POSTGRES_PROXY_URL: string;
-  readonly VITE_NEON_PROXY_URL: string;
-  readonly VITE_NEON_PROJECT_NAME: string;
-  readonly VITE_NEON_DATABASE_NAME: string;
   // Firebase
   readonly VITE_FIREBASE_API_KEY: string;
   readonly VITE_FIREBASE_AUTH_DOMAIN: string;

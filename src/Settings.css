@@ -118,7 +118,10 @@
 .settings-row__control > .ui-input-wrapper,
 .settings-row__control > .ui-input-container,
 .settings-row__control > .ui-select,
-.settings-row__control > .theme-preview-grid {
+.settings-row__control > .theme-preview-grid,
+.settings-row__control > .settings-checklist,
+.settings-row__control > .settings-migration-plan,
+.settings-row__control > .settings-progress {
   width: 100%;
 }
 
@@ -146,6 +149,64 @@
 
 .theme-preview-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-checklist,
+.settings-actions,
+.settings-migration-plan,
+.settings-progress,
+.settings-conflicts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.settings-checklist {
+  gap: 10px;
+}
+
+.settings-actions {
+  flex-direction: row;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.settings-conflicts__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-conflicts__list,
+.settings-progress__errors {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-conflicts__list li,
+.settings-progress__errors li {
+  display: list-item;
+}
+
+.settings-conflicts__list li::marker,
+.settings-progress__errors li::marker {
+  color: var(--text-muted);
+}
+
+.settings-conflicts__list li + li,
+.settings-progress__errors li + li {
+  margin-top: 6px;
+}
+
+.settings-progress__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* ---- Inline value ---- */
