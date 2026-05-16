@@ -1,7 +1,7 @@
 import type { TaskHistoryEntry, TaskItem } from '../types';
 import { getTaskRepositoryAdapterForProvider } from '../services/database';
 
-export type MigrationProvider = 'supabase' | 'firebase';
+export type MigrationProvider = 'supabase' | 'firebase' | 'postgres';
 
 export type MigrationEntityType = 'tasks' | 'taskHistory';
 
@@ -152,12 +152,34 @@ export async function buildMigrationPlan(input: {
   const historyConflicts: MigrationConflict[] = [];
 
   if (shouldIncludeEntity(input.entities, 'taskHistory')) {
-    sourceHistoryEntries = (
-      await Promise.all(sourceTasks.map((task) => sourceAdapter.listTaskHistory(task.id)))
-    ).flat();
-    targetHistoryEntries = (
-      await Promise.all(targetTasks.map((task) => targetAdapter.listTaskHistory(task.id)))
-    ).flat();
+    try {
+      sourceHistoryEntries = (
+        await Promise.all(sourceTasks.map((task) => sourceAdapter.listTaskHistory(task.id)))
+      ).flat();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message.toLowerCase() : '';
+      if (msg.includes('404') || msg.includes('not found') || msg.includes('does not exist') || msg.includes('relation')) {
+        throw new Error(
+          'Таблица task_helper_history не найдена в Supabase. ' +
+          'Выполните скрипт supabase/migrations/20260514_task_helper_history.sql в Supabase SQL Editor.'
+        );
+      }
+      throw error;
+    }
+    try {
+      targetHistoryEntries = (
+        await Promise.all(targetTasks.map((task) => targetAdapter.listTaskHistory(task.id)))
+      ).flat();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message.toLowerCase() : '';
+      if (msg.includes('404') || msg.includes('not found') || msg.includes('does not exist') || msg.includes('relation')) {
+        throw new Error(
+          'Таблица task_helper_history не найдена в target. ' +
+          'Выполните скрипт supabase/migrations/20260514_task_helper_history.sql в Supabase SQL Editor.'
+        );
+      }
+      throw error;
+    }
 
     const targetHistoryMap = new Map(targetHistoryEntries.map((entry) => [entry.id, entry]));
 

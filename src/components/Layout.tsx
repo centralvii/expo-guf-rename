@@ -80,36 +80,47 @@ export function Layout() {
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let failures = 0;
+    let isPaused = false;
 
     const unsubscribe = subscribeToConnection((snap) => {
       if (!cancelled) setConnectionState(snap.state);
     });
 
     const scheduleNext = (delay: number) => {
-      if (cancelled) return;
+      if (cancelled || isPaused) return;
       timeoutId = setTimeout(tick, delay);
     };
 
     const tick = async () => {
-      if (cancelled) return;
+      if (cancelled || isPaused) return;
       const snap = await refreshConnection(true);
-      if (cancelled) return;
+      if (cancelled || isPaused) return;
       if (snap.state === 'online') {
         failures = 0;
-        scheduleNext(60_000); // 1 минута при стабильном соединении
+        scheduleNext(60_000);
       } else {
         failures = Math.min(failures + 1, 6);
-        // 15s → 30s → 1m → 2m → 4m → 5m (cap)
         const delay = Math.min(15_000 * 2 ** (failures - 1), 300_000);
         scheduleNext(delay);
       }
     };
 
-    // Первичная проверка сразу
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        isPaused = true;
+        if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      } else {
+        isPaused = false;
+        tick();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
     tick();
 
     return () => {
       cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (timeoutId) clearTimeout(timeoutId);
       unsubscribe();
     };

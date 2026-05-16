@@ -20,8 +20,10 @@ body {
   min-height: 100vh;
 }
 
-*:focus,
+*:focus {
+  outline: none;
+}
 *:focus-visible {
-  outline: none !important;
-  outline-offset: 0 !important;
+  outline: 2px solid var(--accent, #0070f3);
+  outline-offset: 2px;
 }

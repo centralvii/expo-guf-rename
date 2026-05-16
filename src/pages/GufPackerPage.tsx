@@ -1,4 +1,5 @@
 import { Download, Trash2 } from 'lucide-react';
+import '../GufPacker.css';
 import { FileTable } from '../components/FileTable';
 import { FileUploader } from '../components/FileUploader';
 import { MassActions } from '../components/MassActions';

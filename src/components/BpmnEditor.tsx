@@ -4,6 +4,13 @@ import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 
+// Suppress bpmn-js library deprecation warnings (ContextPad#getPad)
+const _consoleWarn = console.warn;
+console.warn = (msg, ...args) => {
+  if (typeof msg === 'string' && msg.includes('ContextPad#getPad')) return;
+  _consoleWarn(msg, ...args);
+};
+
 export interface BpmnDiagramStats {
   tasks: number;
   gateways: number;
@@ -181,8 +188,8 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
             await modelerRef.current.importXML(EMPTY_DIAGRAM);
             modelerRef.current.get('canvas').zoom('fit-viewport');
             onStatsChange?.(collectDiagramStats(modelerRef.current));
-          } catch {
-            // Silently fail
+          } catch (fallbackError) {
+            console.warn('[BpmnEditor] Fallback diagram also failed:', fallbackError);
           }
         }
       },
@@ -325,8 +332,8 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
             await modeler.importXML(EMPTY_DIAGRAM);
             if (isCancelled) return;
             modeler.get('canvas').zoom('fit-viewport');
-          } catch {
-            // Silently fail - modeler will show empty canvas
+          } catch (fallbackError) {
+            console.warn('[BpmnEditor] Fallback empty diagram also failed:', fallbackError);
           }
         }
 

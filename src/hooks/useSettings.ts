@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { AppSettings, ConnectionMethod } from '../types';
+import type { AppSettings } from '../types';
 import { loadSettings, saveSettings, SETTINGS_EVENT, SETTINGS_KEY } from '../lib/appSettings';
 
 export function useSettings() {
@@ -34,13 +34,8 @@ export function useSettings() {
     });
   }, []);
 
-  const setConnectionMethod = useCallback((method: ConnectionMethod) => {
-    updateSettings({ connectionMethod: method });
-  }, [updateSettings]);
-
   return {
     settings,
     updateSettings,
-    setConnectionMethod,
   };
 }

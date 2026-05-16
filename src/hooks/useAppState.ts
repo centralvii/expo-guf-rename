@@ -119,6 +119,12 @@ export function useAppState(): AppState {
     return () => clearTimeout(timer);
   }, [files, template, startNumber, archiveName, variables, readmeContent]);
 
+  // Пересчёт имён при изменении шаблона/номера/переменных
+  useEffect(() => {
+    setFiles((prev) => recalc(prev, template, startNumber, variables));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [template, startNumber, variables]);
+
   // Пересчёт имён
   const recalc = useCallback(
     (currentFiles: FileRow[], tpl: string, start: number, vars: CustomVariable[]): FileRow[] => {
@@ -227,13 +233,9 @@ export function useAppState(): AppState {
   // Изменение значения переменной
   const setVariableValue = useCallback(
     (key: string, value: string) => {
-      setVariables((prev) => {
-        const newVars = prev.map((v) => (v.key === key ? { ...v, value } : v));
-        setFiles((prevFiles) => recalc(prevFiles, template, startNumber, newVars));
-        return newVars;
-      });
+      setVariables((prev) => prev.map((v) => (v.key === key ? { ...v, value } : v)));
     },
-    [recalc, template, startNumber]
+    []
   );
 
   // Добавление новой переменной
@@ -241,24 +243,18 @@ export function useAppState(): AppState {
     (key: string, label: string) => {
       setVariables((prev) => {
         if (prev.some((v) => v.key === key)) return prev;
-        const newVars = [...prev, { key, label, value: '' }];
-        setFiles((prevFiles) => recalc(prevFiles, template, startNumber, newVars));
-        return newVars;
+        return [...prev, { key, label, value: '' }];
       });
     },
-    [recalc, template, startNumber]
+    []
   );
 
   // Удаление переменной
   const removeVariable = useCallback(
     (key: string) => {
-      setVariables((prev) => {
-        const newVars = prev.filter((v) => v.key !== key);
-        setFiles((prevFiles) => recalc(prevFiles, template, startNumber, newVars));
-        return newVars;
-      });
+      setVariables((prev) => prev.filter((v) => v.key !== key));
     },
-    [recalc, template, startNumber]
+    []
   );
 
   // Переименование cleanName для конкретного файла

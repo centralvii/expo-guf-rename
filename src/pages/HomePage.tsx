@@ -145,8 +145,8 @@ function SkStatCards({ loaded, stats }: { loaded: boolean; stats: ReturnType<typ
 
   return (
     <section className="dash-stats-row">
-      {cards.map((c, i) => (
-        <div key={i} className="dash-stat-card">
+      {cards.map((c) => (
+        <div key={c.label} className="dash-stat-card">
           {!loaded ? (
             /* Skeleton state — same layout as real card */
             <>

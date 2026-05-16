@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import '../ApiClient.css';
 import { Send, Save, Plus, X, Ban } from 'lucide-react';
 import { useApiClient } from '../hooks/useApiClient';
 import { useToast } from '../hooks/useToast';

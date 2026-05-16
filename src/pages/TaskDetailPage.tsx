@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import '../TaskHelper.css';
 import {
   AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus,
   Flame, ArrowUp, ArrowRight, ArrowDown, Circle, Clock, GitPullRequest,

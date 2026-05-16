@@ -1,24 +1,31 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { ToastProvider } from './components/ToastProvider';
-import { HomePage } from './pages/HomePage';
-import { GufPackerPage } from './pages/GufPackerPage';
-import { TaskHelperPage } from './pages/TaskHelperPage';
-import { TaskDetailPage } from './pages/TaskDetailPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { AboutPage } from './pages/AboutPage';
-import { BpmnPage } from './pages/BpmnPage';
-import { ApiClientPage } from './pages/ApiClientPage';
-import { SqlInspectorPage } from './pages/SqlInspectorPage';
 import { useAppTheme } from './hooks/useAppTheme';
 import './styles/themes.css';
 import './App.css';
 import './Dashboard.css';
-import './TaskHelper.css';
-import './Bpmn.css';
-import './GufPacker.css';
-import './ApiClient.css';
-import './Settings.css';
+
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const GufPackerPage = lazy(() => import('./pages/GufPackerPage').then(m => ({ default: m.GufPackerPage })));
+const TaskHelperPage = lazy(() => import('./pages/TaskHelperPage').then(m => ({ default: m.TaskHelperPage })));
+const TaskDetailPage = lazy(() => import('./pages/TaskDetailPage').then(m => ({ default: m.TaskDetailPage })));
+const BpmnPage = lazy(() => import('./pages/BpmnPage').then(m => ({ default: m.BpmnPage })));
+const ApiClientPage = lazy(() => import('./pages/ApiClientPage').then(m => ({ default: m.ApiClientPage })));
+const SqlInspectorPage = lazy(() => import('./pages/SqlInspectorPage').then(m => ({ default: m.SqlInspectorPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+
+function PageLoader() {
+  return (
+    <div className="app-restore anim-fade-in">
+      <div className="sk sk-stat-value" style={{ width: 80 }} />
+      <div className="sk sk-stat-value" style={{ width: 160 }} />
+    </div>
+  );
+}
 
 function App() {
   useAppTheme();
@@ -26,19 +33,23 @@ function App() {
   return (
     <ToastProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<HomePage />} />
-            <Route path="about" element={<AboutPage />} />
-            <Route path="guf-packer" element={<GufPackerPage />} />
-            <Route path="task-helper" element={<TaskHelperPage />} />
-            <Route path="task-helper/:taskId" element={<TaskDetailPage />} />
-            <Route path="bpmn" element={<BpmnPage />} />
-            <Route path="api-client" element={<ApiClientPage />} />
-            <Route path="sql-inspector" element={<SqlInspectorPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-        </Routes>
+        <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomePage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="guf-packer" element={<GufPackerPage />} />
+              <Route path="task-helper" element={<TaskHelperPage />} />
+              <Route path="task-helper/:taskId" element={<TaskDetailPage />} />
+              <Route path="bpmn" element={<BpmnPage />} />
+              <Route path="api-client" element={<ApiClientPage />} />
+              <Route path="sql-inspector" element={<SqlInspectorPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+          </Routes>
+        </Suspense>
+        </ErrorBoundary>
       </BrowserRouter>
     </ToastProvider>
   );
