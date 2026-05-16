@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { memo } from 'react';
 import type { AppTheme } from '../../types';
 import './ThemePreviewCard.css';

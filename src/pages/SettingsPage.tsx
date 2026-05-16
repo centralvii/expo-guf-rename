@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import '../Settings.css';
-import { CircleCheck, CircleX, Database, Info, Link2, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
-import { version as appVersion } from '../../package.json';
+import { Database, Info, Link2, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { useTasks } from '../hooks/useTasks';
 import { useToast } from '../hooks/useToast';
@@ -237,7 +236,7 @@ export function SettingsPage() {
           </SettingsSection>
 
           <SettingsSection icon={<ShieldCheck size={18} />} title="Система">
-            <SystemSection appVersion={appVersion} gitCommit={__APP_GIT_COMMIT__} mode={import.meta.env.MODE} />
+            <SystemSection appVersion={__APP_VERSION__} gitCommit={__APP_GIT_COMMIT__} mode={import.meta.env.MODE} />
           </SettingsSection>
         </div>
       </div>

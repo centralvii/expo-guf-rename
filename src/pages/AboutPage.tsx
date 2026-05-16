@@ -21,7 +21,6 @@ import {
   type ConnectionSnapshot,
 } from '../lib/connectionStatus';
 import type { AppTheme, ConnectionMethod } from '../types';
-import { version as appVersion } from '../../package.json';
 
 import './About/About.css';
 
@@ -287,7 +286,7 @@ export function AboutPage() {
               <span className="about-system__label">Проект</span>
               <div className="about-system__rows">
                 <SystemMetaRow label="название" value="gd-helper" />
-                <SystemMetaRow label="версия" value={appVersion} />
+                <SystemMetaRow label="версия" value={__APP_VERSION__} />
                 <SystemMetaRow label="коммит" value={__APP_GIT_COMMIT__} />
                 <SystemMetaRow label="тема" value={themeLabel} />
                 <SystemMetaRow label="провайдер" value={providerLabel} />

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FileDiff, History, RotateCcw } from 'lucide-react';
+import { formatHistoryDate } from '../lib/dateFormat';
 import { summarizeTaskChangesDetailed } from '../lib/taskHistory';
 import { diffTaskCollections } from '../lib/taskDiff';
 import type { TaskHistoryEntry } from '../types';
@@ -14,16 +15,6 @@ interface TaskHistoryDrawerProps {
   isLoading: boolean;
   taskTitle: string;
   onRestore: (entry: TaskHistoryEntry) => Promise<void>;
-}
-
-function formatHistoryDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 function getTypeBadge(type: TaskHistoryEntry['type']) {
@@ -62,15 +53,12 @@ export function TaskHistoryDrawer({
     );
   }, [selectedEntry]);
 
-  useEffect(() => {
-    if (isOpen) {
-      return;
-    }
-
+  const handleClose = () => {
     setSelectedEntry(null);
     setRestoreCandidate(null);
     setIsRestoring(false);
-  }, [isOpen]);
+    onClose();
+  };
 
   const handleRestore = async () => {
     if (!restoreCandidate) {
@@ -90,7 +78,7 @@ export function TaskHistoryDrawer({
     <>
       <Drawer
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleClose}
         title="История изменений"
         width="680px"
       >

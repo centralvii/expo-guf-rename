@@ -24,15 +24,11 @@ function normalizeConnectionMethod(method: unknown): ConnectionMethod {
     return method;
   }
 
-  if (DEFAULT_SETTINGS.supabaseUrl && DEFAULT_SETTINGS.supabaseAnonKey) {
-    return 'supabase';
+  if (method != null) {
+    console.warn('[settings] Unknown connection method, falling back to default');
   }
 
-  if (DEFAULT_SETTINGS.firebaseApiKey && DEFAULT_SETTINGS.firebaseProjectId && DEFAULT_SETTINGS.firebaseAppId) {
-    return 'firebase';
-  }
-
-  return 'supabase';
+  return DEFAULT_SETTINGS.connectionMethod;
 }
 
 export function loadSettings(): AppSettings {

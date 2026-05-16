@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildUrl, applyAuth, buildBody, createEmptyRequest, normalizeEnvironments } from './apiClient';
-import type { ApiRequest, ApiKeyValue } from '../types';
+import type { ApiKeyValue } from '../types';
 
 describe('buildUrl', () => {
   it('returns base URL when no params', () => {
@@ -9,8 +9,8 @@ describe('buildUrl', () => {
 
   it('appends query params', () => {
     const params: ApiKeyValue[] = [
-      { key: 'page', value: '1', enabled: true },
-      { key: 'limit', value: '10', enabled: true },
+      { id: '1', key: 'page', value: '1', enabled: true },
+      { id: '2', key: 'limit', value: '10', enabled: true },
     ];
     const url = buildUrl('https://example.com/api', params);
     expect(url).toContain('page=1');
@@ -19,8 +19,8 @@ describe('buildUrl', () => {
 
   it('skips disabled params', () => {
     const params: ApiKeyValue[] = [
-      { key: 'page', value: '1', enabled: false },
-      { key: 'limit', value: '10', enabled: true },
+      { id: '1', key: 'page', value: '1', enabled: false },
+      { id: '2', key: 'limit', value: '10', enabled: true },
     ];
     expect(buildUrl('https://example.com/api', params)).not.toContain('page=');
   });

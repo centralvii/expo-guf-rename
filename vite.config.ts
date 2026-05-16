@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { defineConfig, type UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
+import pkg from './package.json';
 
 function getGitCommitHash() {
   try {
@@ -21,6 +22,7 @@ const config: UserConfig = {
   ],
   define: {
     __APP_GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
+    __APP_VERSION__: JSON.stringify(pkg.version),
   },
 };
 

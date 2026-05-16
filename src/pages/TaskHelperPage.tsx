@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useCallback, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../TaskHelper.css';
 import {
   Plus, Calendar, ChevronRight, FileText, AlertTriangle,
-  X, Tag, Flame, ArrowUp, ArrowRight, ArrowDown, Circle,
-  Clock, CheckCircle2, GitPullRequest, XCircle, Filter, SlidersHorizontal,
+  X, Tag, Filter, SlidersHorizontal, Flame,
 } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useTasks } from '../hooks/useTasks';
@@ -19,7 +18,6 @@ import {
   Badge,
   Button,
   Drawer,
-  IconButton,
   Input,
   Island,
   Loader,
@@ -31,49 +29,8 @@ import {
   Toolbar,
   type SelectOption,
 } from '../ui';
-import type { BadgeVariant } from '../ui';
-
-function formatRelativeTime(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return 'только что';
-  if (min < 60) return `${min} мин. назад`;
-  const hours = Math.floor(min / 60);
-  if (hours < 24) return `${hours} ч. назад`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} дн. назад`;
-  return new Date(timestamp).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-}
-
-const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
-  critical: <Flame size={12} />,
-  high: <ArrowUp size={12} />,
-  medium: <ArrowRight size={12} />,
-  low: <ArrowDown size={12} />,
-};
-
-const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, BadgeVariant> = {
-  critical: 'danger',
-  high: 'warning',
-  medium: 'info',
-  low: 'default',
-};
-
-const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
-  open: <Circle size={12} />,
-  in_progress: <Clock size={12} />,
-  review: <GitPullRequest size={12} />,
-  done: <CheckCircle2 size={12} />,
-  closed: <XCircle size={12} />,
-};
-
-const STATUS_BADGE_VARIANTS: Record<TaskStatus, BadgeVariant> = {
-  open: 'default',
-  in_progress: 'accent',
-  review: 'warning',
-  done: 'success',
-  closed: 'default',
-};
+import { PRIORITY_ICONS, PRIORITY_BADGE_VARIANTS, STATUS_ICONS, STATUS_BADGE_VARIANTS } from '../lib/taskUiConstants';
+import { formatRelativeTime } from '../lib/responseUtils';
 
 interface CreateDrawerProps {
   isOpen: boolean;
@@ -115,7 +72,7 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
     [selectedTemplateId, templates, emptyTemplate]
   );
 
-  const applyTemplate = (template: TaskTemplate) => {
+  const applyTemplate = useCallback((template: TaskTemplate) => {
     const payload = createTaskPayloadFromTemplate(template, { id: crypto.randomUUID() });
     setTitle(payload.title);
     setDesc(payload.description);
@@ -123,19 +80,22 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
     setStatus(payload.status);
     setTags(payload.tags);
     setSections(payload.sections);
-  };
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    applyTemplate(selectedTemplate);
-  }, [isOpen, selectedTemplate]);
+  }, []);
 
   const resetForm = () => {
     setSelectedTemplateId(emptyTemplate.id);
     applyTemplate(emptyTemplate);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const nextTemplate = templates.find((template) => template.id === templateId) ?? emptyTemplate;
+    applyTemplate(nextTemplate);
   };
 
   const handleSubmit = async (e?: FormEvent) => {
@@ -153,16 +113,16 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
   };
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Новая задача"
-      footer={(
-        <>
-          <Button size="sm" onClick={onClose} disabled={isSubmitting}>Отмена</Button>
-          <Button variant="primary" size="sm" onClick={() => void handleSubmit()} isLoading={isSubmitting} disabled={!title.trim()}>
-            Создать задачу
-          </Button>
+      <Drawer
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Новая задача"
+        footer={(
+          <>
+            <Button size="sm" onClick={handleClose} disabled={isSubmitting}>Отмена</Button>
+            <Button variant="primary" size="sm" onClick={() => void handleSubmit()} isLoading={isSubmitting} disabled={!title.trim()}>
+              Создать задачу
+            </Button>
         </>
       )}
     >
@@ -170,7 +130,7 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
         <Select
           label="Шаблон"
           value={selectedTemplateId}
-          onChange={setSelectedTemplateId}
+          onChange={handleTemplateChange}
           options={templateOptions}
           fullWidth
         />
@@ -246,6 +206,7 @@ function CreateTaskDrawer({ isOpen, onClose, onCreate }: CreateDrawerProps) {
 export function TaskHelperPage() {
   const { tasks, isLoaded, error, addTask } = useTasks();
   const { notify } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
@@ -328,7 +289,7 @@ export function TaskHelperPage() {
             <AlertTriangle size={48} color="var(--danger)" style={{ marginBottom: '16px' }} />
             <h3 style={{ marginBottom: '8px' }}>Ошибка подключения</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>{error}</p>
-            <Button variant="primary" size="sm" onClick={() => { window.location.href = '/settings'; }}>
+            <Button variant="primary" size="sm" onClick={() => navigate('/settings')}>
               Перейти в настройки
             </Button>
           </Island>

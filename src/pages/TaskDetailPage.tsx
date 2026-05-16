@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../TaskHelper.css';
 import {
   AlertTriangle, ArrowLeft, Copy, Download, Edit2, Save, Trash2, Plus,
-  Flame, ArrowUp, ArrowRight, ArrowDown, Circle, Clock, GitPullRequest,
-  CheckCircle2, XCircle, ChevronUp, ChevronDown
+  ChevronUp, ChevronDown
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -19,41 +18,8 @@ import {
   TASK_PRIORITY_LABELS, TASK_STATUS_LABELS
 } from '../types';
 
-// --- UI-Kit Imports ---
 import { Badge, Button, Input, Island, Loader, Modal, TagChip, Textarea, Toolbar, SegmentedControl } from '../ui';
-import type { BadgeVariant } from '../ui';
-
-const PRIORITY_ICONS: Record<TaskPriority, React.ReactNode> = {
-  critical: <Flame size={12} />,
-  high: <ArrowUp size={12} />,
-  medium: <ArrowRight size={12} />,
-  low: <ArrowDown size={12} />,
-};
-
-
-const PRIORITY_BADGE_VARIANTS: Record<TaskPriority, BadgeVariant> = {
-  critical: 'danger',
-  high: 'warning',
-  medium: 'info',
-  low: 'default',
-};
-
-const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
-  open: <Circle size={12} />,
-  in_progress: <Clock size={12} />,
-  review: <GitPullRequest size={12} />,
-  done: <CheckCircle2 size={12} />,
-  closed: <XCircle size={12} />,
-};
-
-
-const STATUS_BADGE_VARIANTS: Record<TaskStatus, BadgeVariant> = {
-  open: 'default',
-  in_progress: 'accent',
-  review: 'warning',
-  done: 'success',
-  closed: 'default',
-};
+import { PRIORITY_ICONS, PRIORITY_BADGE_VARIANTS, STATUS_ICONS, STATUS_BADGE_VARIANTS } from '../lib/taskUiConstants';
 
 function taskToMarkdown(task: TaskItem): string {
   const lines = [`# ${task.title}`];
@@ -143,7 +109,10 @@ export function TaskDetailPage() {
       clearDraft(taskId);
       return;
     }
-    saveDraft(taskId, draft);
+    const timer = window.setTimeout(() => {
+      saveDraft(taskId, draft);
+    }, 300);
+    return () => window.clearTimeout(timer);
   }, [isEditing, taskId, editTitle, editDesc, editSections, editPriority, editStatus, editTags, task]);
 
   if (!isLoaded) {
@@ -239,9 +208,9 @@ export function TaskDetailPage() {
       });
       clearRecoveredDraftState(updatedTask);
       setIsEditing(false);
-      notify('\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B');
+      notify('Изменения сохранены');
     } catch {
-      notify('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F', 'error');
+      notify('Ошибка сохранения', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -349,7 +318,7 @@ export function TaskDetailPage() {
             )}
             {isEditing && (
               <>
-                <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving}>{"\u041E\u0442\u043C\u0435\u043D\u0430"}</Button>
+                <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving}>Отмена</Button>
                 <Button variant="primary" size="sm" icon={<Save size={16} />} onClick={handleSave} isLoading={isSaving}>
                   Сохранить
                 </Button>
@@ -365,7 +334,7 @@ export function TaskDetailPage() {
               <span>Восстановлены несохранённые изменения</span>
               {draftDiff.hasChanges && (
                 <Button variant="ghost" size="sm" className="draft-warning__view" onClick={() => setShowDraftDiffModal(true)}>
-                  {'\u041f\u043e\u0441\u043c\u043e\u0442\u0440\u0435\u0442\u044c'}
+                  Посмотреть
                 </Button>
               )}
               <Button variant="ghost" size="sm" className="draft-warning__discard" onClick={handleDiscardDraft}>Сбросить</Button>
@@ -375,7 +344,7 @@ export function TaskDetailPage() {
           {isEditing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <Input label="Название" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} fullWidth />
-              <Textarea label={"\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435"} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={2} fullWidth autoResize />
+              <Textarea label="Описание" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={2} fullWidth autoResize />
               <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
                  <div className="form-group">
                    <label className="ui-label">Приоритет</label>

@@ -36,6 +36,7 @@ export interface TaskItemDb {
 
 export interface TaskRepositoryAdapter {
   listTasks(): Promise<TaskItemDb[]>;
+  getTaskById(taskId: string): Promise<TaskItemDb | null>;
   createTask(task: TaskInsert): Promise<TaskItemDb>;
   updateTaskById(taskId: string, updates: TaskUpdate): Promise<TaskItemDb>;
   deleteTaskById(taskId: string): Promise<void>;

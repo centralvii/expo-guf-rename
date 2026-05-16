@@ -1,4 +1,4 @@
-import type { ApiEnvironment, ApiEnvironmentVariable, ApiKeyValue, ApiRequest, ApiResponse } from '../types';
+import type { ApiCollection, ApiEnvironment, ApiEnvironmentVariable, ApiHistoryEntry, ApiKeyValue, ApiRequest, ApiResponse } from '../types';
 import { DEFAULT_API_REQUEST } from '../types';
 import { resolveApiVariables } from './apiVariables';
 
@@ -18,9 +18,6 @@ export interface ApiClientPersistedState {
   activeRequestId: string | null;
   activeEnvironmentId: string | null;
 }
-
-interface ApiCollection { id: string; name: string; description: string; createdAt: number; updatedAt: number; }
-interface ApiHistoryEntry { id: string; requestId: string; linkedTaskId?: string; environmentId?: string; method: string; url: string; resolvedUrl: string; status: number; durationMs: number; timestamp: number; errorMessage?: string; }
 
 /* ---------- Factory functions ---------- */
 
@@ -117,13 +114,13 @@ function getDefaultState(): ApiClientPersistedState {
   };
 }
 
-export async function loadApiClientState(): Promise<ApiClientPersistedState> {
+export async function loadApiClientState(): Promise<{ state: ApiClientPersistedState; fallback: boolean }> {
   try {
     // Try IndexedDB first
     const db = await openDb();
     const saved = await idbGet<ApiClientPersistedState>(db, STORAGE_KEY);
     db.close();
-    if (saved) return saved;
+    if (saved) return { state: saved, fallback: false };
 
     // Fallback: migrate from localStorage
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -135,10 +132,13 @@ export async function loadApiClientState(): Promise<ApiClientPersistedState> {
       await idbPut(db2, STORAGE_KEY, state);
       db2.close();
       localStorage.removeItem(STORAGE_KEY);
-      return state;
+      return { state, fallback: false };
     }
-  } catch (e) { console.warn('[api-client] IndexedDB read failed, using defaults', e); }
-  return getDefaultState();
+  } catch (e) {
+    console.warn('[api-client] IndexedDB read failed, using defaults', e);
+    return { state: getDefaultState(), fallback: true };
+  }
+  return { state: getDefaultState(), fallback: false };
 }
 
 export async function saveApiClientState(state: ApiClientPersistedState) {
@@ -150,10 +150,6 @@ export async function saveApiClientState(state: ApiClientPersistedState) {
 }
 
 /* ---------- URL / Auth / Body builders ---------- */
-
-function kvToRecord(list: ApiKeyValue[]): Record<string, string> {
-  return list.reduce<Record<string, string>>((r, item) => { if (item.enabled && item.key.trim()) r[item.key] = item.value; return r; }, {});
-}
 
 export function buildUrl(baseUrl: string, params: ApiKeyValue[]): string {
   const enabled = params.filter((p) => p.enabled && p.key.trim());

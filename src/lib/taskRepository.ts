@@ -37,7 +37,7 @@ export async function createTask(task: TaskInsert) {
 
 export async function updateTaskById(taskId: string, updates: TaskUpdate) {
   const adapter = getTaskRepositoryAdapter();
-  const before = (await adapter.listTasks()).find((task) => task.id === taskId) ?? null;
+  const before = await adapter.getTaskById(taskId);
   const updatedTask = await adapter.updateTaskById(taskId, updates);
 
   try {
@@ -78,7 +78,7 @@ export async function restoreTaskVersion(
   }
 ) {
   const adapter = getTaskRepositoryAdapter();
-  const before = (await adapter.listTasks()).find((task) => task.id === taskId) ?? null;
+  const before = await adapter.getTaskById(taskId);
   const restoredTask = await adapter.updateTaskById(taskId, {
     title: restoredSnapshot.title,
     description: restoredSnapshot.description,

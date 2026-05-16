@@ -27,6 +27,12 @@ function createHttpTaskAdapter(options: {
       return await response.json();
     },
 
+    async getTaskById(taskId) {
+      const response = await fetch(`${getBaseUrlOrThrow()}/tasks/${taskId}`);
+      if (!response.ok) return null;
+      return await response.json();
+    },
+
     async createTask(task) {
       const payload = {
         id: task.id,

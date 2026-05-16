@@ -15,7 +15,6 @@ interface FileTableProps {
   onDescriptionChange?: (fileId: string, description: string) => void;
   onAddFiles?: (files: File[]) => void;
   onRemoveFile?: (fileId: string) => void;
-  onRemoveFiles?: (fileIds: string[]) => void;
 }
 
 export const FileTable = memo(({ files, errorFileIds, duplicateFileIds, onReorder, onCleanNameChange, onDescriptionChange, onAddFiles, onRemoveFile }: FileTableProps) => {

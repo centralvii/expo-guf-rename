@@ -16,7 +16,7 @@ export const GufPackerPage = () => {
 
   const handleLoadZip = async (file: File) => {
     try { await state.loadZip(file); notify('Архив загружен'); }
-    catch (loadError) { console.error('[guf-packer] Failed to load zip', loadError); notify('Не удалось загрузить архив', 'error'); throw loadError; }
+    catch (loadError) { console.error('[guf-packer] Failed to load zip', loadError); notify('Не удалось загрузить архив', 'error'); }
   };
 
   const handleGufFilesAdded = (files: File[]) => { state.loadGufFiles(files); notify(`Добавлено .guf файлов: ${files.length}`); };
@@ -65,7 +65,6 @@ export const GufPackerPage = () => {
                 onVariableChange={state.setVariableValue}
                 onAddVariable={state.addVariable}
                 onRemoveVariable={state.removeVariable}
-                fileCount={state.files.length}
                 startNumber={state.startNumber}
                 onStartNumberChange={state.setStartNumber}
               />
@@ -80,7 +79,6 @@ export const GufPackerPage = () => {
               onDescriptionChange={state.updateFileDescription}
               onAddFiles={handleAddFiles}
               onRemoveFile={handleRemoveFile}
-              onRemoveFiles={state.removeFiles}
             />
 
             <ReadmeEditor value={state.readmeContent} onChange={state.setReadmeContent} />

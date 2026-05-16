@@ -4,13 +4,6 @@ import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 
-// Suppress bpmn-js library deprecation warnings (ContextPad#getPad)
-const _consoleWarn = console.warn;
-console.warn = (msg, ...args) => {
-  if (typeof msg === 'string' && msg.includes('ContextPad#getPad')) return;
-  _consoleWarn(msg, ...args);
-};
-
 export interface BpmnDiagramStats {
   tasks: number;
   gateways: number;
@@ -167,6 +160,17 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
   ({ initialXml, onChange, onStatsChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const modelerRef = useRef<BpmnModelerInstance | null>(null);
+    const initialXmlRef = useRef(initialXml);
+    const onChangeRef = useRef(onChange);
+    const onStatsChangeRef = useRef(onStatsChange);
+
+    useEffect(() => {
+      onChangeRef.current = onChange;
+    }, [onChange]);
+
+    useEffect(() => {
+      onStatsChangeRef.current = onStatsChange;
+    }, [onStatsChange]);
 
     useImperativeHandle(ref, () => ({
       getXml: async () => {
@@ -179,7 +183,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         try {
           await modelerRef.current.importXML(xml);
           modelerRef.current.get('canvas').zoom('fit-viewport');
-          onStatsChange?.(collectDiagramStats(modelerRef.current));
+          onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
           if (containerRef.current) addDotGrid(containerRef.current);
         } catch (error) {
           console.error('Error importing BPMN XML:', error);
@@ -187,7 +191,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
           try {
             await modelerRef.current.importXML(EMPTY_DIAGRAM);
             modelerRef.current.get('canvas').zoom('fit-viewport');
-            onStatsChange?.(collectDiagramStats(modelerRef.current));
+            onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
           } catch (fallbackError) {
             console.warn('[BpmnEditor] Fallback diagram also failed:', fallbackError);
           }
@@ -212,7 +216,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         if (!modelerRef.current) return;
         await modelerRef.current.importXML(EMPTY_DIAGRAM);
         modelerRef.current.get('canvas').zoom('fit-viewport');
-        onStatsChange?.(collectDiagramStats(modelerRef.current));
+        onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
         if (containerRef.current) addDotGrid(containerRef.current);
       },
       exportImage: async (format: 'jpeg' | 'png' = 'jpeg') => {
@@ -316,13 +320,13 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
 
         // Load initial diagram
         try {
-          const xml = initialXml || EMPTY_DIAGRAM;
+          const xml = initialXmlRef.current || EMPTY_DIAGRAM;
           await modeler.importXML(xml);
           
           if (isCancelled) return;
           
           modeler.get('canvas').zoom('fit-viewport');
-          onStatsChange?.(collectDiagramStats(modeler));
+          onStatsChangeRef.current?.(collectDiagramStats(modeler));
           if (container) addDotGrid(container);
         } catch (error) {
           if (isCancelled) return;
@@ -340,8 +344,8 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         // Set up change listener
         modeler.on('commandStack.changed', () => {
           if (isCancelled || !modelerRef.current) return;
-          onChange?.();
-          onStatsChange?.(collectDiagramStats(modelerRef.current));
+          onChangeRef.current?.();
+          onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
         });
       };
 

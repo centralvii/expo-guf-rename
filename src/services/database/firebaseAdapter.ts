@@ -97,6 +97,14 @@ export const FirebaseTaskAdapter: TaskRepositoryAdapter = {
     return snapshot.docs.map((doc) => mapTaskDoc(doc.id, doc.data()));
   },
 
+  async getTaskById(taskId) {
+    const db = getFirestoreDb();
+    const docRef = doc(db, TASKS_COLLECTION, taskId);
+    const snapshot = await getDoc(docRef);
+    if (!snapshot.exists()) return null;
+    return mapTaskDoc(taskId, snapshot.data());
+  },
+
   async createTask(task) {
     const db = getFirestoreDb();
     const now = Date.now();

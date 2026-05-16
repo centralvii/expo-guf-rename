@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Select, ThemePreviewCard, THEME_PREVIEWS } from '../../ui';
+import { Select, ThemePreviewCard } from '../../ui';
 import type { AppTheme, AppSettings } from '../../types';
 
 const THEME_OPTIONS: { value: AppTheme; label: string; description: string }[] = [

@@ -20,10 +20,9 @@ export const MassActions = memo(({
   onVariableChange,
   onAddVariable,
   onRemoveVariable,
-  fileCount,
   startNumber,
   onStartNumberChange,
-}: MassActionsProps) => {
+}: Omit<MassActionsProps, 'fileCount'>) => {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('guf-vars-collapsed') === 'true');
   const toggleCollapsed = () => setCollapsed((prev) => { const next = !prev; localStorage.setItem('guf-vars-collapsed', String(next)); return next; });
   const [isAddingVar, setIsAddingVar] = useState(false);

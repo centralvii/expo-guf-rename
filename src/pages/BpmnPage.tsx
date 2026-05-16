@@ -79,9 +79,10 @@ export function BpmnPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const { notify } = useToast();
+  const initialDiagrams = useMemo(() => loadDiagrams(), []);
 
-  const [diagrams, setDiagrams] = useState<SavedDiagram[]>(loadDiagrams);
-  const [activeDiagramId, setActiveDiagramId] = useState<string | null>(() => loadDiagrams()[0]?.id ?? null);
+  const [diagrams, setDiagrams] = useState<SavedDiagram[]>(initialDiagrams);
+  const [activeDiagramId, setActiveDiagramId] = useState<string | null>(initialDiagrams[0]?.id ?? null);
   const [diagramStats, setDiagramStats] = useState<BpmnDiagramStats>(EMPTY_STATS);
   const [isDirty, setIsDirty] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');

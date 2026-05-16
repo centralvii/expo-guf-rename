@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -23,6 +23,7 @@ import {
   Toolbar,
   type BadgeVariant,
 } from '../ui';
+import { formatHistoryDate } from '../lib/dateFormat';
 import { useToast } from '../hooks/useToast';
 import {
   inspectSql,
@@ -108,12 +109,6 @@ function downloadTextFile(filename: string, content: string, mimeType: string): 
   URL.revokeObjectURL(url);
 }
 
-function formatHistoryDate(ts: number): string {
-  const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 /* ---------------- subcomponents ---------------- */
 
 const RiskMetric = memo(function RiskMetric({
@@ -169,11 +164,7 @@ export function SqlInspectorPage() {
   const { notify } = useToast();
   const [rawSql, setRawSql] = useState<string>('');
   const [result, setResult] = useState<SqlInspectionResult | null>(null);
-  const [history, setHistory] = useState<SqlInspectionHistoryEntry[]>([]);
-
-  useEffect(() => {
-    setHistory(loadSqlInspectionHistory());
-  }, []);
+  const [history, setHistory] = useState<SqlInspectionHistoryEntry[]>(loadSqlInspectionHistory);
 
   const runInspect = useCallback(
     (sql: string, sourceLabel = 'Скрипт проверен') => {

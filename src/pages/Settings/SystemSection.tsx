@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-interface SystemSectionProps { appVersion: string; gitCommit: string; mode: string; }
+interface SystemSectionProps { appVersion: string; gitCommit: string; mode: ImportMetaEnv['MODE']; }
 
 function SystemSection_({ appVersion, gitCommit, mode }: SystemSectionProps) {
   return (

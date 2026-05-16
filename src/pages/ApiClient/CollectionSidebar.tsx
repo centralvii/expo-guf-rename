@@ -1,7 +1,8 @@
 import { memo, useState } from 'react';
 import { Bookmark, History, Trash2, FolderOpen } from 'lucide-react';
 import type { ApiRequest, ApiHistoryEntry } from '../../types';
-import { Badge, Button, EmptyState, IconButton, type BadgeVariant } from '../../ui';
+import { Badge, Button, EmptyState, IconButton } from '../../ui';
+import { getStatusVariant, formatRelativeTime } from '../../lib/responseUtils';
 
 type SidebarTab = 'collection' | 'history';
 
@@ -12,24 +13,6 @@ interface CollectionSidebarProps {
   onRemoveRequest: (id: string) => void;
   onLoadHistory: (id: string) => void;
   onClearHistory: () => void;
-}
-
-function getStatusVariant(status: number): BadgeVariant {
-  if (status >= 200 && status < 300) return 'success';
-  if (status >= 300 && status < 400) return 'info';
-  if (status >= 400 && status < 500) return 'warning';
-  if (status >= 500) return 'danger';
-  return 'default';
-}
-
-function formatRelativeTime(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return 'сейчас';
-  if (min < 60) return `${min}м`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}ч`;
-  return `${Math.floor(h / 24)}д`;
 }
 
 function CollectionList({

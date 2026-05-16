@@ -1,14 +1,15 @@
-import { type ReactNode, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FileArchive, FileText, ArrowRight, Clock,
-  Flame, ArrowUp, ArrowDown, Circle, CheckCircle2, XCircle,
-  GitPullRequest, TrendingUp, BarChart3, Zap, Sparkles, Workflow, Send, Database
+  FileArchive, FileText, ArrowRight,
+  TrendingUp, BarChart3, Zap, Sparkles, Workflow, Send, Database, CheckCircle2, Flame
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import type { TaskItem, TaskPriority, TaskStatus } from '../types';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from '../types';
 import { SectionHeader, ToolCard, type ToolCardProps } from '../ui';
+import { PRIORITY_ICONS, STATUS_ICONS } from '../lib/taskUiConstants';
+import { formatRelativeTime } from '../lib/responseUtils';
 
 /* ---- Tool data ---- */
 
@@ -74,21 +75,6 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   low: 'var(--theme-priority-low)',
 };
 
-const PRIORITY_ICONS: Record<TaskPriority, ReactNode> = {
-  critical: <Flame size={12} />,
-  high: <ArrowUp size={12} />,
-  medium: <ArrowRight size={12} />,
-  low: <ArrowDown size={12} />,
-};
-
-const STATUS_ICONS: Record<TaskStatus, ReactNode> = {
-  open: <Circle size={12} />,
-  in_progress: <Clock size={12} />,
-  review: <GitPullRequest size={12} />,
-  done: <CheckCircle2 size={12} />,
-  closed: <XCircle size={12} />,
-};
-
 const STATUS_COLORS: Record<TaskStatus, string> = {
   open: 'var(--theme-status-open)',
   in_progress: 'var(--theme-status-in-progress)',
@@ -98,18 +84,6 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 };
 
 /* ---- Helpers ---- */
-
-function timeAgo(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'только что';
-  if (mins < 60) return `${mins} мин. назад`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} ч. назад`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} д. назад`;
-  return new Date(timestamp).toLocaleDateString('ru-RU');
-}
 
 function computeStats(tasks: TaskItem[]) {
   const total = tasks.length;
@@ -345,7 +319,7 @@ function SkRecentActivity({ loaded, recentTasks }: { loaded: boolean; recentTask
                   {PRIORITY_ICONS[task.priority]}
                   {TASK_PRIORITY_LABELS[task.priority]}
                 </span>
-                <span className="dash-recent-item__time">{timeAgo(task.updatedAt)}</span>
+                <span className="dash-recent-item__time">{formatRelativeTime(task.updatedAt)}</span>
               </div>
             </Link>
           ))

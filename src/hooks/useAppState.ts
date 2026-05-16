@@ -128,12 +128,6 @@ export function useAppState(): AppState {
     return () => clearTimeout(timer);
   }, [files, template, startNumber, archiveName, variables, readmeContent]);
 
-  // Пересчёт имён при изменении шаблона/номера/переменных
-  useEffect(() => {
-    setFiles((prev) => recalc(prev, template, startNumber, variables));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [template, startNumber, variables]);
-
   // Пересчёт имён
   const recalc = useCallback(
     (currentFiles: FileRow[], tpl: string, start: number, vars: CustomVariable[]): FileRow[] => {
@@ -243,28 +237,32 @@ export function useAppState(): AppState {
   // Изменение значения переменной
   const setVariableValue = useCallback(
     (key: string, value: string) => {
-      setVariables((prev) => prev.map((v) => (v.key === key ? { ...v, value } : v)));
+      const nextVariables = variables.map((v) => (v.key === key ? { ...v, value } : v));
+      setVariables(nextVariables);
+      setFiles((prev) => recalc(prev, template, startNumber, nextVariables));
     },
-    []
+    [recalc, startNumber, template, variables]
   );
 
   // Добавление новой переменной
   const addVariable = useCallback(
     (key: string, label: string) => {
-      setVariables((prev) => {
-        if (prev.some((v) => v.key === key)) return prev;
-        return [...prev, { key, label, value: '' }];
-      });
+      if (variables.some((v) => v.key === key)) return;
+      const nextVariables = [...variables, { key, label, value: '' }];
+      setVariables(nextVariables);
+      setFiles((prev) => recalc(prev, template, startNumber, nextVariables));
     },
-    []
+    [recalc, startNumber, template, variables]
   );
 
   // Удаление переменной
   const removeVariable = useCallback(
     (key: string) => {
-      setVariables((prev) => prev.filter((v) => v.key !== key));
+      const nextVariables = variables.filter((v) => v.key !== key);
+      setVariables(nextVariables);
+      setFiles((prev) => recalc(prev, template, startNumber, nextVariables));
     },
-    []
+    [recalc, startNumber, template, variables]
   );
 
   // Переименование cleanName для конкретного файла
@@ -342,16 +340,18 @@ export function useAppState(): AppState {
 
   // Детект дубликатов новых имён
   const duplicateFileIds = useMemo(() => {
-    const keys = files.map((f) => `${f.newName}.${f.extension}`.toLowerCase());
-    const seen = new Set<string>();
+    const keyToFirstId = new Map<string, string>();
     const dupes = new Set<string>();
-    keys.forEach((k, i) => {
-      if (seen.has(k)) {
-        dupes.add(files[i].id);
-        dupes.add(files[keys.indexOf(k)].id);
+    for (const f of files) {
+      const k = `${f.newName}.${f.extension}`.toLowerCase();
+      const firstId = keyToFirstId.get(k);
+      if (firstId !== undefined) {
+        dupes.add(firstId);
+        dupes.add(f.id);
+      } else {
+        keyToFirstId.set(k, f.id);
       }
-      seen.add(k);
-    });
+    }
     return dupes;
   }, [files]);
 
@@ -380,13 +380,18 @@ export function useAppState(): AppState {
 
   const loadPreset = useCallback((id: string) => {
     const preset = templatePresets.find((p) => p.id === id);
-    if (preset) setTemplateRaw(preset.template);
-  }, [templatePresets]);
+    if (preset) {
+      setTemplate(preset.template);
+    }
+  }, [setTemplate, templatePresets]);
 
   // Batch remove
   const removeFiles = useCallback((fileIds: string[]) => {
-    setFiles((prev) => prev.filter((f) => !fileIds.includes(f.id)));
-  }, []);
+    setFiles((prev) => {
+      const filtered = prev.filter((f) => !fileIds.includes(f.id));
+      return recalc(filtered, template, startNumber, variables);
+    });
+  }, [recalc, startNumber, template, variables]);
 
   return {
     files,

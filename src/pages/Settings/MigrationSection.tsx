@@ -1,10 +1,11 @@
-import { memo, type ReactNode } from 'react';
-import { Badge, Button, Checkbox, InlineError, Select, Table, type SelectOption } from '../../ui';
+import { memo } from 'react';
+import { Badge, Button, Checkbox, InlineError, Select, SettingsRow, Table, type SelectOption } from '../../ui';
 import type { MigrationConflictStrategy, MigrationEntityType, MigrationPlan, MigrationProgress, MigrationProvider } from '../../lib/providerMigration';
 
 const MIGRATION_PROVIDER_OPTIONS: SelectOption<MigrationProvider>[] = [
   { value: 'supabase', label: 'Supabase' },
   { value: 'firebase', label: 'Firebase' },
+  { value: 'postgres', label: 'PostgreSQL' },
 ];
 
 const MIGRATION_CONFLICT_OPTIONS: SelectOption<MigrationConflictStrategy>[] = [
@@ -13,18 +14,6 @@ const MIGRATION_CONFLICT_OPTIONS: SelectOption<MigrationConflictStrategy>[] = [
 ];
 
 const MIGRATION_ENTITY_LABELS: Record<MigrationEntityType, string> = { tasks: 'Tasks', taskHistory: 'Task history' };
-
-function SettingsRow({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <div className="settings-row">
-      <div className="settings-row__info">
-        <span className="settings-row__label">{label}</span>
-        {hint && <span className="settings-row__hint">{hint}</span>}
-      </div>
-      <div className="settings-row__control">{children}</div>
-    </div>
-  );
-}
 
 interface MigrationSectionProps {
   source: MigrationProvider;

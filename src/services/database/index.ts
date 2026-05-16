@@ -19,7 +19,7 @@ export function getTaskRepositoryAdapterForProvider(provider: ConnectionMethod):
 
 export function getTaskRepositoryAdapter(): TaskRepositoryAdapter {
   const settings = loadSettings();
-  const method = settings.connectionMethod || 'supabase';
+  const method = settings.connectionMethod;
   
   const adapter = adapters[method];
   if (!adapter) {

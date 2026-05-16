@@ -59,7 +59,10 @@ export function useApiClient(): UseApiClientReturn {
 
   // Async init from IndexedDB
   useEffect(() => {
-    loadApiClientState().then((saved) => {
+    loadApiClientState().then(({ state: saved, fallback }) => {
+      if (fallback) {
+        console.warn('[api-client] Loaded default state — saved data may be lost');
+      }
       const initialTab = createEmptyRequest();
       setTabs([initialTab]);
       setActiveRequestId(initialTab.id);
@@ -102,14 +105,22 @@ export function useApiClient(): UseApiClientReturn {
   }, []);
 
   const closeTab = useCallback((id: string) => {
-    setTabs((prev) => {
-      const next = prev.filter((tab) => tab.id !== id);
-      if (next.length === 0) { const fresh = createEmptyRequest(); setActiveRequestId(fresh.id); return [fresh]; }
-      if (id === activeRequestId) { const idx = prev.findIndex((tab) => tab.id === id); setActiveRequestId(next[Math.min(idx, next.length - 1)].id); }
-      return next;
-    });
+    const next = tabs.filter((tab) => tab.id !== id);
+    if (next.length === 0) {
+      const fresh = createEmptyRequest();
+      setTabs([fresh]);
+      setActiveRequestId(fresh.id);
+      setResponse(null);
+      return;
+    }
+
+    setTabs(next);
+    if (id === activeRequestId) {
+      const idx = tabs.findIndex((tab) => tab.id === id);
+      setActiveRequestId(next[Math.min(idx, next.length - 1)].id);
+    }
     setResponse(null);
-  }, [activeRequestId]);
+  }, [activeRequestId, tabs]);
 
   const setActiveTab = useCallback((id: string) => { setActiveRequestId(id); setResponse(null); setError(null); }, []);
   const updateActiveRequest = useCallback((updates: Partial<ApiRequest>) => {
@@ -161,16 +172,19 @@ export function useApiClient(): UseApiClientReturn {
     abortRef.current = controller;
     const startTime = performance.now();
     const resolvedRequest = resolveRequestWithEnvironment({ ...activeRequest, environmentId: activeRequest.environmentId ?? activeEnvironment?.id }, activeEnvironment);
+    const requestId = activeRequest.id;
+    const requestEnvironmentId = activeEnvironment?.id;
     try {
-      let url = buildUrl(resolvedRequest.url, resolvedRequest.params);
-      let headers: Record<string, string> = {};
+      const url = buildUrl(resolvedRequest.url, resolvedRequest.params);
+      const headers: Record<string, string> = {};
       resolvedRequest.headers.forEach((h) => { if (h.enabled && h.key.trim()) headers[h.key] = h.value; });
       const authed = applyAuth(resolvedRequest, headers, url);
       const built = buildBody(resolvedRequest, authed.headers);
       const result = await fetch(url, { method: resolvedRequest.method, headers: authed.headers, body: built.body, signal: controller.signal });
       const apiResponse = await parseFetchResponse(result, startTime);
       setResponse(apiResponse);
-      const entry = createHistoryEntry(activeRequest, url, result.status, apiResponse.durationMs, activeEnvironment?.id);
+      const entry = createHistoryEntry(resolvedRequest, url, result.status, apiResponse.durationMs, requestEnvironmentId);
+      entry.requestId = requestId;
       setHistory((prev) => [entry, ...prev].slice(0, 50));
     } catch (error) {
       const msg = getErrorMessage(error);
@@ -179,7 +193,8 @@ export function useApiClient(): UseApiClientReturn {
       else if (msg?.includes('Failed to fetch')) nextError = 'Ошибка сети или CORS. Проверьте URL и доступность сервера.';
       setError(nextError);
       const dur = Math.round(performance.now() - startTime);
-      const entry = createHistoryEntry(activeRequest, resolvedRequest.url, 0, dur, activeEnvironment?.id, nextError);
+      const entry = createHistoryEntry(resolvedRequest, resolvedRequest.url, 0, dur, requestEnvironmentId, nextError);
+      entry.requestId = requestId;
       setHistory((prev) => [entry, ...prev].slice(0, 50));
     } finally { setIsLoading(false); abortRef.current = null; }
   }, [activeEnvironment, activeRequest]);

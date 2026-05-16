@@ -3,6 +3,20 @@ import { X, AlertCircle, Info } from 'lucide-react';
 import { IconButton } from '../Button/Button';
 import './Modal.css';
 
+let openModalCount = 0;
+
+function lockBodyScroll() {
+  openModalCount += 1;
+  document.body.style.overflow = 'hidden';
+}
+
+function unlockBodyScroll() {
+  openModalCount = Math.max(0, openModalCount - 1);
+  if (openModalCount === 0) {
+    document.body.style.overflow = 'unset';
+  }
+}
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,26 +40,36 @@ export const Modal = memo(({
 }: ModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [isBodyLocked, setIsBodyLocked] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
-      document.body.style.overflow = 'hidden';
+      if (!isBodyLocked) {
+        lockBodyScroll();
+        setIsBodyLocked(true);
+      }
     } else if (shouldRender) {
       setIsClosing(true);
       const timer = setTimeout(() => {
         setShouldRender(false);
         setIsClosing(false);
-        document.body.style.overflow = 'unset';
+        if (isBodyLocked) {
+          unlockBodyScroll();
+          setIsBodyLocked(false);
+        }
       }, 200);
       return () => clearTimeout(timer);
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      if (isBodyLocked) {
+        unlockBodyScroll();
+        setIsBodyLocked(false);
+      }
     };
-  }, [isOpen, shouldRender]);
+  }, [isBodyLocked, isOpen, shouldRender]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

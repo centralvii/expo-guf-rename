@@ -62,7 +62,7 @@ export const FileTableRow = memo(({ row, hasError, isDuplicate, onCleanNameChang
             <IconButton variant="secondary" size="sm" onMouseDown={(e) => { e.preventDefault(); cancelEdit(); }} icon={<X size={14} />} label="Cancel" style={{ width: '32px', height: '32px', padding: 0 }} />
           </div>
         ) : (
-          <div className="inline-edit-display" onClick={startEditing} title="Нажмите для редактирования описания">
+          <div className="inline-edit-display" onClick={startEditing} title="Нажмите для редактирования имени файла">
             <span className="inline-edit-display__text">{row.cleanName}</span>
             <Pencil size={11} className="inline-edit-display__icon" />
           </div>

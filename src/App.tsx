@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { ToastProvider } from './components/ToastProvider';
 import { useAppTheme } from './hooks/useAppTheme';
+import { Loader } from './ui';
 import './styles/themes.css';
 import './App.css';
 import './Dashboard.css';
@@ -21,8 +22,8 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ defa
 function PageLoader() {
   return (
     <div className="app-restore anim-fade-in">
-      <div className="sk sk-stat-value" style={{ width: 80 }} />
-      <div className="sk sk-stat-value" style={{ width: 160 }} />
+      <Loader size="lg" />
+      <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка страницы...</span>
     </div>
   );
 }

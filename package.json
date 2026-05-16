@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "build:analyze": "cross-env ANALYZE=true vite build",
     "lint": "eslint .",
+    "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview"

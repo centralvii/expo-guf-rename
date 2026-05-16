@@ -1,7 +1,8 @@
 import { memo, useState, useMemo } from 'react';
 import { Copy, Check } from 'lucide-react';
 import type { ApiResponse } from '../../types';
-import { Badge, Button, EmptyState, InlineError, Loader, type BadgeVariant } from '../../ui';
+import { Badge, Button, EmptyState, InlineError, Loader } from '../../ui';
+import { getStatusVariant } from '../../lib/responseUtils';
 
 type ResponseTab = 'body' | 'headers';
 
@@ -9,14 +10,6 @@ interface ResponseViewerProps {
   response: ApiResponse | null;
   isLoading: boolean;
   error: string | null;
-}
-
-function getStatusVariant(status: number): BadgeVariant {
-  if (status >= 200 && status < 300) return 'success';
-  if (status >= 300 && status < 400) return 'info';
-  if (status >= 400 && status < 500) return 'warning';
-  if (status >= 500) return 'danger';
-  return 'default';
 }
 
 function formatSize(bytes: number): string {

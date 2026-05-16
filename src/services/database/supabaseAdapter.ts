@@ -125,6 +125,18 @@ export const SupabaseTaskAdapter: TaskRepositoryAdapter = {
     }
   },
 
+  async getTaskById(taskId) {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from(TASKS_TABLE)
+      .select('id, title, description, sections, priority, status, tags, created_at, updated_at')
+      .eq('id', taskId)
+      .single();
+
+    if (error) return null;
+    return mapTaskRow(data as TaskRow);
+  },
+
   async createTask(task) {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase

@@ -6,7 +6,7 @@ import { useToast } from '../hooks/useToast';
 import { HTTP_METHODS, type HttpMethod } from '../types';
 
 import {
-  Button, IconButton, InlineError, Input, Island, PageTitle, Select, Toolbar,
+  Button, IconButton, InlineError, Input, Island, Loader, PageTitle, Select, Toolbar,
   type SelectOption,
 } from '../ui';
 
@@ -56,6 +56,7 @@ export function ApiClientPage() {
     environments,
     activeEnvironment,
     unresolvedVariables,
+    isLoaded,
     response,
     isLoading,
     error,
@@ -111,6 +112,19 @@ export function ApiClientPage() {
       // Ошибки уже обрабатываются внутри хука
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="tool-page anim-fade-in">
+        <div className="tool-page__content tool-page__content--auto">
+          <div className="app-restore">
+            <Loader size="lg" />
+            <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка запросов...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeRequest) {
     return (
