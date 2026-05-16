@@ -24,6 +24,8 @@ export type FileRow = {
   variables: Record<string, string>;
   /** Рассчитанное новое имя файла (превью) */
   newName: string;
+  /** Описание файла для README */
+  description: string;
 };
 
 /**

@@ -24,19 +24,21 @@
 }
 
 .ui-input {
-  width: 100%;
-  height: 40px;
-  padding: 0 14px;
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: var(--radius-buttons);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  height: 40px;
   font-size: var(--text-body);
-  font-weight: var(--font-weight-ui);
-  letter-spacing: var(--tracking-tight);
-  transition: all var(--transition);
+  color: var(--text-primary);
   outline: none;
+  width: 100%;
+  transition: border var(--transition), box-shadow var(--transition);
+}
+.ui-input--sm {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 10px;
 }
 
 .ui-input:focus {

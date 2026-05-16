@@ -7,6 +7,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   fullWidth?: boolean;
   noContainer?: boolean;
+  sizeVariant?: 'sm' | 'md';
 }
 
 export const Input = memo(forwardRef<HTMLInputElement, InputProps>(({
@@ -15,6 +16,7 @@ export const Input = memo(forwardRef<HTMLInputElement, InputProps>(({
   error,
   fullWidth = false,
   noContainer = false,
+  sizeVariant = 'md',
   className = '',
   id,
   ...props
@@ -28,7 +30,7 @@ export const Input = memo(forwardRef<HTMLInputElement, InputProps>(({
       <input
         id={inputId}
         ref={ref}
-        className={`ui-input ${icon ? 'ui-input--with-icon' : ''} ${error ? 'ui-input--error' : ''}`}
+        className={`ui-input ui-input--${sizeVariant} ${icon ? 'ui-input--with-icon' : ''} ${error ? 'ui-input--error' : ''}`}
         {...props}
       />
     </div>

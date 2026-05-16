@@ -14,6 +14,8 @@ import { extractZip, generateZip, gufFilesToRows } from '../utils/zipHandler';
 import { saveState, loadState, clearState } from '../utils/persistence';
 import { parseFileName, getExtension, getNameWithoutExtension } from '../utils/nameCleaner';
 
+export interface TemplatePreset { id: string; name: string; template: string; updatedAt: number; }
+
 export interface AppState {
   files: FileRow[];
   template: string;
@@ -36,13 +38,20 @@ export interface AppState {
   addVariable: (key: string, label: string) => void;
   removeVariable: (key: string) => void;
   updateFileCleanName: (fileId: string, cleanName: string) => void;
+  updateFileDescription: (fileId: string, description: string) => void;
   setReadmeContent: (content: string) => void;
   reorderFiles: (fromIndex: number, toIndex: number) => void;
   removeFile: (fileId: string) => void;
+  removeFiles: (fileIds: string[]) => void;
   exportZip: () => Promise<void>;
   clearFiles: () => void;
   hasErrors: boolean;
   errorFileIds: Set<string>;
+  duplicateFileIds: Set<string>;
+  templatePresets: TemplatePreset[];
+  savePreset: (name: string) => void;
+  deletePreset: (id: string) => void;
+  loadPreset: (id: string) => void;
 }
 
 type LegacyFileRow = Partial<FileRow> & Record<string, unknown>;
@@ -197,6 +206,7 @@ export function useAppState(): AppState {
             cleanName: parsed.cleanName,
             variables: {},
             newName: '',
+            description: '',
           };
         });
         return recalc([...prev, ...newRows], template, startNumber, variables);
@@ -268,6 +278,13 @@ export function useAppState(): AppState {
     [template, startNumber, variables]
   );
 
+  const updateFileDescription = useCallback(
+    (fileId: string, description: string) => {
+      setFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, description } : f)));
+    },
+    []
+  );
+
   // Установка readme
   const setReadmeContent = useCallback((content: string) => {
     setReadmeContentRaw(content);
@@ -301,7 +318,10 @@ export function useAppState(): AppState {
   const exportZip = useCallback(async () => {
     setIsExporting(true);
     try {
-      await generateZip(files, template, archiveName, readmeContent);
+      const descs = files.filter((f) => (f.description || '').trim()).map((f) => `${f.newName}.${f.extension}: ${(f.description || '').trim()}`);
+      const descSection = descs.length > 0 ? '--- Описание файлов ---\n' + descs.join('\n') + '\n\n' : '';
+      const fullReadme = descSection + readmeContent;
+      await generateZip(files, template, archiveName, fullReadme);
     } finally {
       setIsExporting(false);
     }
@@ -318,10 +338,55 @@ export function useAppState(): AppState {
   // Валидация
   const errors = useMemo(() => validateFiles(files), [files]);
   const hasErrors = errors.length > 0;
-  const errorFileIds = useMemo(
-    () => new Set(errors.map((e) => e.fileId)),
-    [errors]
-  );
+  const errorFileIds = useMemo(() => new Set(errors.map((e) => e.fileId)), [errors]);
+
+  // Детект дубликатов новых имён
+  const duplicateFileIds = useMemo(() => {
+    const keys = files.map((f) => `${f.newName}.${f.extension}`.toLowerCase());
+    const seen = new Set<string>();
+    const dupes = new Set<string>();
+    keys.forEach((k, i) => {
+      if (seen.has(k)) {
+        dupes.add(files[i].id);
+        dupes.add(files[keys.indexOf(k)].id);
+      }
+      seen.add(k);
+    });
+    return dupes;
+  }, [files]);
+
+  // Template presets (localStorage)
+  const PRESETS_KEY = 'gd-helper-template-presets';
+  const [templatePresets, setTemplatePresets] = useState<TemplatePreset[]>(() => {
+    try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); }
+    catch { return []; }
+  });
+
+  const savePreset = useCallback((name: string) => {
+    setTemplatePresets((prev) => {
+      const next = [...prev, { id: crypto.randomUUID(), name, template, updatedAt: Date.now() }];
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, [template]);
+
+  const deletePreset = useCallback((id: string) => {
+    setTemplatePresets((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const loadPreset = useCallback((id: string) => {
+    const preset = templatePresets.find((p) => p.id === id);
+    if (preset) setTemplateRaw(preset.template);
+  }, [templatePresets]);
+
+  // Batch remove
+  const removeFiles = useCallback((fileIds: string[]) => {
+    setFiles((prev) => prev.filter((f) => !fileIds.includes(f.id)));
+  }, []);
 
   return {
     files,
@@ -344,6 +409,7 @@ export function useAppState(): AppState {
     addVariable,
     removeVariable,
     updateFileCleanName,
+    updateFileDescription,
     setReadmeContent,
     reorderFiles,
     removeFile,
@@ -351,5 +417,11 @@ export function useAppState(): AppState {
     clearFiles,
     hasErrors,
     errorFileIds,
+    duplicateFileIds,
+    templatePresets,
+    savePreset,
+    deletePreset,
+    loadPreset,
+    removeFiles,
   };
 }

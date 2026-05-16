@@ -63,7 +63,8 @@ export async function extractZip(
       detectedTime: parsed.detectedTime,
       cleanName: parsed.cleanName,
       variables: {},
-      newName: '', // Будет рассчитано после
+      newName: '',
+      description: '',
     };
 
     rows.push(row);
@@ -97,6 +98,7 @@ export function gufFilesToRows(files: File[], startOrder: number = 1): FileRow[]
       cleanName: parsed.cleanName,
       variables: {},
       newName: '',
+      description: '',
     };
   });
 }

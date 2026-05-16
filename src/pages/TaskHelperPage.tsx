@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import '../TaskHelper.css';
 import {
-  Plus, Search, Calendar, ChevronRight, FileText, AlertTriangle,
+  Plus, Calendar, ChevronRight, FileText, AlertTriangle,
   X, Tag, Flame, ArrowUp, ArrowRight, ArrowDown, Circle,
   Clock, CheckCircle2, GitPullRequest, XCircle, Filter, SlidersHorizontal,
 } from 'lucide-react';
@@ -23,6 +23,7 @@ import {
   Input,
   Island,
   Loader,
+  SearchInput,
   SegmentedControl,
   Select,
   TagChip,
@@ -342,25 +343,7 @@ export function TaskHelperPage() {
         <div className="tool-page__content tool-page__content--auto">
           <Toolbar>
             <Toolbar.Left style={{ flex: 1 }}>
-              <div style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
-                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Поиск задач..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                  style={{ width: '100%', paddingLeft: '38px' }}
-                />
-                {searchQuery && (
-                  <IconButton
-                    className="search-clear"
-                    onClick={() => setSearchQuery('')}
-                    icon={<X size={14} />}
-                    label="Очистить поиск"
-                  />
-                )}
-              </div>
+              <SearchInput value={searchQuery} onChange={setSearchQuery} onClear={() => setSearchQuery('')} placeholder="Поиск задач..." wrapperStyle={{ maxWidth: '500px' }} />
             </Toolbar.Left>
             <Toolbar.Right>
               <Button
