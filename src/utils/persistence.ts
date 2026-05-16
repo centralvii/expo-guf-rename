@@ -77,11 +77,7 @@ export async function saveState(state: PersistedState): Promise<void> {
   try {
     const db = await openDB();
 
-    // Сохраняем метаданные файлов (без file blob)
-    const filesWithoutBlobs = state.files.map((f) => ({
-      ...f,
-      file: null as unknown as Blob,
-    }));
+    const filesWithoutBlobs = state.files.map((f) => ({ ...f, file: null as unknown as Blob }));
 
     await idbPut(db, STORE_META, 'state', {
       files: filesWithoutBlobs,
@@ -92,8 +88,7 @@ export async function saveState(state: PersistedState): Promise<void> {
       readmeContent: state.readmeContent,
     });
 
-    // Очистить старые блобы и записать новые
-    await idbClear(db, STORE_BLOBS);
+    // Upsert blobs — только файлы с реальными данными
     for (const file of state.files) {
       if (file.file) {
         await idbPut(db, STORE_BLOBS, file.id, file.file);

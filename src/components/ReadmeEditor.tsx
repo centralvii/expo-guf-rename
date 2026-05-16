@@ -4,6 +4,8 @@ import {
   List, ListOrdered, Code, Quote, Link, Minus, Eye, EyeOff,
   CheckSquare, Eraser
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // --- UI-Kit Imports ---
 import { Button, IconButton, Island, Textarea } from '../ui';
@@ -88,25 +90,14 @@ const TOOLBAR_ITEMS: ToolbarItem[] = [
   { icon: <Minus size={14} />, title: 'HR', action: (ta, v, onChange) => insertAtCursor(ta, v, onChange, '\n---\n') },
 ];
 
-function renderMarkdown(md: string): string {
-  let html = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  html = html.replace(/^---$/gm, '<hr/>');
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-  html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-  html = html.replace(/^- \[x\] (.+)$/gm, '<div class="md-check md-check--done">☑ $1</div>');
-  html = html.replace(/^- \[ \] (.+)$/gm, '<div class="md-check">☐ $1</div>');
-  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
-  html = html.replace(/^(?!<[a-z])(.*\S.*)$/gm, '<p>$1</p>');
-  return html;
+function MarkdownPreview({ content }: { content: string }) {
+  return (
+    <div className="readme-card__preview custom-scrollbar md-body">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {content || '*Пусто — начните писать...*'}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
@@ -163,7 +154,7 @@ export const ReadmeEditor = memo(({ value, onChange }: ReadmeEditorProps) => {
       )}
 
       {showPreview ? (
-        <div className="readme-card__preview custom-scrollbar" dangerouslySetInnerHTML={{ __html: renderMarkdown(value || '*Пусто — начните писать...*') }} />
+        <MarkdownPreview content={value} />
       ) : (
         <Textarea ref={textareaRef} className="readme-card__textarea custom-scrollbar" value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={handleKeyDown} placeholder="Markdown поддерживается..." rows={8} spellCheck={false} noContainer />
       )}
