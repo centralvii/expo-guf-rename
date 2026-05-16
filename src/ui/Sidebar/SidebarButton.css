@@ -1,0 +1,100 @@
+.sb-btn {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 9px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-ui);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.sb-btn:hover:not(.sb-btn--disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sb-btn--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.sb-btn--active:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.sb-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sb-btn--collapsed {
+  justify-content: center;
+}
+
+.sb-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.sb-btn__label {
+  margin-left: 10px;
+  max-width: 160px;
+  overflow: hidden;
+  transition: opacity 150ms ease, max-width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sb-btn--collapsed .sb-btn__label {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sb-btn__tag {
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-ui);
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  letter-spacing: 0.3px;
+  margin-left: auto;
+  transition: opacity 150ms ease;
+}
+
+.sb-btn--collapsed .sb-btn__tag {
+  max-width: 0;
+  margin-left: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sb-btn__chevron {
+  flex-shrink: 0;
+  margin-left: 8px;
+  transition: transform 200ms ease;
+}
+
+.sb-btn--open .sb-btn__chevron {
+  transform: rotate(90deg);
+}

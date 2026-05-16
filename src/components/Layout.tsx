@@ -1,6 +1,6 @@
-import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send, Database } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send, Database, ChevronRight, Layers, Puzzle } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { refreshConnection, subscribeToConnection, type ConnectionState } from '../lib/connectionStatus';
 import { IconButton } from '../ui';
 
@@ -13,6 +13,13 @@ interface NavItem {
   icon: React.ReactNode;
   disabled?: boolean;
   tag?: string;
+}
+
+interface NavFolder {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  items: NavItem[];
 }
 
 const MAIN_NAV: NavItem[] = [
@@ -30,42 +37,32 @@ const MAIN_NAV: NavItem[] = [
   },
 ];
 
-const TOOLS_NAV: NavItem[] = [
+const FOLDERS: NavFolder[] = [
   {
-    id: 'task-helper',
-    label: 'Задачник',
-    path: '/task-helper',
-    icon: <FileText size={18} />,
+    id: 'main',
+    label: 'Основное',
+    icon: <Layers size={18} />,
+    items: [
+      { id: 'task-helper', label: 'Задачник', path: '/task-helper', icon: <FileText size={18} /> },
+      { id: 'guf-packer', label: 'Сборка GUF', path: '/guf-packer', icon: <FileArchive size={18} /> },
+    ],
   },
   {
-    id: 'api-client',
-    label: 'Запросник',
-    path: '/api-client',
-    icon: <Send size={18} />,
-  },
-  {
-    id: 'guf-packer',
-    label: 'Сборка GUF',
-    path: '/guf-packer',
-    icon: <FileArchive size={18} />,
-  },
-  {
-    id: 'bpmn',
-    label: 'Полигон BPMN',
-    path: '/bpmn',
-    icon: <Workflow size={18} />,
-  },
-  {
-    id: 'sql-inspector',
-    label: 'Инспектор SQL',
-    path: '/sql-inspector',
-    icon: <Database size={18} />,
+    id: 'additional',
+    label: 'Дополнительное',
+    icon: <Puzzle size={18} />,
+    items: [
+      { id: 'api-client', label: 'Запросник', path: '/api-client', icon: <Send size={18} /> },
+      { id: 'bpmn', label: 'Полигон BPMN', path: '/bpmn', icon: <Workflow size={18} /> },
+      { id: 'sql-inspector', label: 'Инспектор SQL', path: '/sql-inspector', icon: <Database size={18} /> },
+    ],
   },
 ];
 
 const SIDEBAR_STORAGE_KEY = 'gd-helper-sidebar-collapsed';
 
 export function Layout() {
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches) {
       return true;
@@ -74,6 +71,9 @@ export function Layout() {
     return saved ? JSON.parse(saved) : false;
   });
   const [connectionState, setConnectionState] = useState<ConnectionState>('unknown');
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
+  const folderRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // Connection status: подписка на глобальный менеджер с exponential backoff
   useEffect(() => {
@@ -133,7 +133,6 @@ export function Layout() {
       if (e.matches) {
         setIsCollapsed(true);
       } else {
-        // Восстанавливаем из стораджа при возврате на большой экран
         const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
         setIsCollapsed(saved ? JSON.parse(saved) : false);
       }
@@ -142,6 +141,36 @@ export function Layout() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  // Close flyout on Escape
+  useEffect(() => {
+    if (!activeFolder) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveFolder(null);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [activeFolder]);
+
+  // Reposition flyout when sidebar collapses/expands
+  useEffect(() => {
+    if (!activeFolder) return;
+    const btn = folderRefs.current.get(activeFolder);
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    setPopupPos({ top: rect.top, left: isCollapsed ? 62 : 245 });
+  }, [isCollapsed, activeFolder]);
+
+  const openFolderPopup = useCallback((id: string) => {
+    const btn = folderRefs.current.get(id);
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    setPopupPos({ top: rect.top, left: isCollapsed ? 62 : 245 });
+    setActiveFolder(prev => prev === id ? null : id);
+  }, [isCollapsed]);
+
+  const isFolderActive = (folder: NavFolder) =>
+    folder.items.some(item => location.pathname === item.path);
 
   const sidebarClass = `sidebar ${isCollapsed ? 'sidebar--collapsed' : ''}`;
 
@@ -153,10 +182,10 @@ export function Layout() {
     });
   };
 
-  const renderNavItem = (item: NavItem) => {
+  const renderNavItem = (item: NavItem, className = '') => {
     if (item.disabled) {
       return (
-        <div key={item.id} className="sidebar__link sidebar__link--disabled" title={item.label}>
+        <div key={item.id} className={`sidebar__link sidebar__link--disabled ${className}`} title={item.label}>
           <span className="sidebar__link-icon">{item.icon}</span>
           <span className="sidebar__link-label">{item.label}</span>
           {item.tag && (
@@ -172,7 +201,7 @@ export function Layout() {
         to={item.path}
         end={item.path === '/'}
         className={({ isActive }) =>
-          `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+          `sidebar__link ${isActive ? 'sidebar__link--active' : ''} ${className}`
         }
         title={item.label}
       >
@@ -182,8 +211,37 @@ export function Layout() {
     );
   };
 
+  const activeFolderData = activeFolder ? FOLDERS.find(f => f.id === activeFolder) : null;
+
   return (
     <div className="dashboard">
+      {/* Sidebar backdrop (for flyout) */}
+      {activeFolder && (
+        <div className="sidebar__backdrop" onClick={() => setActiveFolder(null)} />
+      )}
+
+      {/* Flyout popup for folder items */}
+      {activeFolderData && (
+        <div
+          className="sidebar__flyout"
+          style={{ top: popupPos.top, left: popupPos.left }}
+        >
+          {activeFolderData.items.map(item => (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              onClick={() => setActiveFolder(null)}
+              className={({ isActive }) =>
+                `sidebar__flyout-item ${isActive ? 'sidebar__flyout-item--active' : ''}`
+              }
+            >
+              <span className="sidebar__flyout-icon">{item.icon}</span>
+              <span className="sidebar__flyout-label">{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className={sidebarClass}>
         <div className="sidebar__header">
@@ -197,18 +255,30 @@ export function Layout() {
 
         <nav className="sidebar__nav">
           <div className="sidebar__section">
-            {MAIN_NAV.map(renderNavItem)}
+            {MAIN_NAV.map(item => renderNavItem(item))}
           </div>
 
           <div className="sidebar__divider" />
 
           <div className="sidebar__section">
-            {TOOLS_NAV.map(renderNavItem)}
+            {FOLDERS.map(folder => (
+              <button
+                key={folder.id}
+                ref={el => { if (el) folderRefs.current.set(folder.id, el); else folderRefs.current.delete(folder.id); }}
+                className={`sidebar__folder ${isCollapsed ? 'sidebar__folder--collapsed' : ''} ${isFolderActive(folder) ? 'sidebar__folder--active' : ''} ${activeFolder === folder.id ? 'sidebar__folder--open' : ''}`}
+                onClick={() => openFolderPopup(folder.id)}
+                title={isCollapsed ? folder.label : undefined}
+              >
+                <span className="sidebar__folder-icon">{folder.icon}</span>
+                {!isCollapsed && <span className="sidebar__folder-label">{folder.label}</span>}
+                {!isCollapsed && <ChevronRight size={14} className="sidebar__folder-chevron" />}
+              </button>
+            ))}
           </div>
 
           <div className="sidebar__divider" />
 
-          <div className="sidebar__section">
+          <div className="sidebar__section sidebar__section--bottom">
             {renderNavItem({
               id: 'settings',
               label: 'Настройки',
@@ -216,6 +286,8 @@ export function Layout() {
               icon: <Settings size={18} />,
             })}
           </div>
+
+          <div className="sidebar__divider" />
         </nav>
 
         <div className="sidebar__footer">

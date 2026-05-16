@@ -29,3 +29,5 @@ export { Toolbar } from './Toolbar/Toolbar';
 export { ToolCard } from './ToolCard/ToolCard';
 export type { ToolCardProps } from './ToolCard/ToolCard';
 export { SearchInput } from './SearchInput/SearchInput';
+export { SidebarButton } from './Sidebar/SidebarButton';
+export type { SidebarButtonProps } from './Sidebar/SidebarButton';

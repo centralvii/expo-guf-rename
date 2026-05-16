@@ -278,6 +278,10 @@
   border-radius: 4px;
 }
 
+:root[data-theme='nothing'] .sidebar__folder {
+  font-weight: 400;
+}
+
 :root[data-theme='nothing'] .statusbar {
   background: var(--bg-body);
 }
@@ -520,6 +524,25 @@
   background: var(--bg-card);
   color: var(--text-primary);
   border-color: transparent;
+}
+
+:root[data-theme='099'] .sidebar__folder {
+  font-family: var(--font-mono);
+}
+
+:root[data-theme='099'] .sidebar__flyout {
+  border-radius: 12px;
+  background: var(--bg-body);
+}
+
+:root[data-theme='099'] .sidebar__flyout-item {
+  border-radius: 10px;
+  font-family: var(--font-mono);
+}
+
+:root[data-theme='099'] .sidebar__flyout-item--active {
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 :root[data-theme='099'] .filter-chip {
