@@ -55,7 +55,7 @@ const TOOLS: ToolCardProps[] = [
   },
   {
     id: 'sql-inspector',
-    title: 'SQL Inspector',
+    title: 'Инспектор SQL',
     description: 'Форматирование SQL, проверка рисков, rollback-шаблоны и markdown-отчёты.',
     icon: <Database size={22} />,
     path: '/sql-inspector',

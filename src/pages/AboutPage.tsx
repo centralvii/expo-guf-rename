@@ -70,7 +70,7 @@ const MODULES: ModuleEntry[] = [
   },
   {
     id: 'sql-inspector',
-    title: 'SQL Inspector',
+    title: 'Инспектор SQL',
     description: 'Форматирование SQL, проверка рисков, rollback-шаблоны и markdown-отчёты.',
     path: '/sql-inspector',
     icon: <Database size={14} />,

@@ -286,7 +286,7 @@ export function SqlInspectorPage() {
       <div className="tool-page__content tool-page__content--auto sql-inspector">
         <Toolbar>
           <Toolbar.Left>
-            <PageTitle>SQL Inspector</PageTitle>
+            <PageTitle>Инспектор SQL</PageTitle>
           </Toolbar.Left>
           <Toolbar.Right>
             <Button

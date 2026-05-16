@@ -1,5 +1,5 @@
 /**
- * SQL Inspector — чистый logic-layer для форматирования и анализа SQL.
+ * Инспектор SQL — чистый logic-layer для форматирования и анализа SQL.
  *
  * Не использует DOM, localStorage или React.
  * Не выполняет SQL и не подключается к базе.

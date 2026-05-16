@@ -57,7 +57,7 @@ const TOOLS_NAV: NavItem[] = [
   },
   {
     id: 'sql-inspector',
-    label: 'SQL Inspector',
+    label: 'Инспектор SQL',
     path: '/sql-inspector',
     icon: <Database size={18} />,
   },

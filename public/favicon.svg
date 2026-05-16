@@ -1,11 +1,13 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="fav-vertex" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00F0FF" />
-      <stop offset="100%" stop-color="#0066FF" />
+    <linearGradient id="g" x1="0" y1="0" x2="32" y2="32">
+      <stop offset="0%" stop-color="#0070f3"/>
+      <stop offset="50%" stop-color="#0070f3"/>
+      <stop offset="100%" stop-color="#00F0FF"/>
     </linearGradient>
   </defs>
-  <path d="M16 16L28 9V23L16 30V16Z" fill="url(#fav-vertex)" opacity="0.9" />
-  <path d="M16 16L4 9V23L16 30V16Z" fill="url(#fav-vertex)" opacity="0.7" />
-  <path d="M16 2L28 9L16 16L4 9L16 2Z" fill="url(#fav-vertex)" />
+  <path d="M 16 14 C 10 14, 6 8, 9 16 C 12 24, 14 17, 16 17"
+        stroke="url(#g)" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M 16 17 C 22 17, 26 23, 23 16 C 20 9, 18 14, 16 14"
+        stroke="url(#g)" stroke-width="4" stroke-linecap="round" fill="none"/>
 </svg>

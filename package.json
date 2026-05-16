@@ -14,7 +14,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.103.3",
-    "bpmn-js": "18.15.0",
+    "bpmn-js": "18.16.1",
     "file-saver": "^2.0.5",
     "firebase": "^12.13.0",
     "jszip": "^3.10.1",
