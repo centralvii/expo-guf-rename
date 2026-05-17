@@ -17,7 +17,7 @@ dist-ssr
 .env.*
 !.env.example
 supabase
-firebase
+/firebase
 
 # Editor directories and files
 .vscode/*
