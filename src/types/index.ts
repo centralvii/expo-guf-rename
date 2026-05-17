@@ -194,6 +194,18 @@ export interface AppSettings {
   firebaseMeasurementId: string;
 }
 
+export interface BookmarkItem {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  category?: string;
+  iconUrl?: string;
+  pinned?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /**
  * API Client "Запросник" — Инструмент для тестирования API запросов
  */

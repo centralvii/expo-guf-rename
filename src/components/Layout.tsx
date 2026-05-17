@@ -1,8 +1,9 @@
 import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send, Database, ChevronRight, Layers, Puzzle } from 'lucide-react';
+import { LayoutDashboard, FileArchive, FileText, Settings, PanelLeftDashed, Info, Workflow, Send, Database, ChevronRight, Layers, Puzzle, Sparkles, Bookmark } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { refreshConnection, subscribeToConnection, type ConnectionState } from '../lib/connectionStatus';
 import { IconButton } from '../ui';
+import { BookmarkDrawer } from './BookmarkDrawer';
 
 declare const __APP_GIT_COMMIT__: string;
 
@@ -11,6 +12,7 @@ interface NavItem {
   label: string;
   path: string;
   icon: React.ReactNode;
+  external?: boolean;
   disabled?: boolean;
   tag?: string;
 }
@@ -20,6 +22,17 @@ interface NavFolder {
   label: string;
   icon: React.ReactNode;
   items: NavItem[];
+}
+
+function renderServiceLogo(src: string, label: string) {
+  return (
+    <span
+      className="sidebar__service-logo"
+      style={{ '--service-logo': `url(${src})` } as React.CSSProperties}
+      aria-hidden="true"
+      title={label}
+    />
+  );
 }
 
 const MAIN_NAV: NavItem[] = [
@@ -59,6 +72,23 @@ const FOLDERS: NavFolder[] = [
   },
 ];
 
+const AI_SERVICES_FOLDER: NavFolder = {
+  id: 'ai-services',
+  label: 'ИИ Сервисы',
+  icon: <Sparkles size={18} />,
+  items: [
+    { id: 'chatgpt', label: 'ChatGPT', path: 'https://chatgpt.com', external: true, icon: renderServiceLogo('/ai-services/chatgpt.svg', 'ChatGPT') },
+    { id: 'deepseek', label: 'DeepSeek', path: 'https://chat.deepseek.com', external: true, icon: renderServiceLogo('/ai-services/deepseek.svg', 'DeepSeek') },
+    { id: 'gemini', label: 'Gemini', path: 'https://gemini.google.com', external: true, icon: renderServiceLogo('/ai-services/gemini.svg', 'Gemini') },
+    { id: 'claude', label: 'Claude', path: 'https://claude.ai', external: true, icon: renderServiceLogo('/ai-services/claude.svg', 'Claude') },
+    { id: 'qwen', label: 'Qwen', path: 'https://chat.qwen.ai', external: true, icon: renderServiceLogo('/ai-services/qwen.svg', 'Qwen') },
+    { id: 'grok', label: 'Grok', path: 'https://grok.com', external: true, icon: renderServiceLogo('/ai-services/grok.svg', 'Grok') },
+    { id: 'perplexity', label: 'Perplexity', path: 'https://www.perplexity.ai', external: true, icon: renderServiceLogo('/ai-services/perplexity.svg', 'Perplexity') },
+  ],
+};
+
+const ALL_FOLDERS: NavFolder[] = [...FOLDERS, AI_SERVICES_FOLDER];
+
 const SIDEBAR_STORAGE_KEY = 'gd-helper-sidebar-collapsed';
 
 export function Layout() {
@@ -73,6 +103,7 @@ export function Layout() {
   const [connectionState, setConnectionState] = useState<ConnectionState>('unknown');
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const folderRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // Connection status: подписка на глобальный менеджер с exponential backoff
@@ -170,7 +201,7 @@ export function Layout() {
   }, [isCollapsed]);
 
   const isFolderActive = (folder: NavFolder) =>
-    folder.items.some(item => location.pathname === item.path);
+    folder.items.some(item => !item.external && location.pathname === item.path);
 
   const sidebarClass = `sidebar ${isCollapsed ? 'sidebar--collapsed' : ''}`;
 
@@ -211,7 +242,7 @@ export function Layout() {
     );
   };
 
-  const activeFolderData = activeFolder ? FOLDERS.find(f => f.id === activeFolder) : null;
+  const activeFolderData = activeFolder ? ALL_FOLDERS.find(f => f.id === activeFolder) : null;
 
   return (
     <div className="dashboard">
@@ -227,17 +258,31 @@ export function Layout() {
           style={{ top: popupPos.top, left: popupPos.left }}
         >
           {activeFolderData.items.map(item => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              onClick={() => setActiveFolder(null)}
-              className={({ isActive }) =>
-                `sidebar__flyout-item ${isActive ? 'sidebar__flyout-item--active' : ''}`
-              }
-            >
-              <span className="sidebar__flyout-icon">{item.icon}</span>
-              <span className="sidebar__flyout-label">{item.label}</span>
-            </NavLink>
+            item.external ? (
+              <a
+                key={item.id}
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setActiveFolder(null)}
+                className="sidebar__flyout-item"
+              >
+                <span className="sidebar__flyout-icon">{item.icon}</span>
+                <span className="sidebar__flyout-label">{item.label}</span>
+              </a>
+            ) : (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                onClick={() => setActiveFolder(null)}
+                className={({ isActive }) =>
+                  `sidebar__flyout-item ${isActive ? 'sidebar__flyout-item--active' : ''}`
+                }
+              >
+                <span className="sidebar__flyout-icon">{item.icon}</span>
+                <span className="sidebar__flyout-label">{item.label}</span>
+              </NavLink>
+            )
           ))}
         </div>
       )}
@@ -276,7 +321,21 @@ export function Layout() {
             ))}
           </div>
 
+
           <div className="sidebar__divider" />
+
+          <div className="sidebar__section">
+            <button
+              ref={el => { if (el) folderRefs.current.set(AI_SERVICES_FOLDER.id, el); else folderRefs.current.delete(AI_SERVICES_FOLDER.id); }}
+              className={`sidebar__folder ${isCollapsed ? 'sidebar__folder--collapsed' : ''} ${activeFolder === AI_SERVICES_FOLDER.id ? 'sidebar__folder--open' : ''}`}
+              onClick={() => openFolderPopup(AI_SERVICES_FOLDER.id)}
+              title={isCollapsed ? AI_SERVICES_FOLDER.label : undefined}
+            >
+              <span className="sidebar__folder-icon">{AI_SERVICES_FOLDER.icon}</span>
+              {!isCollapsed && <span className="sidebar__folder-label">{AI_SERVICES_FOLDER.label}</span>}
+              {!isCollapsed && <ChevronRight size={14} className="sidebar__folder-chevron" />}
+            </button>
+          </div>
 
           <div className="sidebar__section sidebar__section--bottom">
             {renderNavItem({
@@ -307,6 +366,8 @@ export function Layout() {
         </main>
       </div>
 
+      <BookmarkDrawer isOpen={isBookmarksOpen} onClose={() => setIsBookmarksOpen(false)} docked />
+
       {/* Status bar — full width under sidebar + content */}
       <footer className="statusbar">
         <div className="statusbar__left">
@@ -332,11 +393,19 @@ export function Layout() {
           </a>
         </div>
         <div className="statusbar__right">
+          <IconButton
+            variant="ghost"
+            size="sm"
+            icon={<Bookmark size={15} />}
+            label={isBookmarksOpen ? 'Закрыть закладки' : 'Открыть закладки'}
+            onClick={() => setIsBookmarksOpen((prev) => !prev)}
+          />
           <span className="statusbar__item">
             commit: {__APP_GIT_COMMIT__}
           </span>
         </div>
       </footer>
+
     </div>
   );
 }
