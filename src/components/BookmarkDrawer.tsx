@@ -22,6 +22,8 @@ const EMPTY_DRAFT: BookmarkDraft = {
   pinned: false,
 };
 
+const BOOKMARK_SKELETON_IDS = ['bookmark-sk-1', 'bookmark-sk-2', 'bookmark-sk-3', 'bookmark-sk-4'];
+
 function sortBookmarks(bookmarks: BookmarkItem[]): BookmarkItem[] {
   return [...bookmarks].sort((left, right) => {
     if (Boolean(left.pinned) !== Boolean(right.pinned)) {
@@ -287,7 +289,31 @@ export function BookmarkDrawer({ isOpen, onClose, docked = false }: BookmarkDraw
               </div>
 
               {isLoading ? (
-                <div className="bookmarks-drawer__empty">Загрузка закладок...</div>
+                <div className="bookmarks-list" aria-hidden="true">
+                  {BOOKMARK_SKELETON_IDS.map((itemId) => (
+                    <div key={itemId} className="bookmark-card bookmark-card--skeleton">
+                      <div className="bookmark-card__main">
+                        <div className="bookmark-card__favicon bookmark-card__favicon--skeleton sk" />
+                        <div className="bookmark-card__content">
+                          <div className="bookmark-card__head">
+                            <div className="bookmark-card__title-skeleton sk" />
+                            <div className="bookmark-card__badge-skeleton sk" />
+                          </div>
+                          <div className="bookmark-card__url-skeleton sk" />
+                          <div className="bookmark-card__description-skeleton sk" />
+                          <div className="bookmark-card__description-skeleton bookmark-card__description-skeleton--short sk" />
+                        </div>
+                      </div>
+
+                      <div className="bookmark-card__actions">
+                        <div className="bookmark-card__action-skeleton sk" />
+                        <div className="bookmark-card__action-skeleton sk" />
+                        <div className="bookmark-card__action-skeleton sk" />
+                        <div className="bookmark-card__action-skeleton sk" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : loadError ? (
                 <InlineError title="Не удалось загрузить закладки" message={loadError} />
               ) : filteredBookmarks.length === 0 ? (

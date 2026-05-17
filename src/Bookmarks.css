@@ -117,6 +117,10 @@
   background: color-mix(in srgb, var(--accent-soft) 30%, var(--bg-card));
 }
 
+.bookmark-card--skeleton {
+  pointer-events: none;
+}
+
 .bookmark-card__main {
   display: flex;
   gap: 12px;
@@ -143,6 +147,11 @@
   object-fit: contain;
 }
 
+.bookmark-card__favicon--skeleton {
+  border: none;
+  background: transparent;
+}
+
 .bookmark-card__content {
   display: flex;
   flex-direction: column;
@@ -163,10 +172,28 @@
   font-size: 13px;
 }
 
+.bookmark-card__title-skeleton {
+  width: 42%;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.bookmark-card__badge-skeleton {
+  width: 68px;
+  height: 18px;
+  border-radius: 999px;
+}
+
 .bookmark-card__url {
   color: var(--text-muted);
   font-size: 12px;
   font-family: var(--font-mono);
+}
+
+.bookmark-card__url-skeleton {
+  width: 58%;
+  height: 11px;
+  border-radius: 999px;
 }
 
 .bookmark-card__description {
@@ -175,11 +202,27 @@
   line-height: 1.55;
 }
 
+.bookmark-card__description-skeleton {
+  width: 100%;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.bookmark-card__description-skeleton--short {
+  width: 74%;
+}
+
 .bookmark-card__actions {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.bookmark-card__action-skeleton {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
 }
 
 .bookmark-form {
