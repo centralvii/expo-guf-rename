@@ -207,7 +207,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
       }) as unknown as BpmnModelerInstance;
     }, []);
 
-    const recreateModeler = useCallback((isCancelledRef: { current: boolean }) => {
+    const recreateModeler = useCallback(() => {
       const container = containerRef.current;
       if (!container) {
         throw new Error('Контейнер BPMN редактора недоступен.');
@@ -240,7 +240,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         }
 
         try {
-          const fallbackModeler = isCancelledRef ? recreateModeler(isCancelledRef) : modeler;
+          const fallbackModeler = isCancelledRef ? recreateModeler() : modeler;
           await applyImportedXml(fallbackModeler, EMPTY_DIAGRAM);
           if (isCancelledRef) {
             attachModelerListeners(fallbackModeler, isCancelledRef);

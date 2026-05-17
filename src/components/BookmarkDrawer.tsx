@@ -198,10 +198,10 @@ export function BookmarkDrawer({ isOpen, onClose, docked = false }: BookmarkDraw
 
       const next = editingBookmarkId
         ? (usesFirebase
-          ? await updateFirebaseBookmark(editingBookmark as BookmarkItem, nextDraft).then((updatedBookmark) => bookmarks.map((bookmark) => bookmark.id === updatedBookmark.id ? updatedBookmark : bookmark))
+          ? await updateFirebaseBookmark(editingBookmark as BookmarkItem, nextDraft).then((updatedBookmark: BookmarkItem) => bookmarks.map((bookmark) => bookmark.id === updatedBookmark.id ? updatedBookmark : bookmark))
           : updateBookmark(bookmarks, editingBookmarkId, nextDraft))
         : (usesFirebase
-          ? await createFirebaseBookmark(nextDraft).then((createdBookmark) => [createdBookmark, ...bookmarks])
+          ? await createFirebaseBookmark(nextDraft).then((createdBookmark: BookmarkItem) => [createdBookmark, ...bookmarks])
           : createBookmark(bookmarks, nextDraft));
 
       setBookmarks(next);

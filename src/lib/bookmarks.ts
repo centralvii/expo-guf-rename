@@ -113,7 +113,6 @@ export function createBookmark(bookmarks: BookmarkItem[], draft: BookmarkDraft):
 }
 
 export function updateBookmark(bookmarks: BookmarkItem[], id: string, draft: BookmarkDraft): BookmarkItem[] {
-  const normalizedUrl = normalizeBookmarkUrl(draft.url);
   const next = bookmarks.map((bookmark) => {
     if (bookmark.id !== id) {
       return bookmark;
