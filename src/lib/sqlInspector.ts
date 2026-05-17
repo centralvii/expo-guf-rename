@@ -117,51 +117,89 @@ const NEWLINE_BEFORE_KEYWORDS = [
 const INDENT_KEYWORDS = ['AND', 'OR'];
 
 /**
- * Делит SQL на segments quoted/unquoted, чтобы не трогать строки в кавычках.
+ * Делит SQL на segments quoted/unquoted, чтобы не трогать single quotes
+ * и PostgreSQL dollar-quoted strings.
  */
 interface SqlSegment {
   text: string;
   quoted: boolean;
 }
 
-function splitBySingleQuotes(sql: string): SqlSegment[] {
+function getDollarQuoteDelimiter(sql: string, offset: number): string | null {
+  const match = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(offset));
+  return match?.[0] ?? null;
+}
+
+function splitQuotedSegments(sql: string): SqlSegment[] {
   const segments: SqlSegment[] = [];
   let current = '';
-  let inQuote = false;
+  let mode: 'unquoted' | 'single' | 'dollar' = 'unquoted';
+  let dollarDelimiter: string | null = null;
 
   for (let i = 0; i < sql.length; i++) {
     const ch = sql[i];
 
-    if (ch === "'") {
-      // Обработка escape ''
-      if (inQuote && sql[i + 1] === "'") {
+    if (mode === 'single') {
+      if (ch === "'" && sql[i + 1] === "'") {
         current += "''";
-        i++;
+        i += 1;
         continue;
       }
 
-      if (current.length > 0) {
-        segments.push({ text: current, quoted: inQuote });
-        current = '';
-      }
       current += ch;
-      // если открываем — закрываем segment unquoted, начинаем quoted
-      if (!inQuote) {
-        inQuote = true;
-      } else {
-        // закрываем quoted segment
+      if (ch === "'") {
         segments.push({ text: current, quoted: true });
         current = '';
-        inQuote = false;
+        mode = 'unquoted';
       }
       continue;
+    }
+
+    if (mode === 'dollar') {
+      if (dollarDelimiter && sql.startsWith(dollarDelimiter, i)) {
+        current += dollarDelimiter;
+        segments.push({ text: current, quoted: true });
+        current = '';
+        mode = 'unquoted';
+        i += dollarDelimiter.length - 1;
+        dollarDelimiter = null;
+        continue;
+      }
+
+      current += ch;
+      continue;
+    }
+
+    if (ch === "'") {
+      if (current.length > 0) {
+        segments.push({ text: current, quoted: false });
+        current = '';
+      }
+      current = ch;
+      mode = 'single';
+      continue;
+    }
+
+    if (ch === '$') {
+      const delimiter = getDollarQuoteDelimiter(sql, i);
+      if (delimiter) {
+        if (current.length > 0) {
+          segments.push({ text: current, quoted: false });
+          current = '';
+        }
+        current = delimiter;
+        mode = 'dollar';
+        dollarDelimiter = delimiter;
+        i += delimiter.length - 1;
+        continue;
+      }
     }
 
     current += ch;
   }
 
   if (current.length > 0) {
-    segments.push({ text: current, quoted: inQuote });
+    segments.push({ text: current, quoted: mode !== 'unquoted' });
   }
 
   return segments;
@@ -171,7 +209,7 @@ function splitBySingleQuotes(sql: string): SqlSegment[] {
  * Применяет преобразование к unquoted-сегментам, оставляя quoted-сегменты как есть.
  */
 function transformUnquoted(sql: string, transform: (chunk: string) => string): string {
-  return splitBySingleQuotes(sql)
+  return splitQuotedSegments(sql)
     .map((seg) => (seg.quoted ? seg.text : transform(seg.text)))
     .join('');
 }
@@ -233,7 +271,7 @@ export function formatSql(sql: string): string {
 
 function splitStatements(sql: string): string[] {
   const result: string[] = [];
-  const segments = splitBySingleQuotes(sql);
+  const segments = splitQuotedSegments(sql);
   let buffer = '';
 
   for (const seg of segments) {
@@ -318,7 +356,7 @@ function summarizeStatements(sql: string): StatementSummary {
 function stripComments(sql: string, captured: string[]): string {
   // Удаляет -- комментарии и /* */ комментарии вне кавычек.
   let result = '';
-  const segments = splitBySingleQuotes(sql);
+  const segments = splitQuotedSegments(sql);
 
   for (const seg of segments) {
     if (seg.quoted) {

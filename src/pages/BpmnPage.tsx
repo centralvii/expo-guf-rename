@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { BpmnEditor, type BpmnDiagramStats, type BpmnEditorHandle } from '../components/BpmnEditor';
 import { useToast } from '../hooks/useToast';
-import { Button, EmptyState, IconButton, Input, Island, Modal, PageTitle, Panel, SectionHeader, Toolbar } from '../ui';
+import { Button, EmptyState, IconButton, InlineError, Input, Island, Modal, PageTitle, Panel, SectionHeader, Toolbar } from '../ui';
 
 const STORAGE_KEY = 'bpmn_polygon_diagrams';
 const STORAGE_VERSION_KEY = 'bpmn_polygon_diagrams_version';
@@ -92,6 +92,7 @@ export function BpmnPage() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportMenuClosing, setExportMenuClosing] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const activeDiagram = useMemo(
     () => diagrams.find((diagram) => diagram.id === activeDiagramId) ?? null,
@@ -118,11 +119,17 @@ export function BpmnPage() {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [showExportMenu, closeExportMenu]);
 
+  const handleImportError = useCallback((message: string) => {
+    setImportError(message);
+    notify(message, 'error');
+  }, [notify]);
+
   const handleNew = useCallback(() => {
     setActiveDiagramId(null);
     setIsDirty(false);
     setSaveNameInput('');
     setDiagramStats(EMPTY_STATS);
+    setImportError(null);
     void editorRef.current?.resetDiagram();
   }, []);
 
@@ -164,11 +171,11 @@ export function BpmnPage() {
     setIsDirty(false);
     try {
       await editorRef.current?.importXml(diagram.xml);
+      setImportError(null);
     } catch (error) {
       console.error('Failed to open diagram:', error);
-      notify('Не удалось открыть диаграмму. Возможно, файл повреждён.', 'error');
     }
-  }, [notify]);
+  }, []);
 
   const handleDelete = useCallback((diagram: SavedDiagram) => {
     setDiagramToDelete(diagram);
@@ -182,15 +189,16 @@ export function BpmnPage() {
     saveDiagrams(updated);
     setDiagrams(updated);
 
-    if (activeDiagramId === diagramToDelete.id) {
-      const nextDiagram = updated[0] ?? null;
-      setActiveDiagramId(nextDiagram?.id ?? null);
-      if (nextDiagram) {
-        void editorRef.current?.importXml(nextDiagram.xml);
-      } else {
-        void editorRef.current?.resetDiagram();
+      if (activeDiagramId === diagramToDelete.id) {
+        const nextDiagram = updated[0] ?? null;
+        setActiveDiagramId(nextDiagram?.id ?? null);
+        if (nextDiagram) {
+          void editorRef.current?.importXml(nextDiagram.xml);
+        } else {
+          setImportError(null);
+          void editorRef.current?.resetDiagram();
+        }
       }
-    }
 
     notify('Диаграмма удалена', 'error');
     setShowDeleteModal(false);
@@ -212,8 +220,12 @@ export function BpmnPage() {
   }, [activeDiagram, notify]);
 
   const handleExportImage = useCallback(async (format: 'jpeg' | 'png') => {
-    await editorRef.current?.exportImage(format);
-    notify(format === 'png' ? 'PNG изображение скачано' : 'JPG изображение скачано');
+    try {
+      await editorRef.current?.exportImage(format);
+      notify(format === 'png' ? 'PNG изображение скачано' : 'JPG изображение скачано');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Не удалось экспортировать изображение диаграммы.', 'error');
+    }
   }, [notify]);
 
   const handleImportXml = useCallback(() => {
@@ -224,11 +236,17 @@ export function BpmnPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
-    await editorRef.current?.importXml(text);
-    setIsDirty(true);
-    notify(`Импортировано: ${file.name}`);
-    event.target.value = '';
+    try {
+      const text = await file.text();
+      await editorRef.current?.importXml(text);
+      setImportError(null);
+      setIsDirty(true);
+      notify(`Импортировано: ${file.name}`);
+    } catch (error) {
+      console.error('Failed to import BPMN file:', error);
+    } finally {
+      event.target.value = '';
+    }
   }, [notify]);
 
   const handleFit = useCallback(() => {
@@ -250,6 +268,7 @@ export function BpmnPage() {
   const onConfirmReset = useCallback(async () => {
     await editorRef.current?.resetDiagram();
     setIsDirty(true);
+    setImportError(null);
     notify('Диаграмма сброшена');
     setShowResetModal(false);
   }, [notify]);
@@ -334,6 +353,8 @@ export function BpmnPage() {
           </Toolbar.Right>
         </Toolbar>
 
+        {importError && <InlineError title="Ошибка BPMN XML" message={importError} />}
+
         <div className="bpmn-workspace">
           <Island className="bpmn-canvas-card">
             <BpmnEditor
@@ -341,6 +362,7 @@ export function BpmnPage() {
               initialXml={activeDiagram?.xml}
               onChange={() => setIsDirty(true)}
               onStatsChange={setDiagramStats}
+              onImportError={handleImportError}
             />
           </Island>
 

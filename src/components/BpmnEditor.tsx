@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/diagram-js.css';
@@ -28,6 +28,7 @@ interface BpmnEditorProps {
   initialXml?: string;
   onChange?: () => void;
   onStatsChange?: (stats: BpmnDiagramStats) => void;
+  onImportError?: (message: string) => void;
 }
 
 interface BpmnCanvas {
@@ -157,12 +158,14 @@ function collectDiagramStats(modeler: BpmnModelerInstance): BpmnDiagramStats {
 }
 
 export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
-  ({ initialXml, onChange, onStatsChange }, ref) => {
+  ({ initialXml, onChange, onStatsChange, onImportError }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const modelerRef = useRef<BpmnModelerInstance | null>(null);
+    const listenerModelerRef = useRef<BpmnModelerInstance | null>(null);
     const initialXmlRef = useRef(initialXml);
     const onChangeRef = useRef(onChange);
     const onStatsChangeRef = useRef(onStatsChange);
+    const onImportErrorRef = useRef(onImportError);
 
     useEffect(() => {
       onChangeRef.current = onChange;
@@ -172,6 +175,86 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
       onStatsChangeRef.current = onStatsChange;
     }, [onStatsChange]);
 
+    useEffect(() => {
+      onImportErrorRef.current = onImportError;
+    }, [onImportError]);
+
+    const applyImportedXml = useCallback(async (modeler: BpmnModelerInstance, xml: string) => {
+      await modeler.importXML(xml);
+      modeler.get('canvas').zoom('fit-viewport');
+      onStatsChangeRef.current?.(collectDiagramStats(modeler));
+      if (containerRef.current) {
+        addDotGrid(containerRef.current);
+      }
+    }, []);
+
+    const attachModelerListeners = useCallback((modeler: BpmnModelerInstance, isCancelledRef: { current: boolean }) => {
+      if (listenerModelerRef.current === modeler) {
+        return;
+      }
+
+      modeler.on('commandStack.changed', () => {
+        if (isCancelledRef.current || !modelerRef.current) return;
+        onChangeRef.current?.();
+        onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
+      });
+      listenerModelerRef.current = modeler;
+    }, []);
+
+    const createModeler = useCallback((container: HTMLDivElement) => {
+      return new BpmnModeler({
+        container,
+      }) as unknown as BpmnModelerInstance;
+    }, []);
+
+    const recreateModeler = useCallback((isCancelledRef: { current: boolean }) => {
+      const container = containerRef.current;
+      if (!container) {
+        throw new Error('Контейнер BPMN редактора недоступен.');
+      }
+
+      if (modelerRef.current) {
+        modelerRef.current.destroy();
+      }
+
+      container.innerHTML = '';
+      listenerModelerRef.current = null;
+      const freshModeler = createModeler(container);
+      modelerRef.current = freshModeler;
+      return freshModeler;
+    }, [createModeler]);
+
+    const importXmlWithFallback = useCallback(async (
+      modeler: BpmnModelerInstance,
+      xml: string,
+      errorMessage: string,
+      rethrowError: boolean,
+      isCancelledRef?: { current: boolean },
+      reportError: boolean = true
+    ) => {
+      try {
+        await applyImportedXml(modeler, xml);
+      } catch {
+        if (reportError) {
+          onImportErrorRef.current?.(errorMessage);
+        }
+
+        try {
+          const fallbackModeler = isCancelledRef ? recreateModeler(isCancelledRef) : modeler;
+          await applyImportedXml(fallbackModeler, EMPTY_DIAGRAM);
+          if (isCancelledRef) {
+            attachModelerListeners(fallbackModeler, isCancelledRef);
+          }
+        } catch (fallbackError) {
+          console.warn('[BpmnEditor] Fallback diagram also failed:', fallbackError);
+        }
+
+        if (rethrowError) {
+          throw new Error(errorMessage);
+        }
+      }
+    }, [applyImportedXml, attachModelerListeners, recreateModeler]);
+
     useImperativeHandle(ref, () => ({
       getXml: async () => {
         if (!modelerRef.current) return '';
@@ -180,22 +263,14 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
       },
       importXml: async (xml: string) => {
         if (!modelerRef.current) return;
-        try {
-          await modelerRef.current.importXML(xml);
-          modelerRef.current.get('canvas').zoom('fit-viewport');
-          onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
-          if (containerRef.current) addDotGrid(containerRef.current);
-        } catch (error) {
-          console.error('Error importing BPMN XML:', error);
-          // Try to load empty diagram as fallback
-          try {
-            await modelerRef.current.importXML(EMPTY_DIAGRAM);
-            modelerRef.current.get('canvas').zoom('fit-viewport');
-            onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
-          } catch (fallbackError) {
-            console.warn('[BpmnEditor] Fallback diagram also failed:', fallbackError);
-          }
-        }
+        await importXmlWithFallback(
+          modelerRef.current,
+          xml,
+          'Не удалось импортировать BPMN XML. Загружена пустая диаграмма.',
+          true,
+          { current: false },
+          true
+        );
       },
       fitViewport: () => {
         modelerRef.current?.get('canvas').zoom('fit-viewport');
@@ -214,10 +289,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
       },
       resetDiagram: async () => {
         if (!modelerRef.current) return;
-        await modelerRef.current.importXML(EMPTY_DIAGRAM);
-        modelerRef.current.get('canvas').zoom('fit-viewport');
-        onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
-        if (containerRef.current) addDotGrid(containerRef.current);
+        await applyImportedXml(modelerRef.current, EMPTY_DIAGRAM);
       },
       exportImage: async (format: 'jpeg' | 'png' = 'jpeg') => {
         if (!modelerRef.current) return;
@@ -228,7 +300,7 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         const svgEl = svgDoc.querySelector('svg');
 
         if (!svgEl) {
-          return;
+          throw new Error('Не удалось подготовить SVG диаграммы для экспорта.');
         }
 
         svgDoc.querySelector('.djs-dot-bg')?.remove();
@@ -245,46 +317,60 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         const svgString = new XMLSerializer().serializeToString(svgEl);
         const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
         const svgUrl = URL.createObjectURL(svgBlob);
-        const img = new Image();
 
-        img.onload = () => {
-          const width = img.naturalWidth || 1200;
-          const height = img.naturalHeight || 800;
-          const scale = 2;
-          const canvas = document.createElement('canvas');
-          canvas.width = width * scale;
-          canvas.height = height * scale;
+        await new Promise<void>((resolve, reject) => {
+          const img = new Image();
 
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
+          img.onload = () => {
+            const width = img.naturalWidth || 1200;
+            const height = img.naturalHeight || 800;
+            const scale = 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              URL.revokeObjectURL(svgUrl);
+              reject(new Error('Не удалось подготовить canvas для экспорта диаграммы.'));
+              return;
+            }
+
+            ctx.scale(scale, scale);
+
+            if (format === 'jpeg') {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, width, height);
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
             URL.revokeObjectURL(svgUrl);
-            return;
-          }
 
-          ctx.scale(scale, scale);
+            const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+            const quality = format === 'jpeg' ? 0.95 : undefined;
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Не удалось сформировать изображение диаграммы.'));
+                return;
+              }
 
-          if (format === 'jpeg') {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, width, height);
-          }
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `diagram.${format}`;
+              link.click();
+              URL.revokeObjectURL(url);
+              resolve();
+            }, mimeType, quality);
+          };
 
-          ctx.drawImage(img, 0, 0, width, height);
-          URL.revokeObjectURL(svgUrl);
+          img.onerror = () => {
+            URL.revokeObjectURL(svgUrl);
+            reject(new Error('Не удалось загрузить SVG для экспорта изображения.'));
+          };
 
-          const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-          const quality = format === 'jpeg' ? 0.95 : undefined;
-          canvas.toBlob((blob) => {
-            if (!blob) return;
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `diagram.${format}`;
-            link.click();
-            URL.revokeObjectURL(url);
-          }, mimeType, quality);
-        };
-
-        img.src = svgUrl;
+          img.src = svgUrl;
+        });
       },
       getStats: () => {
         if (!modelerRef.current) return EMPTY_STATS;
@@ -298,13 +384,12 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
 
       // Track if this effect is still active
       let isCancelled = false;
+      const isCancelledRef = { current: false };
       let modeler: BpmnModelerInstance | null = null;
 
       const initModeler = async () => {
         // Create modeler
-        modeler = new BpmnModeler({
-          container: container,
-        }) as unknown as BpmnModelerInstance;
+        modeler = createModeler(container);
 
         // Store reference only after successful creation
         modelerRef.current = modeler;
@@ -321,32 +406,23 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
         // Load initial diagram
         try {
           const xml = initialXmlRef.current || EMPTY_DIAGRAM;
-          await modeler.importXML(xml);
+          await importXmlWithFallback(
+            modeler,
+            xml,
+            'Не удалось загрузить BPMN XML. Загружена пустая диаграмма.',
+            false,
+            isCancelledRef,
+            false
+          );
           
           if (isCancelled) return;
-          
-          modeler.get('canvas').zoom('fit-viewport');
-          onStatsChangeRef.current?.(collectDiagramStats(modeler));
-          if (container) addDotGrid(container);
-        } catch (error) {
-          if (isCancelled) return;
-          console.error('Error importing BPMN XML:', error);
-          // Try loading empty diagram as fallback
-          try {
-            await modeler.importXML(EMPTY_DIAGRAM);
-            if (isCancelled) return;
-            modeler.get('canvas').zoom('fit-viewport');
-          } catch (fallbackError) {
-            console.warn('[BpmnEditor] Fallback empty diagram also failed:', fallbackError);
+          if (modelerRef.current) {
+            attachModelerListeners(modelerRef.current, isCancelledRef);
           }
+        } catch {
+          if (isCancelled) return;
         }
 
-        // Set up change listener
-        modeler.on('commandStack.changed', () => {
-          if (isCancelled || !modelerRef.current) return;
-          onChangeRef.current?.();
-          onStatsChangeRef.current?.(collectDiagramStats(modelerRef.current));
-        });
       };
 
       void initModeler();
@@ -375,13 +451,15 @@ export const BpmnEditor = forwardRef<BpmnEditorHandle, BpmnEditorProps>(
 
       return () => {
         isCancelled = true;
+        isCancelledRef.current = true;
         document.removeEventListener('keydown', handleKeyDown);
         if (modelerRef.current) {
           modelerRef.current.destroy();
           modelerRef.current = null;
         }
+        listenerModelerRef.current = null;
       };
-    }, []); // Empty deps - only initialize once
+    }, [attachModelerListeners, createModeler, importXmlWithFallback]);
 
     return <div ref={containerRef} className="bpmn-editor-canvas" tabIndex={0} />;
   }

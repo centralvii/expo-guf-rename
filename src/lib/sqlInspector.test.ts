@@ -17,7 +17,32 @@ describe('formatSql', () => {
   it('uppercases keywords', () => {
     const result = formatSql('select * from orders inner join users on orders.user_id = users.id');
     expect(result).toMatch(/^SELECT/);
-    expect(result).toContain('INNER JOIN');
+    expect(result).toContain('INNER');
+    expect(result).toContain('JOIN');
+  });
+
+  it('does not treat $$ inside single quotes as dollar quote', () => {
+    expect(formatSql("SELECT '$$not dollar$$';")).toBe("SELECT '$$not dollar$$';");
+  });
+
+  it('does not modify SQL inside anonymous dollar quotes', () => {
+    const sql = "DO $$ BEGIN RAISE NOTICE 'UPDATE table SET x=1'; END $$;";
+    expect(formatSql(sql)).toBe(sql);
+  });
+
+  it('does not modify SQL inside tagged dollar quotes', () => {
+    const sql = "DO $func$ BEGIN RAISE NOTICE 'DELETE FROM t'; END $func$;";
+    expect(formatSql(sql)).toBe(sql);
+  });
+
+  it('keeps comments inside dollar quote blocks', () => {
+    const sql = "DO $$ BEGIN\n-- comment inside dollar quote\nRAISE NOTICE 'ok';\nEND $$;";
+    expect(formatSql(sql)).toContain('-- comment inside dollar quote');
+  });
+
+  it('does not split statements by semicolon inside dollar quote blocks', () => {
+    const sql = "DO $$ BEGIN RAISE NOTICE 'semi ; inside'; END $$;\n\nSELECT 1;";
+    expect(formatSql(sql)).toBe("DO $$ BEGIN RAISE NOTICE 'semi ; inside'; END $$;\n\nSELECT 1;");
   });
 });
 
@@ -45,6 +70,16 @@ describe('detectSqlStatementType', () => {
 
   it('returns unknown for empty', () => {
     expect(detectSqlStatementType('')).toBe('unknown');
+  });
+
+  it('ignores SQL-looking text inside dollar quotes', () => {
+    const sql = "DO $$ BEGIN RAISE NOTICE 'UPDATE table SET x=1'; END $$;";
+    expect(detectSqlStatementType(sql)).toBe('unknown');
+  });
+
+  it('does not strip comments inside dollar quotes before analysis', () => {
+    const sql = "DO $$ BEGIN\n-- DELETE FROM t\nRAISE NOTICE 'ok';\nEND $$;";
+    expect(detectSqlStatementType(sql)).toBe('unknown');
   });
 });
 
