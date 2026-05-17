@@ -18,8 +18,9 @@ import {
   TASK_PRIORITY_LABELS, TASK_STATUS_LABELS
 } from '../types';
 
-import { Badge, Button, Input, Island, Loader, Modal, TagChip, Textarea, Toolbar, SegmentedControl } from '../ui';
+import { Badge, Button, Input, Island, Modal, TagChip, Textarea, Toolbar, SegmentedControl } from '../ui';
 import { PRIORITY_ICONS, PRIORITY_BADGE_VARIANTS, STATUS_ICONS, STATUS_BADGE_VARIANTS } from '../lib/taskUiConstants';
+import { TaskDetailSkeleton } from '../components/skeletons/TaskDetailSkeleton';
 
 function taskToMarkdown(task: TaskItem): string {
   const lines = [`# ${task.title}`];
@@ -116,14 +117,7 @@ export function TaskDetailPage() {
   }, [isEditing, taskId, editTitle, editDesc, editSections, editPriority, editStatus, editTags, task]);
 
   if (!isLoaded) {
-    return (
-      <div className="tool-page">
-        <div className="app-restore">
-          <Loader size="lg" />
-          <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка задачи...</span>
-        </div>
-      </div>
-    );
+    return <TaskDetailSkeleton />;
   }
   if (error) return <div className="page-loading">{error}</div>;
   if (!task) return <div className="page-loading">Задача не найдена или удалена</div>;

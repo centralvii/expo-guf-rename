@@ -4,8 +4,9 @@ import { formatHistoryDate } from '../lib/dateFormat';
 import { summarizeTaskChangesDetailed } from '../lib/taskHistory';
 import { diffTaskCollections } from '../lib/taskDiff';
 import type { TaskHistoryEntry } from '../types';
-import { Badge, Button, Drawer, EmptyState, Loader, Modal } from '../ui';
+import { Badge, Button, Drawer, EmptyState, Modal } from '../ui';
 import { TaskDiffModal } from './TaskDiffModal';
+import { TaskHistorySkeleton } from './skeletons/TaskHistorySkeleton';
 import './TaskHistoryDrawer.css';
 
 interface TaskHistoryDrawerProps {
@@ -89,10 +90,7 @@ export function TaskHistoryDrawer({
           </div>
 
           {isLoading ? (
-            <div className="app-restore" style={{ minHeight: '240px' }}>
-              <Loader size="lg" />
-              <span style={{ color: 'var(--text-secondary)' }}>Загружаем историю изменений...</span>
-            </div>
+            <TaskHistorySkeleton />
           ) : entries.length === 0 ? (
             <EmptyState
               icon={<History size={20} />}

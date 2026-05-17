@@ -31,3 +31,4 @@ export type { ToolCardProps } from './ToolCard/ToolCard';
 export { SearchInput } from './SearchInput/SearchInput';
 export { SettingsRow } from './SettingsRow/SettingsRow';
 export type { SettingsRowProps } from './SettingsRow/SettingsRow';
+export { Skeleton, SkeletonText, SkeletonCircle } from './Skeleton/Skeleton';

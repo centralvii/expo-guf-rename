@@ -8,7 +8,8 @@ import { TemplateEditor } from '../components/TemplateEditor';
 import { ValidationPanel } from '../components/ValidationPanel';
 import { useAppState } from '../hooks/useAppState';
 import { useToast } from '../hooks/useToast';
-import { Button, Island, Loader } from '../ui';
+import { Button, Island } from '../ui';
+import { GufPackerSkeleton } from '../components/skeletons/GufPackerSkeleton';
 
 export const GufPackerPage = () => {
   const state = useAppState();
@@ -30,14 +31,7 @@ export const GufPackerPage = () => {
   };
 
   if (state.isRestoring) {
-    return (
-      <div className="tool-page">
-        <div className="app-restore">
-          <Loader size="lg" />
-          <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Восстановление сессии...</span>
-        </div>
-      </div>
-    );
+    return <GufPackerSkeleton />;
   }
 
   return (

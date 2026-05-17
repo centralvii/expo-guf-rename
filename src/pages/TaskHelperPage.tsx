@@ -20,7 +20,6 @@ import {
   Drawer,
   Input,
   Island,
-  Loader,
   SearchInput,
   SegmentedControl,
   Select,
@@ -31,6 +30,7 @@ import {
 } from '../ui';
 import { PRIORITY_ICONS, PRIORITY_BADGE_VARIANTS, STATUS_ICONS, STATUS_BADGE_VARIANTS } from '../lib/taskUiConstants';
 import { formatRelativeTime } from '../lib/responseUtils';
+import { TaskListSkeleton } from '../components/skeletons/TaskListSkeleton';
 
 interface CreateDrawerProps {
   isOpen: boolean;
@@ -271,14 +271,7 @@ export function TaskHelperPage() {
   };
 
   if (!isLoaded) {
-    return (
-      <div className="tool-page">
-        <div className="app-restore">
-          <Loader size="lg" />
-          <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка задач...</span>
-        </div>
-      </div>
-    );
+    return <TaskListSkeleton />;
   }
 
   if (error) {

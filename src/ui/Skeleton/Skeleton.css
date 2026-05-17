@@ -1,0 +1,8 @@
+.ui-skeleton {
+  display: block;
+  flex-shrink: 0;
+}
+
+.ui-skeleton--circle {
+  border-radius: 50%;
+}

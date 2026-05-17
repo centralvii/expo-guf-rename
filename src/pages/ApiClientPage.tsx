@@ -6,7 +6,7 @@ import { useToast } from '../hooks/useToast';
 import { HTTP_METHODS, type HttpMethod } from '../types';
 
 import {
-  Button, IconButton, InlineError, Input, Island, Loader, PageTitle, Select, Toolbar,
+  Button, IconButton, InlineError, Input, Island, PageTitle, Select, Toolbar,
   type SelectOption,
 } from '../ui';
 
@@ -16,6 +16,7 @@ import { AuthPanel } from './ApiClient/AuthPanel';
 import { BodyEditor } from './ApiClient/BodyEditor';
 import { ResponseViewer } from './ApiClient/ResponseViewer';
 import { CollectionSidebar } from './ApiClient/CollectionSidebar';
+import { ApiClientSkeleton } from '../components/skeletons/ApiClientSkeleton';
 
 type RequestTab = 'params' | 'headers' | 'auth' | 'body';
 
@@ -114,16 +115,7 @@ export function ApiClientPage() {
   };
 
   if (!isLoaded) {
-    return (
-      <div className="tool-page anim-fade-in">
-        <div className="tool-page__content tool-page__content--auto">
-          <div className="app-restore">
-            <Loader size="lg" />
-            <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка запросов...</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <ApiClientSkeleton />;
   }
 
   if (!activeRequest) {

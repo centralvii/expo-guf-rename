@@ -4,7 +4,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { ToastProvider } from './components/ToastProvider';
 import { useAppTheme } from './hooks/useAppTheme';
-import { Loader } from './ui';
+import { PageSkeleton } from './components/skeletons/PageSkeleton';
 import './styles/themes.css';
 import './App.css';
 import './Dashboard.css';
@@ -19,15 +19,6 @@ const ApiClientPage = lazy(() => import('./pages/ApiClientPage').then(m => ({ de
 const SqlInspectorPage = lazy(() => import('./pages/SqlInspectorPage').then(m => ({ default: m.SqlInspectorPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
-function PageLoader() {
-  return (
-    <div className="app-restore anim-fade-in">
-      <Loader size="lg" />
-      <span style={{ marginTop: '16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Загрузка страницы...</span>
-    </div>
-  );
-}
-
 function App() {
   useAppTheme();
 
@@ -35,7 +26,7 @@ function App() {
     <ToastProvider>
       <BrowserRouter>
         <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<PageSkeleton />}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
