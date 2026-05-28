@@ -74,6 +74,7 @@
 .ui-textarea--auto-resize {
   resize: none;
   overflow: hidden;
+  overflow-anchor: none;
 }
 
 .ui-textarea::-webkit-scrollbar {

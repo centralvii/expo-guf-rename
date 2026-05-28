@@ -25,13 +25,22 @@ export const Textarea = memo(forwardRef<HTMLTextAreaElement, TextareaProps>(({
   const inputId = id || (label ? `textarea-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
 
   useEffect(() => {
-    if (!autoResize || !textareaRef.current) {
-      return;
-    }
+    if (!autoResize || !textareaRef.current) return;
 
     const element = textareaRef.current;
+
+    // Сохраняем позиции скролла ДО изменения высоты
+    const pageScrollY = window.scrollY;
+    const taScrollTop = element.scrollTop;
+
+    // Измеряем истинную высоту контента и применяем
     element.style.height = 'auto';
-    element.style.height = `${element.scrollHeight}px`;
+    const newHeight = element.scrollHeight;
+    element.style.height = `${newHeight}px`;
+
+    // Восстанавливаем скролл — предотвращает скачок
+    window.scrollTo(window.scrollX, pageScrollY);
+    element.scrollTop = taScrollTop;
   }, [autoResize, value]);
 
   const content = (

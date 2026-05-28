@@ -320,8 +320,6 @@ export function TaskDetailPage() {
             )}
           </Toolbar.Right>
         </Toolbar>
-
-        <Island flex={false} style={{ padding: '24px' }}>
           {isEditing && hasDraftWarning && (
             <div className="draft-warning" style={{ marginBottom: '20px' }}>
               <AlertTriangle size={15} />
@@ -335,8 +333,9 @@ export function TaskDetailPage() {
             </div>
           )}
 
-          {isEditing ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Island flex={false} style={{ padding: '24px' }}>
+            {isEditing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <Input label="Название" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} fullWidth />
               <Textarea label="Описание" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={2} fullWidth autoResize />
               <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
