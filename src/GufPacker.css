@@ -551,3 +551,88 @@
 }
 .file-table-card__footer--error { color: var(--danger); }
 .file-table-card__footer--duplicate { color: var(--warning); }
+
+/* --- Global drag-and-drop overlay (GUF Packer) --- */
+.guf-drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-app) 60%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+  animation: guf-drop-overlay-fade 120ms ease-out;
+}
+
+.guf-drop-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 16px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  opacity: 0.85;
+}
+
+.guf-drop-overlay__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 48px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 40px -8px color-mix(in srgb, var(--accent) 30%, transparent);
+  text-align: center;
+  max-width: 90vw;
+}
+
+.guf-drop-overlay__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.guf-drop-overlay__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+.guf-drop-overlay__hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+@keyframes guf-drop-overlay-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- File table drop-active highlight (drop over files table area) --- */
+.file-table-card__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-table-card--drop-active {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+  transition: outline-color 80ms ease-out;
+}
+
+.file-table-card--drop-active .file-table-list {
+  background: var(--accent-soft);
+}

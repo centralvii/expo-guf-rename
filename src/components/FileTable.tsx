@@ -15,11 +15,14 @@ interface FileTableProps {
   onDescriptionChange?: (fileId: string, description: string) => void;
   onAddFiles?: (files: File[]) => void;
   onRemoveFile?: (fileId: string) => void;
+  isExternalDragActive?: boolean;
 }
 
-export const FileTable = memo(({ files, errorFileIds, duplicateFileIds, onReorder, onCleanNameChange, onDescriptionChange, onAddFiles, onRemoveFile }: FileTableProps) => {
+export const FileTable = memo(({ files, errorFileIds, duplicateFileIds, onReorder, onCleanNameChange, onDescriptionChange, onAddFiles, onRemoveFile, isExternalDragActive }: FileTableProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isHoveringForDrop, setIsHoveringForDrop] = useState(false);
+  const hoverCounter = useRef(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -46,11 +49,56 @@ export const FileTable = memo(({ files, errorFileIds, duplicateFileIds, onReorde
     }
   }, [files, onReorder]);
 
+  const isExternalFilesDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    const types = Array.from(e.dataTransfer?.types || []);
+    return types.includes('Files');
+  }, []);
+
+  const handleTableDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!isExternalFilesDrag(e)) return;
+    e.preventDefault();
+    hoverCounter.current += 1;
+    if (hoverCounter.current === 1) setIsHoveringForDrop(true);
+  }, [isExternalFilesDrag]);
+
+  const handleTableDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!isExternalFilesDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, [isExternalFilesDrag]);
+
+  const handleTableDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!isExternalFilesDrag(e)) return;
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    hoverCounter.current = Math.max(0, hoverCounter.current - 1);
+    if (hoverCounter.current === 0) setIsHoveringForDrop(false);
+  }, [isExternalFilesDrag]);
+
+  const handleTableDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!isExternalFilesDrag(e)) return;
+    // Сам drop перехватывается на window через useGlobalFileDrop.
+    // Здесь только гасим подсветку.
+    e.preventDefault();
+    hoverCounter.current = 0;
+    setIsHoveringForDrop(false);
+  }, [isExternalFilesDrag]);
+
   const errorCount = errorFileIds.size;
   const duplicateCount = duplicateFileIds.size;
+  const showDropHighlight = isExternalDragActive && isHoveringForDrop;
 
   return (
-    <Island className="file-table-card" flex={false}>
+    <Island
+      className={`file-table-card ${showDropHighlight ? 'file-table-card--drop-active' : ''}`.trim()}
+      flex={false}
+    >
+      <div
+        className="file-table-card__body"
+        onDragEnter={handleTableDragEnter}
+        onDragOver={handleTableDragOver}
+        onDragLeave={handleTableDragLeave}
+        onDrop={handleTableDrop}
+      >
       <div className="file-table-card__header">
         <div className="file-table-card__title-row">
           <h2><FileIcon size={18} /> Файлы <Badge variant="accent">{files.length}</Badge></h2>
@@ -79,7 +127,7 @@ export const FileTable = memo(({ files, errorFileIds, duplicateFileIds, onReorde
         </DndContext>
         {filteredFiles.length === 0 && (
           <div className="file-table-card__empty">
-            {searchQuery ? 'Ничего не найдено' : 'Нет файлов. Загрузите ZIP или .guf файлы.'}
+            {showDropHighlight ? 'Отпустите файлы для добавления' : (searchQuery ? 'Ничего не найдено' : 'Нет файлов. Загрузите ZIP или .guf файлы.')}
           </div>
         )}
       </div>
@@ -90,6 +138,7 @@ export const FileTable = memo(({ files, errorFileIds, duplicateFileIds, onReorde
           {duplicateCount > 0 && <span className="file-table-card__footer--duplicate"><Copy size={12} /> {duplicateCount} дубликат{(duplicateCount % 10 === 1 && duplicateCount % 100 !== 11) ? '' : 'а'}</span>}
         </div>
       )}
+      </div>
     </Island>
   );
 });

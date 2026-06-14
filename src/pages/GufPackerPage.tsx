@@ -1,12 +1,15 @@
+import { useCallback } from 'react';
 import { Download, Trash2 } from 'lucide-react';
 import '../GufPacker.css';
 import { FileTable } from '../components/FileTable';
 import { FileUploader } from '../components/FileUploader';
+import { GufDropOverlay } from '../components/GufDropOverlay';
 import { MassActions } from '../components/MassActions';
 import { ReadmeEditor } from '../components/ReadmeEditor';
 import { TemplateEditor } from '../components/TemplateEditor';
 import { ValidationPanel } from '../components/ValidationPanel';
 import { useAppState } from '../hooks/useAppState';
+import { useGlobalFileDrop } from '../hooks/useGlobalFileDrop';
 import { useToast } from '../hooks/useToast';
 import { Button, Island } from '../ui';
 import { GufPackerSkeleton } from '../components/skeletons/GufPackerSkeleton';
@@ -15,20 +18,51 @@ export const GufPackerPage = () => {
   const state = useAppState();
   const { notify } = useToast();
 
-  const handleLoadZip = async (file: File) => {
+  const handleLoadZip = useCallback(async (file: File) => {
     try { await state.loadZip(file); notify('Архив загружен'); }
     catch (loadError) { console.error('[guf-packer] Failed to load zip', loadError); notify('Не удалось загрузить архив', 'error'); }
-  };
+  }, [state, notify]);
 
-  const handleGufFilesAdded = (files: File[]) => { state.loadGufFiles(files); notify(`Добавлено .guf файлов: ${files.length}`); };
-  const handleAddFiles = (files: File[]) => { state.addFiles(files); notify(`Добавлено файлов: ${files.length}`); };
-  const handleClearFiles = () => { state.clearFiles(); notify('Список файлов очищен', 'error'); };
-  const handleRemoveFile = (fileId: string) => { state.removeFile(fileId); notify('Файл удалён', 'error'); };
+  const handleGufFilesAdded = useCallback((files: File[]) => { state.loadGufFiles(files); notify(`Добавлено .guf файлов: ${files.length}`); }, [state, notify]);
+  const handleAddFiles = useCallback((files: File[]) => { state.addFiles(files); notify(`Добавлено файлов: ${files.length}`); }, [state, notify]);
+  const handleClearFiles = useCallback(() => { state.clearFiles(); notify('Список файлов очищен', 'error'); }, [state, notify]);
+  const handleRemoveFile = useCallback((fileId: string) => { state.removeFile(fileId); notify('Файл удалён', 'error'); }, [state, notify]);
 
-  const handleExportZip = async () => {
+  const handleExportZip = useCallback(async () => {
     try { await state.exportZip(); notify('ZIP архив скачан'); }
     catch (exportError) { console.error('[guf-packer] Failed to export zip', exportError); notify('Не удалось сформировать ZIP архив', 'error'); }
-  };
+  }, [state, notify]);
+
+  const handleGlobalDrop = useCallback((files: File[]) => {
+    const arr = Array.from(files);
+    const zips = arr.filter((f) => f.name.toLowerCase().endsWith('.zip'));
+    const gufs = arr.filter((f) => f.name.toLowerCase().endsWith('.guf'));
+    const other = arr.filter(
+      (f) => !f.name.toLowerCase().endsWith('.zip') && !f.name.toLowerCase().endsWith('.guf')
+    );
+
+    if (other.length > 0) {
+      notify(`Неподдерживаемые файлы: ${other.map((f) => f.name).join(', ')}`, 'error');
+      return;
+    }
+    if (zips.length > 0 && gufs.length > 0) {
+      notify('Нельзя смешивать ZIP и .guf в одной загрузке', 'error');
+      return;
+    }
+    if (zips.length > 1) {
+      notify('Выберите только один ZIP-архив', 'error');
+      return;
+    }
+    if (zips.length === 1) {
+      void handleLoadZip(zips[0]);
+      return;
+    }
+    if (gufs.length > 0) {
+      handleGufFilesAdded(gufs);
+    }
+  }, [notify, handleLoadZip, handleGufFilesAdded]);
+
+  const isExternalDragging = useGlobalFileDrop({ onFiles: handleGlobalDrop });
 
   if (state.isRestoring) {
     return <GufPackerSkeleton />;
@@ -73,6 +107,7 @@ export const GufPackerPage = () => {
               onDescriptionChange={state.updateFileDescription}
               onAddFiles={handleAddFiles}
               onRemoveFile={handleRemoveFile}
+              isExternalDragActive={isExternalDragging}
             />
 
             <ReadmeEditor value={state.readmeContent} onChange={state.setReadmeContent} />
@@ -85,6 +120,8 @@ export const GufPackerPage = () => {
             </Island>
           </>
         )}
+
+        <GufDropOverlay show={isExternalDragging} />
       </div>
     </div>
   );
