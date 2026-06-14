@@ -316,7 +316,7 @@ export function useAppState(): AppState {
   const exportZip = useCallback(async () => {
     setIsExporting(true);
     try {
-      const descs = files.filter((f) => (f.description || '').trim()).map((f) => `${f.newName}.${f.extension}: ${(f.description || '').trim()}`);
+      const descs = files.filter((f) => (f.description || '').trim()).map((f) => `${f.newName}: ${(f.description || '').trim()}`);
       const descSection = descs.length > 0 ? '--- Описание файлов ---\n' + descs.join('\n') + '\n\n' : '';
       const fullReadme = descSection + readmeContent;
       await generateZip(files, template, archiveName, fullReadme);
